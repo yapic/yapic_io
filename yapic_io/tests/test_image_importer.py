@@ -2,7 +2,7 @@ from unittest import TestCase
 import os
 
 import numpy as np
-import yapic.image_importers as ip
+import yapic_io.image_importers as ip
 import logging
 logger = logging.getLogger(os.path.basename(__file__))
 

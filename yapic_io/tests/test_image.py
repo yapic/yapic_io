@@ -2,8 +2,8 @@ import os
 from unittest import TestCase
 
 import numpy as np
-import yapic.image as im
-import yapic.image_importers as ip
+import yapic_io.image as im
+import yapic_io.image_importers as ip
 
 class TestImage(TestCase):
     def test_get_template_value_error_size(self):

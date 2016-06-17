@@ -1,8 +1,8 @@
 from unittest import TestCase
 
-import yapic
+
 import numpy as np
-import yapic.transformations as tf
+import yapic_io.transformations as tf
 
 class TestTransformations(TestCase):
     
