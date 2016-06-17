@@ -23,21 +23,14 @@ stages:
   - test
   - deploy
 
-run_gpu_tests:
-  stage: test
-  script:
-    - ls -l /dev/nvidia*
-    - pip install nose
-    - cd ${CI_PROJECT_DIR}
-    - THEANO_FLAGS=device=gpu,floatX=float32 nosetests --with-doctest --with-timer --with-coverage --cover-package=yapic -v
-    - sleep 5
+
 
 run_cpu_tests:
   stage: test
   script:
     - pip install nose
     - cd ${CI_PROJECT_DIR}
-    - THEANO_FLAGS=device=cpu,floatX=float32 nosetests --with-doctest --with-timer --with-coverage --cover-package=yapic -v
+    - nosetests --with-doctest --with-timer --with-coverage --cover-package=yapic_io
     - sleep 5
 
 pages:
