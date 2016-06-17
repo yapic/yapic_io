@@ -1,0 +1,58 @@
+image: yapic-debian
+
+before_script:
+  - export LANG=C.UTF-8
+  - PATH=${HOME}/.local/bin/:$PATH
+  - cd /tmp
+  - ~/.local/bin/virtualenv virtenv --system-site-packages
+  - source virtenv/bin/activate
+  - pip install -e ${CI_PROJECT_DIR}
+  - cd ${CI_PROJECT_DIR}
+
+  # setup ssh environment
+  - mkdir -p ${HOME}/.ssh
+  - ssh-keyscan -t rsa animate-x3.dzne.ds >> ~/.ssh/known_hosts
+  - chmod -R 700 ${HOME}/.ssh
+  - eval $(ssh-agent -s)
+  - ssh-add <(echo "$SSH_PRIVATE_KEY")
+  - git submodule update --init
+
+  - export YAPIC_TEST_LONG_RUNNING=${RUN_NIGHTLY_BUILD}
+
+stages:
+  - test
+  - deploy
+
+run_gpu_tests:
+  stage: test
+  script:
+    - ls -l /dev/nvidia*
+    - pip install nose
+    - cd ${CI_PROJECT_DIR}
+    - THEANO_FLAGS=device=gpu,floatX=float32 nosetests --with-doctest --with-timer --with-coverage --cover-package=yapic -v
+    - sleep 5
+
+run_cpu_tests:
+  stage: test
+  script:
+    - pip install nose
+    - cd ${CI_PROJECT_DIR}
+    - THEANO_FLAGS=device=cpu,floatX=float32 nosetests --with-doctest --with-timer --with-coverage --cover-package=yapic -v
+    - sleep 5
+
+pages:
+  stage: deploy
+  script:
+    - cd ${CI_PROJECT_DIR}/doc
+    - sphinx-apidoc -o source ../yapic
+    - pip freeze
+    - make html
+    # the next line requires this volume in /etc/gitlab-runner/config.toml: '/var/www/html/yapic:/public/:rw'
+    - cp -R ${CI_PROJECT_DIR}/doc/build /public/
+    - sleep 5
+  artifacts:
+    paths:
+    - doc/build
+  only:
+  - master
+
