@@ -9,15 +9,6 @@ before_script:
   - pip install -e ${CI_PROJECT_DIR}
   - cd ${CI_PROJECT_DIR}
 
-  # setup ssh environment
-  - mkdir -p ${HOME}/.ssh
-  - ssh-keyscan -t rsa animate-x3.dzne.ds >> ~/.ssh/known_hosts
-  - chmod -R 700 ${HOME}/.ssh
-  - eval $(ssh-agent -s)
-  - ssh-add <(echo "$SSH_PRIVATE_KEY")
-  - git submodule update --init
-
-  - export YAPIC_TEST_LONG_RUNNING=${RUN_NIGHTLY_BUILD}
 
 stages:
   - test
