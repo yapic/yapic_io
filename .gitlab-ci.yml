@@ -28,7 +28,7 @@ pages:
   stage: deploy
   script:
     - cd ${CI_PROJECT_DIR}/doc
-    - sphinx-apidoc -o source ../yapic
+    - sphinx-apidoc -o source ../yapic_io
     - pip freeze
     - make html
     # the next line requires this volume in /etc/gitlab-runner/config.toml: '/var/www/html/yapic:/public/:rw'
