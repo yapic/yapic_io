@@ -149,3 +149,17 @@ class TestImage(TestCase):
         print(img)
         self.assertEqual(img.dims, (3, 2, 6, 4))
 
+
+
+    def test_get_template_meshgrid(self):
+        image_shape = (5, 4)
+        pos = (1, 2)
+        size = (3, 2)
+        m = im.get_template_meshgrid(image_shape, pos, size)
+        print(m)
+        vals_x = np.array([[1,1], [2,2], [3,3]])
+        vals_y = np.array([[2, 3], [2, 3], [2, 3]])
+        
+        self.assertTrue((m[0] == vals_x).all())
+        self.assertTrue((m[1] == vals_y).all())
+

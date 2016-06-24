@@ -122,7 +122,30 @@ def get_template(image, pos, size, padding=0):
     return image[np.meshgrid(*indices, indexing='ij')]
 
 
+def get_template_meshgrid(image_shape, pos, size):
+    pos = np.array(pos)
+    size = np.array(size)
 
+    if len(image_shape) != len(size):        
+        error_str = '''nr of image dimensions (%s) 
+            and size vector length (%s) do not match'''\
+            % (len(image_shape), len(size))
+        raise ValueError(error_str)
+
+    if len(image_shape) != len(pos):        
+        error_str = '''nr of image dimensions (%s) 
+            and pos vector length (%s) do not match'''\
+            % (len(image_shape), len(pos))
+        raise ValueError(error_str)    
+
+    
+    if (image_shape < (pos + size)).any():
+        error_str = '''template out of image bounds: image shape: %s,  
+            pos: %s, template size: %s''' % (image_shape, pos, size)
+        raise ValueError(error_str)
+
+    indices = get_indices(pos, size)
+    return np.meshgrid(*indices, indexing='ij') 
 
 
 
