@@ -35,44 +35,34 @@ class TestTiffconnector(TestCase):
 
 
 
-    # def test_scan_dataset_dimensions(self):
-    #     img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-    #     c = Tiffconnector(img_path,'path/to/nowhere/')
-    #     c.load_img_filenames()
-    #     c.scan_dataset_dimensions()
-        
+    
 
-    #     val_dims = [(3, 3, 6, 4), (3, 6, 40, 26), (3, 3, 40, 26)]
-    #     self.assertEqual(val_dims, c.dimensions)
-
-
-    def test_get_img_dimensions(self):
+    def test_load_img_dimensions(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         c = Tiffconnector(img_path,'path/to/nowhere/')
-        # c.load_img_filenames()
-        # c.scan_dataset_dimensions()
         
-        self.assertFalse(c.get_img_dimensions(-1))
-        self.assertFalse(c.get_img_dimensions(4))   
         
-        self.assertEqual(c.get_img_dimensions(0), (3, 3, 6, 4))   
-        self.assertEqual(c.get_img_dimensions(1), (3, 6, 40, 26))
-        self.assertEqual(c.get_img_dimensions(2), (3, 3, 40, 26))
+        self.assertFalse(c.load_img_dimensions(-1))
+        self.assertFalse(c.load_img_dimensions(4))   
+        
+        self.assertEqual(c.load_img_dimensions(0), (3, 3, 6, 4))   
+        self.assertEqual(c.load_img_dimensions(1), (3, 6, 40, 26))
+        self.assertEqual(c.load_img_dimensions(2), (3, 3, 40, 26))
 
     def test_load_image(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         c = Tiffconnector(img_path,'path/to/nowhere/')
-        #c.load_img_filenames()
+        
         im = c.load_image(0)
         print(im)
-        #self.assertTrue(False)
+        
         self.assertEqual(im.shape, (3, 3, 6, 4))   
 
     def test_get_template(self):
         
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         c = Tiffconnector(img_path,'path/to/nowhere/')
-        #c.load_img_filenames()
+        
 
         image_nr = 0
         pos = (0, 0, 0, 0)

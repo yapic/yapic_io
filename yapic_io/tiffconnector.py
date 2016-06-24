@@ -62,7 +62,7 @@ class Tiffconnector(object):
         return(im[mesh])
 
 
-    def get_img_dimensions(self, image_nr):
+    def load_img_dimensions(self, image_nr):
         '''
         returns dimensions of the dataset.
         dims is a 4-element-tuple:
