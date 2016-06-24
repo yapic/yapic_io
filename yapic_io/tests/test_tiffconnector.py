@@ -41,13 +41,20 @@ class TestTiffconnector(TestCase):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         c = Tiffconnector(img_path,'path/to/nowhere/')
         
+        c.filenames = [\
+                ('6width4height3slices_rgb.tif',)\
+                , ('40width26height3slices_rgb.tif',)\
+                , ('40width26height6slices_rgb.tif',)\
+                ]
+
+
         
         self.assertFalse(c.load_img_dimensions(-1))
         self.assertFalse(c.load_img_dimensions(4))   
         
         self.assertEqual(c.load_img_dimensions(0), (3, 3, 6, 4))   
-        self.assertEqual(c.load_img_dimensions(1), (3, 6, 40, 26))
-        self.assertEqual(c.load_img_dimensions(2), (3, 3, 40, 26))
+        self.assertEqual(c.load_img_dimensions(1), (3, 3, 40, 26))
+        self.assertEqual(c.load_img_dimensions(2), (3, 6, 40, 26))
 
     def test_load_image(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
