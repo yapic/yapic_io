@@ -1,4 +1,5 @@
 import numpy as np
+from yapic_io.utils import get_template_meshgrid
 
 class Image(object):
     '''
@@ -87,29 +88,10 @@ def get_template(image, pos, size, padding=0):
     pos = np.array(pos)
     size = np.array(size)
 
-    if len(image.shape) != len(size):        
-        error_str = '''nr of image dimensions (%s) 
-            and size vector length (%s) do not match'''\
-            % (len(image.shape), len(size))
-        raise ValueError(error_str)
-
-    if len(image.shape) != len(pos):        
-        error_str = '''nr of image dimensions (%s) 
-            and pos vector length (%s) do not match'''\
-            % (len(image.shape), len(pos))
-        raise ValueError(error_str)    
-
-    
-    if (image.shape < (pos + size)).any():
-        error_str = '''template out of image bounds: image shape: %s,  
-            pos: %s, template size: %s''' % (image.shape, pos, size)
-        raise ValueError(error_str)
-
 
     if padding == 0:    
-        indices = get_indices(pos, size)
-        return image[np.meshgrid(*indices, indexing='ij')]
-
+        return image[get_template_meshgrid(image.shape, pos, size)]
+    
     pos_p = pos-padding
     size_p = size + 2*padding
     
@@ -117,59 +99,15 @@ def get_template(image, pos, size, padding=0):
     image = np.pad(image, reflect_sizes, mode='reflect')
     pos_corr = correct_pos_for_padding(pos_p, reflect_sizes)
 
-    indices = get_indices(pos_corr, size_p)
+    return image[get_template_meshgrid(image.shape, pos_corr, size_p)]
     
-    return image[np.meshgrid(*indices, indexing='ij')]
-
-
-def get_template_meshgrid(image_shape, pos, size):
-    pos = np.array(pos)
-    size = np.array(size)
-
-    if len(image_shape) != len(size):        
-        error_str = '''nr of image dimensions (%s) 
-            and size vector length (%s) do not match'''\
-            % (len(image_shape), len(size))
-        raise ValueError(error_str)
-
-    if len(image_shape) != len(pos):        
-        error_str = '''nr of image dimensions (%s) 
-            and pos vector length (%s) do not match'''\
-            % (len(image_shape), len(pos))
-        raise ValueError(error_str)    
-
-    
-    if (image_shape < (pos + size)).any():
-        error_str = '''template out of image bounds: image shape: %s,  
-            pos: %s, template size: %s''' % (image_shape, pos, size)
-        raise ValueError(error_str)
-
-    indices = get_indices(pos, size)
-    return np.meshgrid(*indices, indexing='ij') 
-
 
 
 def correct_pos_for_padding(pos, padding_sizes):
     return tuple([s[0]+p for p,s in zip(pos, padding_sizes)])
 
 
-def get_indices(pos, size):
-    '''
-    returns all indices for a sub matrix, given a certain n-dimensional position (upper left)
-    and n-dimensional size. 
 
-
-    :param pos: tuple defining the upper left position of the template in n dimensions
-    :param size: tuple defining size of template in all dimensions
-    :returns: list of indices for all dimensions
-    '''
-    if len(pos) != len(size):
-        error_str = '''nr of dimensions does not fit: pos(%s), 
-            size (%s)''' % (pos, size)
-        raise ValueError(error_str)
-
-
-    return [list(range(p, p+s)) for p,s in zip(pos,size)]
 
 
 def get_padding_size(shape, pos, size):

@@ -30,38 +30,63 @@ class TestTiffconnector(TestCase):
     def test_load_filenames_emptyfolder(self):
         img_path = os.path.join(base_path, '../test_data/empty_folder/')
         c = Tiffconnector(img_path,'path/to/nowhere/')
-        c.load_img_filenames()
+        #c.load_img_filenames()
         self.assertIsNone(c.filenames)
 
 
 
-    def test_scan_dataset_dimensions(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        c = Tiffconnector(img_path,'path/to/nowhere/')
-        c.load_img_filenames()
-        c.scan_dataset_dimensions()
+    # def test_scan_dataset_dimensions(self):
+    #     img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+    #     c = Tiffconnector(img_path,'path/to/nowhere/')
+    #     c.load_img_filenames()
+    #     c.scan_dataset_dimensions()
         
 
-        val_dims = [(3, 3, 6, 4), (3, 6, 40, 26), (3, 3, 40, 26)]
-        self.assertEqual(val_dims, c.dimensions)
+    #     val_dims = [(3, 3, 6, 4), (3, 6, 40, 26), (3, 3, 40, 26)]
+    #     self.assertEqual(val_dims, c.dimensions)
+
+
+    def test_get_img_dimensions(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        c = Tiffconnector(img_path,'path/to/nowhere/')
+        # c.load_img_filenames()
+        # c.scan_dataset_dimensions()
+        
+        self.assertFalse(c.get_img_dimensions(-1))
+        self.assertFalse(c.get_img_dimensions(4))   
+        
+        self.assertEqual(c.get_img_dimensions(0), (3, 3, 6, 4))   
+        self.assertEqual(c.get_img_dimensions(1), (3, 6, 40, 26))
+        self.assertEqual(c.get_img_dimensions(2), (3, 3, 40, 26))
+
+    def test_load_image(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        c = Tiffconnector(img_path,'path/to/nowhere/')
+        #c.load_img_filenames()
+        im = c.load_image(0)
+        print(im)
+        #self.assertTrue(False)
+        self.assertEqual(im.shape, (3, 3, 6, 4))   
+
+    def test_get_template(self):
+        
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        c = Tiffconnector(img_path,'path/to/nowhere/')
+        #c.load_img_filenames()
+
+        image_nr = 0
+        pos = (0, 0, 0, 0)
+        size = (1, 1, 1, 2)
+        im = c.load_image(0)
+        tpl = c.get_template(image_nr, pos, size)
+        val = np.empty(shape=size)
+        val[0,0,0,0] = 151
+        val[0,0,0,1] = 132
+        val = val.astype(int)
+        print(val)
+        print(tpl)
+        self.assertTrue((tpl == val).all())
 
 
 
-            
 
-        # path = os.path.join(base_path, '../test_data/tif_images/6width_4height_3slices_rgb_zstack.tif')
-        # dims = ip.get_tiff_image_dimensions(path)
-        # self.assertEqual(dims, (3, 3, 6, 4))
-
-        # path = os.path.join(base_path, '../test_data/tif_images/6width_4height_2slices_rgb_zstack.tif')
-        # dims = ip.get_tiff_image_dimensions(path)
-        # self.assertEqual(dims, (3, 2, 6, 4))
-
-        # path = os.path.join(base_path, '../test_data/tif_images/6width_4height_rgb.tif')
-        # dims = ip.get_tiff_image_dimensions(path)
-        # self.assertEqual(dims, (3, 1, 6, 4))
-
-        # path = os.path.join(base_path, '../test_data/tif_images/6width_4height_2slices_8bit_grayscale_zstack.tif')
-        # dims = ip.get_tiff_image_dimensions(path)
-        # self.assertEqual(dims, (1, 2, 6, 4))
-        # 

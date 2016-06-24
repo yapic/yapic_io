@@ -4,7 +4,7 @@ from unittest import TestCase
 import numpy as np
 import yapic_io.image as im
 import yapic_io.image_importers as ip
-
+from yapic_io.utils import get_indices
 class TestImage(TestCase):
     def test_get_template_value_error_size(self):
         image = np.zeros((4, 5, 6)) #3 dim image
@@ -71,7 +71,7 @@ class TestImage(TestCase):
         size = (1,2)
 
         self.assertRaises(ValueError\
-            , lambda: im.get_indices(pos, size))  
+            , lambda: get_indices(pos, size))  
 
 
     def test_get_indices(self):
@@ -80,7 +80,7 @@ class TestImage(TestCase):
         size = (3, 5)
 
         validation_ind = np.array([[5, 6, 7], [5, 6, 7, 8, 9]])
-        ind = im.get_indices(pos, size)
+        ind = get_indices(pos, size)
         
         self.assertTrue((ind == validation_ind).all())
 
