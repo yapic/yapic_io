@@ -95,6 +95,48 @@ def get_padding_size(shape, pos, size):
         padding_size.append((p_l,p_u))        
     return padding_size
 
+def calc_inner_template_size(shape, pos, size):
+    '''
+    if a requested template is out of bounds, this function calculates a new template
+    size and pos that can be used in a second step with padding.
+
+    (more explanation needed)
+    '''
+
+    shape = np.array(shape)
+    pos = np.array(pos)
+    size = np.array(size)
+
+    padding_sizes = get_padding_size(shape, pos, size)
+
+    
+    padding_upper = np.array([e[1] for e in padding_sizes])
+    padding_lower = np.array([e[0] for e in padding_sizes])
+
+    shift_1 = padding_lower
+    shift_2 = shape - pos - padding_upper
+    shift_2[shift_2 > 0] = 0
+
+    shift = shift_1 + shift_2
+    pos_out = pos + shift
+
+    dist_lu_s = shape - pos - shift
+    size_new_1 = np.vstack([size,dist_lu_s]).min(axis=0)
+    pos_r = pos.copy()
+    pos_r[pos>0]=0
+    size_inmat = size + pos_r
+    
+    size_new_2 = np.vstack([padding_lower,size_inmat]).max(axis=0)
+    size_out = np.vstack([size_new_1,size_new_2]).min(axis=0)
+
+    return tuple(pos_out), tuple(size_out)
+
+    
+
+
+
+   
+
 
 def get_dist_to_upper_img_edge(shape, pos):
     return np.array(shape)-np.array(pos)-1

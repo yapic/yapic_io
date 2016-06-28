@@ -66,16 +66,200 @@ class TestDataset(TestCase):
         res = ds.get_dist_to_upper_img_edge(shape, pos)
         self.assertTrue((val == res).all())
 
-    # def test_pos_shift_for_padding(self):
 
-    #     pos = (4, 3)
-    #     shape = (5, 4)
-    #     size=(3, 3)
-    #     res = ds.pos_shift_for_padding(shape, pos, size)
-    #     dist = ds.get_dist_to_upper_img_edge(shape, pos)
-    #     print(dist)
-    #     print(res)
-    #     self.assertTrue(False)
+
+    def test_calc_inner_template_size_1(self):
+
+        shape = (7, 11)
+        pos = (-4, 8)
+        size = (16, 9)
+
+        pos_val = (0, 5)
+        size_val = (7, 6)
+
+        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+
+        print(pos_out)
+        print(size_out)
+
+        self.assertEqual(pos_out, pos_val)
+        self.assertEqual(size_out, size_val)    
+
+
+    def test_calc_inner_template_size_2(self):
+
+        shape = (7, 11)
+        pos = (-4, -1)
+        size = (5, 8)
+
+        pos_val = (0, 0)
+        size_val = (4, 7)
+
+        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+
+        print(pos_out)
+        print(size_out)
+
+        self.assertEqual(pos_out, pos_val)
+        self.assertEqual(size_out, size_val)        
+
+    def test_calc_inner_template_size_3(self):
+
+        shape = (7, 11)
+        pos = (-2, -3)
+        size = (3, 4)
+
+        pos_val = (0, 0)
+        size_val = (2, 3)
+
+        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+
+        print(pos_out)
+        print(size_out)
+
+        self.assertEqual(pos_out, pos_val)
+        self.assertEqual(size_out, size_val)
+
+    def test_calc_inner_template_size_4(self):
+
+        shape = (7, 11)
+        pos = (-5, 2)
+        size = (6, 4)
+
+        pos_val = (0, 2)
+        size_val = (5, 4)
+
+        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+
+        print(pos_out)
+        print(size_out)
+
+        self.assertEqual(pos_out, pos_val)
+        self.assertEqual(size_out, size_val)
+
+    def test_calc_inner_template_size_5(self):
+
+        shape = (7, 11)
+        pos = (2, -4)
+        size = (3, 8)
+
+        pos_val = (2, 0)
+        size_val = (3, 4)
+
+        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+
+        print(pos_out)
+        print(size_out)
+
+        self.assertEqual(pos_out, pos_val)
+        self.assertEqual(size_out, size_val)
+
+    def test_calc_inner_template_size_6(self):
+
+        shape = (7, 11)
+        pos = (2, 9)
+        size = (3, 6)
+
+        pos_val = (2, 7)
+        size_val = (3, 4)
+
+        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+
+        print(pos_out)
+        print(size_out)
+
+        self.assertEqual(pos_out, pos_val)
+        self.assertEqual(size_out, size_val)
+
+    def test_calc_inner_template_size_7(self):
+
+        shape = (7, 11)
+        pos = (2, 9)
+        size = (6, 5)
+
+        pos_val = (2, 8)
+        size_val = (5, 3)
+
+        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+
+        print(pos_out)
+        print(size_out)
+
+        self.assertEqual(pos_out, pos_val)
+        self.assertEqual(size_out, size_val) 
+
+    def test_calc_inner_template_size_8(self):
+
+        shape = (7, 11)
+        pos = (5, 9)
+        size = (5, 6)
+
+        pos_val = (4, 7)
+        size_val = (3, 4)
+
+        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+
+        print(pos_out)
+        print(size_out)
+
+        self.assertEqual(pos_out, pos_val)
+        self.assertEqual(size_out, size_val)
+
+    def test_calc_inner_template_size_9(self):
+
+        shape = (7, 11)
+        pos = (-4, -1)
+        size = (6, 6)
+
+        pos_val = (0, 0)
+        size_val = (4, 5)
+
+        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+
+        print(pos_out)
+        print(size_out)
+
+        self.assertEqual(pos_out, pos_val)
+        self.assertEqual(size_out, size_val)
+
+    def test_calc_inner_template_size_10(self):
+
+        shape = (7, 11)
+        pos = (6, 7)
+        size = (4, 3)
+
+        pos_val = (4, 7)
+        size_val = (3, 3)
+
+        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+
+        print(pos_out)
+        print(size_out)
+
+        self.assertEqual(pos_out, pos_val)
+        self.assertEqual(size_out, size_val)
+
+
+    def test_calc_inner_template_size_11(self):
+
+        shape = (7, 11)
+        pos = (2, 2)
+        size = (3, 4)
+
+        pos_val = (2, 2)
+        size_val = (3, 4)
+
+        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+
+        print(pos_out)
+        print(size_out)
+
+        self.assertEqual(pos_out, pos_val)
+        self.assertEqual(size_out, size_val)                                           
+                                                               
+                      
+      
+  
 
 
 
