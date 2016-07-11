@@ -50,6 +50,24 @@ class TestDataset(TestCase):
         res = ds.get_padding_size(shape, pos, size)
         self.assertEqual([(3,0),(0,0)], res) 
 
+    def test_get_padding_size_3(self):
+
+        shape = (7, 11, 7)
+        pos = (5, 5, 5)
+        size = (3, 5, 3)
+        res = ds.get_padding_size(shape, pos, size)
+        self.assertEqual([(0, 1), (0, 0), (0, 1)], res)
+
+    def test_get_padding_size_3(self):
+
+        shape = (7, 11, 7, 1)
+        pos = (5, 5, 5, 0)
+        size = (3, 5, 3, 1)
+        res = ds.get_padding_size(shape, pos, size)
+        self.assertEqual([(0, 1), (0, 0), (0, 1), (0, 0)], res)    
+
+        
+
     def test_get_dist_to_upper_img_edge(self):
 
 
@@ -76,15 +94,17 @@ class TestDataset(TestCase):
 
         pos_val = (0, 5)
         size_val = (7, 6)
-
-        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+        pos_tpl_val = (0, 3)
+        pos_out, size_out, pos_tpl, padding = \
+                ds.calc_inner_template_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
 
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)    
-
+        self.assertEqual(pos_tpl_val, pos_tpl)  
+        self.assertEqual(padding, [(4,5),(0,6)])
 
     def test_calc_inner_template_size_2(self):
 
@@ -95,13 +115,16 @@ class TestDataset(TestCase):
         pos_val = (0, 0)
         size_val = (4, 7)
 
-        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+        pos_out, size_out, pos_tpl, pd = \
+                ds.calc_inner_template_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
 
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)        
+        self.assertEqual(pos_tpl, (0,0))
+        self.assertEqual(pd, [(4,0),(1,0)])        
 
     def test_calc_inner_template_size_3(self):
 
@@ -111,14 +134,17 @@ class TestDataset(TestCase):
 
         pos_val = (0, 0)
         size_val = (2, 3)
-
-        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+        
+        pos_out, size_out, pos_tpl, pd = \
+                ds.calc_inner_template_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
 
         self.assertEqual(pos_out, pos_val)
-        self.assertEqual(size_out, size_val)
+        self.assertEqual(size_out, size_val)        
+        self.assertEqual(pos_tpl, (0,0))
+        self.assertEqual(pd, [(2,0),(3,0)])        
 
     def test_calc_inner_template_size_4(self):
 
@@ -129,13 +155,17 @@ class TestDataset(TestCase):
         pos_val = (0, 2)
         size_val = (5, 4)
 
-        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+        pos_out, size_out, pos_tpl, pd = \
+                ds.calc_inner_template_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
 
         self.assertEqual(pos_out, pos_val)
-        self.assertEqual(size_out, size_val)
+        self.assertEqual(size_out, size_val)        
+        self.assertEqual(pos_tpl, (0,0))
+        self.assertEqual(pd, [(5,0),(0,0)])        
+
 
     def test_calc_inner_template_size_5(self):
 
@@ -146,14 +176,16 @@ class TestDataset(TestCase):
         pos_val = (2, 0)
         size_val = (3, 4)
 
-        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+        pos_out, size_out, pos_tpl, pd = \
+                ds.calc_inner_template_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
 
         self.assertEqual(pos_out, pos_val)
-        self.assertEqual(size_out, size_val)
-
+        self.assertEqual(size_out, size_val)        
+        self.assertEqual(pos_tpl, (0,0))
+        self.assertEqual(pd, [(0,0),(4,0)])        
     def test_calc_inner_template_size_6(self):
 
         shape = (7, 11)
@@ -163,13 +195,16 @@ class TestDataset(TestCase):
         pos_val = (2, 7)
         size_val = (3, 4)
 
-        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+        pos_out, size_out, pos_tpl, pd = \
+                ds.calc_inner_template_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
 
         self.assertEqual(pos_out, pos_val)
-        self.assertEqual(size_out, size_val)
+        self.assertEqual(size_out, size_val)        
+        self.assertEqual(pos_tpl, (0,2))
+        self.assertEqual(pd, [(0,0),(0,4)]) 
 
     def test_calc_inner_template_size_7(self):
 
@@ -180,13 +215,16 @@ class TestDataset(TestCase):
         pos_val = (2, 8)
         size_val = (5, 3)
 
-        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+        pos_out, size_out, pos_tpl, pd = \
+                ds.calc_inner_template_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
 
         self.assertEqual(pos_out, pos_val)
-        self.assertEqual(size_out, size_val) 
+        self.assertEqual(size_out, size_val)        
+        self.assertEqual(pos_tpl, (0,1))
+        self.assertEqual(pd, [(0,1),(0,3)]) 
 
     def test_calc_inner_template_size_8(self):
 
@@ -197,13 +235,17 @@ class TestDataset(TestCase):
         pos_val = (4, 7)
         size_val = (3, 4)
 
-        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+        pos_out, size_out, pos_tpl, pd = \
+                ds.calc_inner_template_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
 
         self.assertEqual(pos_out, pos_val)
-        self.assertEqual(size_out, size_val)
+        self.assertEqual(size_out, size_val)        
+        self.assertEqual(pos_tpl, (1,2))
+        self.assertEqual(pd, [(0,3),(0,4)]) 
+
 
     def test_calc_inner_template_size_9(self):
 
@@ -214,13 +256,16 @@ class TestDataset(TestCase):
         pos_val = (0, 0)
         size_val = (4, 5)
 
-        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+        pos_out, size_out, pos_tpl, pd = \
+                ds.calc_inner_template_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
 
         self.assertEqual(pos_out, pos_val)
-        self.assertEqual(size_out, size_val)
+        self.assertEqual(size_out, size_val)        
+        self.assertEqual(pos_tpl, (0,0))
+        self.assertEqual(pd, [(4,0),(1,0)]) 
 
     def test_calc_inner_template_size_10(self):
 
@@ -231,13 +276,17 @@ class TestDataset(TestCase):
         pos_val = (4, 7)
         size_val = (3, 3)
 
-        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+        pos_out, size_out, pos_tpl, pd = \
+                ds.calc_inner_template_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
 
         self.assertEqual(pos_out, pos_val)
-        self.assertEqual(size_out, size_val)
+        self.assertEqual(size_out, size_val)        
+        self.assertEqual(pos_tpl, (2,0))
+        self.assertEqual(pd, [(0,3),(0,0)]) 
+
 
 
     def test_calc_inner_template_size_11(self):
@@ -249,17 +298,143 @@ class TestDataset(TestCase):
         pos_val = (2, 2)
         size_val = (3, 4)
 
-        pos_out, size_out = ds.calc_inner_template_size(shape, pos, size)
+        pos_out, size_out, pos_tpl, pd = \
+                ds.calc_inner_template_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
 
         self.assertEqual(pos_out, pos_val)
-        self.assertEqual(size_out, size_val)                                           
-                                                               
+        self.assertEqual(size_out, size_val)        
+        self.assertEqual(pos_tpl, (0,0))
+        self.assertEqual(pd, [(0,0),(0,0)])                 
                       
       
-  
+    def test_is_padding(self):
+        self.assertTrue(ds.is_padding([(2,3),(0,0)]))
+        self.assertTrue(ds.is_padding([(2,3),(20,3)]))
+        self.assertTrue(ds.is_padding([(0,0),(3,0)]))
+        self.assertFalse(ds.is_padding([(0,0),(0,0)]))
+
+    def test_get_template_singlechannel_1(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        c = Tiffconnector(img_path,'path/to/nowhere/')
+        
+        c.filenames = [\
+                ('6width4height3slices_rgb.tif',)\
+                , ('40width26height3slices_rgb.tif',)\
+                , ('40width26height6slices_rgb.tif',)\
+                ]
+        
+        d = Dataset(c)
+        image_nr = 0
+        pos = (0,0,0)
+        size= (3, 6, 4)
+        channel = 0
+        tpl = d.get_template_singlechannel(image_nr, pos, size, channel, reflect=False)
+
+        
+        self.assertEqual(tpl.shape,(1,3,6,4))
+
+
+    def test_get_template_singlechannel_2(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        c = Tiffconnector(img_path,'path/to/nowhere/')
+        
+        c.filenames = [\
+                ('6width4height3slices_rgb.tif',)\
+                , ('40width26height3slices_rgb.tif',)\
+                , ('40width26height6slices_rgb.tif',)\
+                ]
+        
+        d = Dataset(c)
+        image_nr = 0
+        pos = (0,0,0)
+        size= (1, 6, 4)
+        channel = 0
+        tpl = d.get_template_singlechannel(image_nr, pos, size, channel, reflect=False)
+
+        val = \
+        [[[[151, 132, 154, 190],\
+           [140,  93, 122, 183],\
+           [148, 120, 133, 171],\
+           [165, 175, 166, 161],\
+           [175, 200, 184, 161],\
+           [174, 180, 168, 157]]]]
+
+        val = np.array(val) 
+        print(val)
+        print(tpl)      
+        self.assertTrue((tpl == val).all())   
+
+
+    def test_get_template_singlechannel_3(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        c = Tiffconnector(img_path,'path/to/nowhere/')
+        
+        c.filenames = [\
+                ('6width4height3slices_rgb.tif',)\
+                , ('40width26height3slices_rgb.tif',)\
+                , ('40width26height6slices_rgb.tif',)\
+                ]
+        
+        d = Dataset(c)
+        image_nr = 0
+        pos = (0,-1,-2)
+        size= (1, 3, 3)
+        channel = 0
+        tpl = d.get_template_singlechannel(image_nr, pos, size, channel, reflect=False)
+
+        val = \
+        [[[[132, 151, 151],\
+           [132,  151, 151],\
+           [93, 140, 140]]]]
+        
+        val = np.array(val) 
+        print(val)
+        print(tpl)   
+        self.assertTrue((tpl == val).all())
+
+
+
+    def test_get_template_singlechannel_4(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        c = Tiffconnector(img_path,'path/to/nowhere/')
+        
+        c.filenames = [\
+                ('6width4height3slices_rgb.tif',)\
+                , ('40width26height3slices_rgb.tif',)\
+                , ('40width26height6slices_rgb.tif',)\
+                ]
+        
+        d = Dataset(c)
+        image_nr = 0
+        pos = (0, 4, 2)
+        size= (1, 2, 6)
+        channel = 0
+        tpl = d.get_template_singlechannel(image_nr, pos, size, channel, reflect=False)
+
+        val = \
+        [[[[184, 161, 161, 184, 200, 175],\
+           [168,  157, 157, 168, 180, 174]]]]
+        
+        val = np.array(val) 
+        print(val)
+        print(tpl)   
+        self.assertTrue((tpl == val).all())
+
+
+          
+            
+        
+
+            
+
+
 
 
 

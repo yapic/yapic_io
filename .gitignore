@@ -6,6 +6,7 @@
 ._.DS_Store
 .DS_Store
 ._*
+.eggs/
 
 # Setuptools distribution folder.
 /dist/
