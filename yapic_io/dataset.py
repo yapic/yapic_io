@@ -99,7 +99,7 @@ class Dataset(object):
         pos_transient, size_transient, pos_inside_transient, pad_size = \
                 calc_inner_template_size(shape_czxy, pos_czxy, size_czxy)
 
-        if is_padding(pad_size) and reflect:
+        if is_padding(pad_size) and not reflect:
             #if image has to be padded to get the template
             logger.error('requested template out of bounds')
             return False
@@ -282,6 +282,10 @@ def get_padding_size(shape, pos, size):
 
 
 def label2mask(image_shape, pos, size, label_coors, label_value):
+    '''
+    transform label coordinate to mask of given pos and size inside image
+    '''
+
     if not is_valid_image_subset(image_shape, pos, size):
         raise ValueError('image subset (labels) not valid')
     msk = np.zeros(size)

@@ -386,7 +386,7 @@ class TestDataset(TestCase):
         pos = (0,-1,-2)
         size= (1, 3, 3)
         channel = 0
-        tpl = d.get_template_singlechannel(image_nr, pos, size, channel, reflect=False)
+        tpl = d.get_template_singlechannel(image_nr, pos, size, channel, reflect=True)
 
         val = \
         [[[[132, 151, 151],\
@@ -416,7 +416,7 @@ class TestDataset(TestCase):
         pos = (0, 4, 2)
         size= (1, 2, 6)
         channel = 0
-        tpl = d.get_template_singlechannel(image_nr, pos, size, channel, reflect=False)
+        tpl = d.get_template_singlechannel(image_nr, pos, size, channel, reflect=True)
 
         val = \
         [[[[184, 161, 161, 184, 200, 175],\
