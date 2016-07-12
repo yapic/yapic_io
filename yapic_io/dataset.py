@@ -1,5 +1,5 @@
 import numpy as np
-from yapic_io.utils import get_template_meshgrid
+from yapic_io.utils import get_template_meshgrid, is_valid_image_subset
 from functools import lru_cache
 import logging
 import os
@@ -28,6 +28,7 @@ class Dataset(object):
         
         self.n_images = pixel_connector.get_image_count()
         
+        self.label_coordinates = self.load_label_coordinates()
 
 
     def __repr__(self):
@@ -54,6 +55,9 @@ class Dataset(object):
 
 
     #def get_pre_template(image_nr, pos, size):
+
+
+    
 
 
     @lru_cache(maxsize = 1000)
@@ -141,6 +145,124 @@ class Dataset(object):
         # return image[get_template_meshgrid(image.shape, pos_corr, size_p)]    
 
 
+    def load_label_coordinates(self):
+        
+        labels = {}
+        
+        for image_nr in list(range(self.n_images)):
+            
+            label_coor = self.pixel_connector.get_label_coordinates(image_nr)
+            if label_coor is not None:
+                label_coor_5d = label_coordinates_to_5d(label_coor, image_nr)
+                if not self.label_coordinates_is_valid(label_coor_5d):
+                    logger.warning('failed to load label coordinates because of non valid data')
+                    return False
+
+                for key in label_coor_5d.keys():
+                    if key not in labels.keys():
+                        labels[key] = label_coor_5d[key]
+                    else:
+                        labels[key] = labels[key] + label_coor_5d[key]
+
+        self.label_coordinates = labels                 
+        return True
+
+
+
+
+    def label_coordinates_is_valid(self, label_coordinates):
+        '''
+        check if label coordinate data meets following requirements:
+        
+        z,x,y within image size
+        channel = 0 (for label data, always only one channel)
+        image_nr between 0 and n_images-1
+        no duplicate positions within and across labels
+
+
+        label_cooridnates = 
+        {
+                label_nr1 : [(image_nr, channel, z, x, y), (image_nr, channel, z, x, y) ...],
+                label_nr2 : [(image_nr, channel, z, x, y), (image_nr, channel, z, x, y) ...],
+                ...
+            }
+
+        
+        '''
+        
+        #check for duplicates
+        coor_flat = []
+        for key in label_coordinates.keys():
+            coor_flat = coor_flat + label_coordinates[key]
+
+        if len(set(coor_flat)) != len(coor_flat):
+            #if threre are duplicate postitions
+            logger.warning('duplicate label positions detected')
+            return False
+
+        for coor in coor_flat:
+            #check for correct nr of dimensions    
+            if len(coor) != 5:
+                logger.warning(\
+                    'number of coordinate dimensions must be 5,' +\
+                    ' but is at least one time %s, coordinate: %s',\
+                     str(len(coor)), str(coor))
+                return False
+            if (coor[0] < 0) or (coor[0] >= self.n_images):
+
+                logger.warning(\
+                    'image number in label coordinates not valid:' +\
+                    ' is %s, but must be between 0 and %s',\
+                     str(coor[0]), str(self.n_images-1))
+                return False
+            
+            #image dimensions in z,x and y
+            dim_zxy = self.get_img_dimensions(coor[0])[1:]
+            coor_zxy = coor[2:]
+
+            #check if coordinates are within image zxy range
+            if (np.array(coor_zxy) > np.array(dim_zxy)).any():
+                logger.warning(\
+                    'label coordinate out of image bounds:' +\
+                    ' coordinate: %s, image bounds: %s',\
+                     str(coor_zxy), str(dim_zxy))
+                return False
+
+            if  (np.array(coor_zxy) < 0).any():
+                logger.warning(\
+                    'label coordinate below zero:' +\
+                    ' coordinate: %s, image bounds: %s',\
+                     str(coor_zxy), str(dim_zxy))
+                return False 
+            print(coor)
+            print(coor[1])
+            if coor[1] != 0:
+                logger.warning(\
+                    'nr of channels MUST be 0 for label coordinates, but is %s' +\
+                    ' coordinate: %s',\
+                     str(coor[1]), str(coor))
+                return False
+
+        return True    
+
+
+           
+
+
+
+
+def label_coordinates_to_5d(label_dict, image_nr):
+    '''
+    add image_nr as first dimension to coordinates
+    '''
+    
+    label_dict = dict(label_dict) #copy
+    for key in label_dict.keys():
+        label_dict[key] =\
+             [(image_nr, coor[0], coor[1], coor[2], coor[3]) for coor in label_dict[key]]
+
+    return label_dict         
+        
 def get_padding_size(shape, pos, size):
     '''
     [(x_lower, x_upper), (y_lower,_y_upper)]
@@ -155,6 +277,27 @@ def get_padding_size(shape, pos, size):
             p_u = po + si - sh
         padding_size.append((p_l,p_u))        
     return padding_size
+
+
+
+
+def label2mask(image_shape, pos, size, label_coors, label_value):
+    if not is_valid_image_subset(image_shape, pos, size):
+        raise ValueError('image subset (labels) not valid')
+    msk = np.zeros(size)
+    #label_coors_corr = np.array(label_coors) - np.array(pos) + 1
+
+    for coor in label_coors:
+        coor_shifted = np.array(coor) - np.array(pos)
+        print(coor_shifted)
+        #msk[coor[0],coor[1],coor[2]] = label_value
+        #print(coor)
+        #print(msk)
+        if (coor_shifted >= 0).all() and (coor_shifted < np.array(size)).all():
+            msk[tuple(coor_shifted)] = label_value
+    return msk    
+
+
 
 
 def is_padding(padding_size):
@@ -234,4 +377,3 @@ def pos_shift_for_padding(shape, pos, size):
 
 
 
-    

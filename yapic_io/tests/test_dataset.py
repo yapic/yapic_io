@@ -322,9 +322,9 @@ class TestDataset(TestCase):
         c = Tiffconnector(img_path,'path/to/nowhere/')
         
         c.filenames = [\
-                ('6width4height3slices_rgb.tif',)\
-                , ('40width26height3slices_rgb.tif',)\
-                , ('40width26height6slices_rgb.tif',)\
+                ('6width4height3slices_rgb.tif', None)\
+                , ('40width26height3slices_rgb.tif', None)\
+                , ('40width26height6slices_rgb.tif', None)\
                 ]
         
         d = Dataset(c)
@@ -344,9 +344,9 @@ class TestDataset(TestCase):
         c = Tiffconnector(img_path,'path/to/nowhere/')
         
         c.filenames = [\
-                ('6width4height3slices_rgb.tif',)\
-                , ('40width26height3slices_rgb.tif',)\
-                , ('40width26height6slices_rgb.tif',)\
+                ('6width4height3slices_rgb.tif', None)\
+                , ('40width26height3slices_rgb.tif', None)\
+                , ('40width26height6slices_rgb.tif', None)\
                 ]
         
         d = Dataset(c)
@@ -376,9 +376,9 @@ class TestDataset(TestCase):
         c = Tiffconnector(img_path,'path/to/nowhere/')
         
         c.filenames = [\
-                ('6width4height3slices_rgb.tif',)\
-                , ('40width26height3slices_rgb.tif',)\
-                , ('40width26height6slices_rgb.tif',)\
+                ('6width4height3slices_rgb.tif', None)\
+                , ('40width26height3slices_rgb.tif', None)\
+                , ('40width26height6slices_rgb.tif', None)\
                 ]
         
         d = Dataset(c)
@@ -406,9 +406,9 @@ class TestDataset(TestCase):
         c = Tiffconnector(img_path,'path/to/nowhere/')
         
         c.filenames = [\
-                ('6width4height3slices_rgb.tif',)\
-                , ('40width26height3slices_rgb.tif',)\
-                , ('40width26height6slices_rgb.tif',)\
+                ('6width4height3slices_rgb.tif',  None)\
+                , ('40width26height3slices_rgb.tif', None)\
+                , ('40width26height6slices_rgb.tif', None)\
                 ]
         
         d = Dataset(c)
@@ -428,14 +428,139 @@ class TestDataset(TestCase):
         self.assertTrue((tpl == val).all())
 
 
-          
+    def test_label_coordinates_to_5d(self):
+
+        label_dict = \
+            {
+            2 : [(1, 3, 0, 0), (1, 5, 1, 2)],
+            3 : [(1, 3, 1, 2), (1, 5, 3, 4), (1,1,1,1)],
+            }
+
+        image_nr = 2
+
+        val = \
+            {
+            2 : [(2, 1, 3, 0, 0), (2, 1, 5, 1, 2)],
+            3 : [(2, 1, 3, 1, 2), (2, 1, 5, 3, 4), (2, 1,1,1,1)],
+            }
+        
+        out = ds.label_coordinates_to_5d(label_dict, image_nr)
+
+        self.assertEqual(val, out)
+      
             
         
 
-            
-
-
-
-
-
+    def test_label_coordinates_is_valid(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = Tiffconnector(img_path,label_path)
         
+        c.filenames = [\
+                ('6width4height3slices_rgb.tif', None)\
+                , ('40width26height3slices_rgb.tif', None)\
+                , ('40width26height6slices_rgb.tif', None)\
+                ]
+        
+        d = Dataset(c)
+
+        #duplicate
+        coor = \
+            {
+            2 : [(2, 0, 3, 0, 0), (2, 0, 5, 1, 2)],
+            3 : [(2, 0, 3, 1, 2), (2, 0, 5, 3, 4), (2, 0,1,1,1), (2, 0, 3, 0, 0)],
+            }
+
+
+        self.assertFalse(d.label_coordinates_is_valid(coor))
+
+        # one tuple with 4 instead 5 coordinate dimensions
+        coor = \
+            {
+            2 : [(2, 0, 3, 0, 0), (2, 0, 5, 1, 2)],
+            3 : [(2, 0, 3, 1, 2), (2, 0, 5, 3), (2, 0,1,1,1)],
+            }
+
+
+        self.assertFalse(d.label_coordinates_is_valid(coor))  
+
+        # image nr too high
+        coor = \
+            {
+            2 : [(2, 0, 3, 0, 0), (2, 0, 5, 1, 2)],
+            3 : [(2, 0, 3, 1, 2), (3, 0,1,1,1)],
+            }
+
+
+        self.assertFalse(d.label_coordinates_is_valid(coor))     
+
+
+        # out of image bounds
+        coor = \
+            {
+            2 : [(0, 0, 3, 7, 4), (0, 0, 3, 1, 2)]
+            }
+
+        self.assertFalse(d.label_coordinates_is_valid(coor))
+
+        # out of image bounds
+        coor = \
+            {
+            2 : [(0, 0, -1, 6, 4), (0, 0, 3, 1, 2)]
+            }
+
+        self.assertFalse(d.label_coordinates_is_valid(coor))
+
+        # out of image bounds
+        coor = \
+            {
+            2 : [(0, 2, 0, 6, 4), (0, 1, 3, 1, 2)]
+            }
+
+        self.assertFalse(d.label_coordinates_is_valid(coor))
+
+        # correct
+        coor = \
+            {
+            2 : [(0, 0, 0, 6, 4), (0, 0, 3, 1, 2)]
+            }
+
+        self.assertTrue(d.label_coordinates_is_valid(coor))         
+  
+
+
+    def test_load_label_coordinates(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = Tiffconnector(img_path,label_path)
+        
+        val = \
+            {
+                91: [(2, 0, 0, 0, 0), (2, 0, 0, 3, 1), (2, 0, 0, 3, 2), (2, 0, 0, 4, 1)],
+                109: [(0, 0, 0, 2, 1), (0, 0, 0, 2, 2), (0, 0, 0, 2, 3), (0, 0, 0, 3, 1), (0, 0, 0, 3, 2), (0, 0, 0, 3, 3), (0, 0, 1, 5, 0), (0, 0, 1, 5, 1), (0, 0, 2, 0, 0), (0, 0, 2, 1, 0), (0, 0, 2, 1, 2), (2, 0, 2, 9, 7), (2, 0, 2, 9, 8), (2, 0, 2, 12, 7)],
+                150: [(0, 0, 0, 0, 1), (0, 0, 0, 4, 1), (0, 0, 0, 5, 1), (2, 0, 0, 2, 2), (2, 0, 1, 0, 2), (2, 0, 1, 39, 25)]
+            }
+        
+        d = Dataset(c)
+        d.load_label_coordinates()
+        print(d.label_coordinates)
+
+        self.assertEqual(val, d.label_coordinates)
+    
+    def test_label_to_mask(self):
+        shape = (5,4)
+        pos = (2,1)
+        size = (3,2)
+        label_coors = [(0,0), (2,1), (2,2)]
+        label_value = 2
+        mat = ds.label2mask(shape, pos, size, label_coors, label_value)    
+        val = \
+            [[2., 2.],\
+            [0., 0.],\
+            [0., 0.]]
+
+        val = np.array(val)    
+
+
+        print(mat)
+        self.assertTrue((val == mat).all())

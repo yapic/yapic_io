@@ -186,6 +186,16 @@ class TestTiffconnector(TestCase):
         c.load_label_filenames()            
         labelc = c.get_label_coordinates(0)
         labelmat = c.load_label_matrix(0)
+        
+        val_109 =\
+           [(0, 0, 2, 1), (0, 0, 2, 2), (0, 0, 2, 3)\
+           , (0, 0, 3, 1), (0, 0, 3, 2), (0, 0, 3, 3)\
+           , (0, 1, 5, 0), (0, 1, 5, 1), (0, 2, 0, 0)\
+           , (0, 2, 1, 0), (0, 2, 1, 2)]
+
+        val_150 =\
+            [(0, 0, 0, 1), (0, 0, 4, 1), (0, 0, 5, 1)]   
+
         print('109')
         print(labelc[109])
         print('150')
@@ -193,9 +203,11 @@ class TestTiffconnector(TestCase):
 
         print(labelmat)
         print(labelmat.shape)
-        #self.assertTrue(False)    
+        self.assertEqual(val_109, labelc[109])
+        self.assertEqual(val_150, labelc[150])    
     
     
+
         
 
 

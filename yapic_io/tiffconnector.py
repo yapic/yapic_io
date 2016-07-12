@@ -156,15 +156,35 @@ class Tiffconnector(object):
         return list(values)
 
     def get_label_coordinates(self, image_nr):
+        ''''
+        returns label coordinates as dict in following format:
+        channel has always value 0!! This value is just kept for consitency in 
+        dimensions with corresponding pixel data 
+
+        {
+            label_nr1 : [(channel, z, x, y), (channel, z, x, y) ...],
+            label_nr2 : [(channel, z, x, y), (channel, z, x, y) ...],
+            ...
+        }
+
+
+        :param image_nr: index of image
+        :returns: dict of label coordinates
+    
+        '''
 
         mat = self.load_label_matrix(image_nr)
         labels = self.get_labelvalues_for_im(image_nr)
-
+        if labels is None:
+            #if no labelmatrix available
+            return None
+        
         label_coor = {}
         for label in labels:
             coors = np.array(np.where(mat==label))
             coor_list = [tuple(coors[:,i]) for i in list(range(coors.shape[1]))]
             label_coor[label] = coor_list#np.array(np.where(mat==label))
+        
         return label_coor    
 
     def is_valid_image_nr(self, image_nr):
