@@ -534,6 +534,13 @@ class TestDataset(TestCase):
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
         c = Tiffconnector(img_path,label_path)
         
+        # c.filenames = [\
+        #         ['6width4height3slices_rgb.tif', None]\
+        #         , ['40width26height3slices_rgb.tif', None]\
+        #         , ['40width26height6slices_rgb.tif', None]\
+        #         ]
+        # c.load_label_filenames()        
+
         val = \
             {
                 91: [(2, 0, 0, 0, 0), (2, 0, 0, 3, 1), (2, 0, 0, 3, 2), (2, 0, 0, 4, 1)],
