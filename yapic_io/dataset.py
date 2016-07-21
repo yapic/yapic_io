@@ -81,13 +81,27 @@ class Dataset(object):
     #def get_pre_template(image_nr, pos, size):
 
 
-    # def get_template(self, image_nr, pos_zxy, size_zxy, channels, labels):
+    def get_training_template(self, image_nr, pos_zxy, size_zxy, channels, labels,\
+            rotation_angle=0, shear_angle=0):
 
-    #     pixel_tpl =  []
-    #     for channel in channels:
-    #         pixel_tpl.append(self.get_template_singlechannel(image_nr, \
-    #                 pos_zxy, size_zxy, channel))
-    #     pixel_tpl = np.array(pixel_tpl)    
+        pixel_tpl =  []
+        for channel in channels:
+            pixel_tpl.append(self.get_template_singlechannel(image_nr,\
+                    pos_zxy, size_zxy, channel,\
+                    rotation_angle=rotation_angle, shear_angle=shear_angle))
+        pixel_tpl = np.array(pixel_tpl) #4d pixel template with selected channels in
+        #1st dimension
+
+        label_tpl = []
+        for label in labels:
+            label_tpl.append(self.get_template_for_label(image_nr,\
+                    pos_zxy, size_zxy, label,\
+                    rotation_angle=rotation_angle, shear_angle=shear_angle))
+        pixel_tpl = np.array(pixel_tpl) #4d pixel template with selected channels in
+        #1st dimension
+
+
+
                 
 
 
@@ -581,14 +595,17 @@ def calc_equalized_label_weights(label_n):
 def get_augmented_template(shape, pos, size, \
         get_template_func, rotation_angle=0, shear_angle=0,\
         reflect=True, **kwargs):
-
+    '''
+    fixme: morph template works only in 2d.
+    morphing has to be applied slice by slice
+    '''
     if (rotation_angle == 0) and (shear_angle == 0):
         return get_template_with_reflection(shape, pos, size, get_template_func, reflect=reflect, **kwargs)
     
     size = np.array(size)
     pos = np.array(pos)
     
-    size_new = size * 3
+    size_new = size * 3 #triple template size if morphing takes place
     pos_new = pos-size    
     tpl_large = get_template_with_reflection(shape, pos_new, size_new, get_template_func, reflect=reflect, **kwargs)
     tpl_large_morphed = trafo.warp_image_2d(tpl_large, rotation_angle, shear_angle)
