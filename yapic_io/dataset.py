@@ -73,10 +73,7 @@ class Dataset(object):
         :returns: template as numpy array with same nr of dimensions as image
         '''
         
-        if image_nr >= self.n_images:
-            error_msg = \
-                'Wrong image number. image numbers in range 0 to %s' % str(self.n_images-1)
-            logger.error(error_msg)
+        if not self.image_nr_is_valid(image_nr): 
             return False
 
         
@@ -109,10 +106,7 @@ class Dataset(object):
             logger.info('requested template out of bounds')
             logger.info('image will be extended with reflection')
 
-        #add channel dimension        
-        #pos_transient = tuple([channel] + list(pos_transient))
-        #size_transient = tuple([1] + list(size_transient))
-
+        
         #get transient template
         transient_tpl = self.pixel_connector.get_template( \
             image_nr, pos_transient, size_transient)
@@ -130,22 +124,50 @@ class Dataset(object):
 
 
 
+    def get_label_template(self, image_nr, pos_zxy, size_zxy, label_value):
+        '''
+        returns a 3d label matrix template for a ceratin label.
+        the label matrix has values 0 (no label) and 1 (label)
+        '''
+        if not self.label_value_is_valid(label_value):
+            return False
 
-        # if padding == 0:    
-        #     return self.pixel_connector.get_template(self, image_nr, pos, size)
-        #     #return image[get_template_meshgrid(image.shape, pos, size)]
+        shape_zxy = self.get_img_dimensions(image_nr)[1:]
+        label_coors = self.label_coordinates[label_value]
+        print('labelcoors')
+        print(label_coors)  
+        label_coors_zxy = \
+            [coor[2:] for coor in label_coors if coor[0] == image_nr]
         
-        # pos_p = pos-padding
-        # size_p = size + 2*padding
+        print('labelcoors_zxy')
+        print(label_coors_zxy)    
+        return label2mask(shape_zxy, pos_zxy, size_zxy, label_coors_zxy, 1)
+
         
-        # reflect_sizes = get_padding_size(image.shape, pos_p, size_p)
-        # image = np.pad(image, reflect_sizes, mode='reflect')
-        # pos_corr = correct_pos_for_padding(pos_p, reflect_sizes)
-
-        # return image[get_template_meshgrid(image.shape, pos_corr, size_p)]    
-
+    
 
     def load_label_coordinates(self):
+        '''
+        imports labale coodinates with the connector objects and stores them in 
+        self.label_coordinates in following dictionary format:
+
+        { 
+            label_nr1 : [
+                            (img_nr, channel, z, x, y),
+                            (img_nr, channel, z, x, y),
+                            (img_nr, channel, z, x, y),
+                             ...],
+            label_nr2 : [
+                            (img_nr, channel, z, x, y),
+                            (img_nr, channel, z, x, y),
+                            (img_nr, channel, z, x, y),
+                             ...],                 
+        }
+
+        channel has always value 0!! This value is just kept for consitency in 
+        dimensions with corresponding pixel data 
+
+        '''
         
         labels = {}
         
@@ -167,8 +189,30 @@ class Dataset(object):
         self.label_coordinates = labels                 
         return True
 
+    def label_value_is_valid(self, label_value):
+        '''
+        check if label value is part of self.label_coordinates
+        '''
+
+        if label_value not in self.label_coordinates.keys():
+            logger.warning(\
+                'Label value not found %s',\
+                 str(label_value))
+            return False
+        return True   
 
 
+    def image_nr_is_valid(self, image_nr):
+        '''
+        check if image_nr is between 0 and self.n_images
+        '''
+
+        if (image_nr >= self.n_images) or (image_nr < 0):
+            logger.error(\
+                'Wrong image number. image numbers in range 0 to %s',\
+                 str(self.n_images-1))
+            return False
+        return True    
 
     def label_coordinates_is_valid(self, label_coordinates):
         '''
@@ -234,8 +278,7 @@ class Dataset(object):
                     ' coordinate: %s, image bounds: %s',\
                      str(coor_zxy), str(dim_zxy))
                 return False 
-            print(coor)
-            print(coor[1])
+            
             if coor[1] != 0:
                 logger.warning(\
                     'nr of channels MUST be 0 for label coordinates, but is %s' +\
@@ -293,7 +336,7 @@ def label2mask(image_shape, pos, size, label_coors, label_value):
 
     for coor in label_coors:
         coor_shifted = np.array(coor) - np.array(pos)
-        print(coor_shifted)
+        #print(coor_shifted)
         #msk[coor[0],coor[1],coor[2]] = label_value
         #print(coor)
         #print(msk)
