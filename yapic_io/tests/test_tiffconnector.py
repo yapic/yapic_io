@@ -79,7 +79,7 @@ class TestTiffconnector(TestCase):
         pos = (0, 0, 0, 0)
         size = (1, 1, 1, 2)
         im = c.load_image(0)
-        tpl = c.get_template(image_nr, pos, size)
+        tpl = c.get_template(image_nr=image_nr, pos=pos, size=size)
         val = np.empty(shape=size)
         val[0,0,0,0] = 151
         val[0,0,0,1] = 132

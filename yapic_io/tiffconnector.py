@@ -56,7 +56,7 @@ class Tiffconnector(object):
         #print(self.filenames)
         return len(self.filenames)
 
-    def get_template(self, image_nr, pos, size):
+    def get_template(self, image_nr=None, pos=None, size=None):
 
         im = self.load_image(image_nr)
         mesh = get_template_meshgrid(im.shape, pos, size)

@@ -1,10 +1,10 @@
 from unittest import TestCase
 import os
-
 import numpy as np
+
 from yapic_io.tiffconnector import Tiffconnector
 from yapic_io.dataset import Dataset
-
+from yapic_io.utils import get_template_meshgrid
 import yapic_io.dataset as ds
 
 import logging
@@ -335,7 +335,7 @@ class TestDataset(TestCase):
         tpl = d.get_template_singlechannel(image_nr, pos, size, channel, reflect=False)
 
         
-        self.assertEqual(tpl.shape,(1,3,6,4))
+        self.assertEqual(tpl.shape,(3,6,4))
 
 
     def test_get_template_singlechannel_2(self):
@@ -357,12 +357,12 @@ class TestDataset(TestCase):
         tpl = d.get_template_singlechannel(image_nr, pos, size, channel, reflect=False)
 
         val = \
-        [[[[151, 132, 154, 190],\
+        [[[151, 132, 154, 190],\
            [140,  93, 122, 183],\
            [148, 120, 133, 171],\
            [165, 175, 166, 161],\
            [175, 200, 184, 161],\
-           [174, 180, 168, 157]]]]
+           [174, 180, 168, 157]]]
 
         val = np.array(val) 
         print(val)
@@ -389,9 +389,9 @@ class TestDataset(TestCase):
         tpl = d.get_template_singlechannel(image_nr, pos, size, channel, reflect=True)
 
         val = \
-        [[[[132, 151, 151],\
+        [[[132, 151, 151],\
            [132,  151, 151],\
-           [93, 140, 140]]]]
+           [93, 140, 140]]]
         
         val = np.array(val) 
         print(val)
@@ -419,8 +419,8 @@ class TestDataset(TestCase):
         tpl = d.get_template_singlechannel(image_nr, pos, size, channel, reflect=True)
 
         val = \
-        [[[[184, 161, 161, 184, 200, 175],\
-           [168,  157, 157, 168, 180, 174]]]]
+        [[[184, 161, 161, 184, 200, 175],\
+           [168,  157, 157, 168, 180, 174]]]
         
         val = np.array(val) 
         print(val)
@@ -554,7 +554,8 @@ class TestDataset(TestCase):
 
         self.assertEqual(val, d.label_coordinates)
     
-    def test_get_label_template(self):
+    def test_get_weight_template_for_label(self):
+
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
         c = Tiffconnector(img_path,label_path)
@@ -570,12 +571,13 @@ class TestDataset(TestCase):
         d.load_label_coordinates()
 
         img_nr = 0
-        pos_zxy = (0,0,0)
-        size_zxy = (1,6,4)
+        pos_czxy = (0,0,0)
+        size_czxy = (1,6,4)
         label_value = 150
-        mat = d.get_label_template(img_nr, pos_zxy, size_zxy, label_value)
+        mat = d._get_template_for_label_inner(img_nr,\
+         pos_czxy, size_czxy, label_value)
         
-        val = np.zeros(size_zxy)
+        val = np.zeros(size_czxy)
         val[0,0,1] = 1
         val[0,4,1] = 1
         val[0,5,1] = 1 
@@ -583,16 +585,197 @@ class TestDataset(TestCase):
         self.assertTrue((val==mat).all())
 
 
+    def test_get_template_for_label_1(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = Tiffconnector(img_path,label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
+                , ['40width26height6slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', '40width26height3slices_rgb.tif']\
+                ]
+        c.load_label_filenames()    
+
+        d = Dataset(c)
+        d.load_label_coordinates()
+
+        img_nr = 0
+        pos_czxy = (0,0,0)
+        size_czxy = (1,6,4)
+        label_value = 150
+        mat = d.get_template_for_label(img_nr,\
+         pos_czxy, size_czxy, label_value)
+        
+        val = np.zeros(size_czxy)
+        val[0,0,1] = 1
+        val[0,4,1] = 1
+        val[0,5,1] = 1 
+
+        self.assertTrue((val==mat).all())   
 
 
+    def test_get_template_for_label_2(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = Tiffconnector(img_path,label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
+                , ['40width26height6slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', '40width26height3slices_rgb.tif']\
+                ]
+        c.load_label_filenames()    
+
+        d = Dataset(c)
+        d.load_label_coordinates()
+
+        img_nr = 0
+        pos_czxy = (0,2,1)
+        size_czxy = (1,7,2)
+        label_value = 150
+        mat = d.get_template_for_label(img_nr,\
+         pos_czxy, size_czxy, label_value)
+        
+        val = np.zeros(size_czxy)
+        # val[0,0,1] = 1
+        # val[0,4,1] = 1
+        # val[0,5,1] = 1 
+        print(d.label_coordinates[150])
+        print('tpl')
+        print(mat)
+
+        val = [\
+            [0.,0.],\
+            [0.,0.],\
+            [1.,0.],\
+            [1.,0.],\
+            [1.,0.],\
+            [1.,0.],\
+            [0.,0.]\
+        ]
+        val = np.array(val)
+        self.assertTrue((mat==val).all())         
+
+
+    def test_get_weight_template_for_label_2(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = Tiffconnector(img_path,label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
+                , ['40width26height6slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', '40width26height3slices_rgb.tif']\
+                ]
+        c.load_label_filenames()    
+
+        d = Dataset(c)
+        d.load_label_coordinates()
+        d.set_weight_for_label(1.2, 150)
+        img_nr = 0
+        pos_czxy = (0,0,0)
+        size_czxy = (1,6,4)
+        label_value = 150
+        mat = d._get_template_for_label_inner(img_nr,\
+         pos_czxy, size_czxy, label_value)
+        
+        val = np.zeros(size_czxy)
+        print('valshae')
+        print(val.shape)
+        val[0,0,1] = 1.2
+        val[0,4,1] = 1.2
+        val[0,5,1] = 1.2 
+
+        self.assertTrue((val==mat).all())    
+
+
+
+    def test_load_label_coordinates(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = Tiffconnector(img_path,label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
+                , ['40width26height6slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', '40width26height3slices_rgb.tif']\
+                ]
+        c.load_label_filenames()    
+
+        d = Dataset(c)
+        d.load_label_coordinates()
+        d.init_label_weights()
+
+        print(d.label_weights)
+        print(d.label_coordinates)
+        #check if dimensions match
+        self.assertEqual(d.label_weights.keys(), d.label_coordinates.keys())
+        self.assertEqual(len(d.label_weights[91]), len(d.label_coordinates[91]))
+        self.assertEqual(len(d.label_weights[109]), len(d.label_coordinates[109]))
+        self.assertEqual(len(d.label_weights[150]), len(d.label_coordinates[150]))
+        
+        self.assertEqual(set(d.label_weights[91]), set([1]))    
+        self.assertEqual(set(d.label_weights[109]), set([1]))    
+        self.assertEqual(set(d.label_weights[150]), set([1]))    
+
+    
+    def test_set_weight_for_label(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = Tiffconnector(img_path,label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
+                , ['40width26height6slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', '40width26height3slices_rgb.tif']\
+                ]
+        c.load_label_filenames()    
+
+        d = Dataset(c)
+        
+        d.set_weight_for_label(0.7, 150)
+
+        self.assertEqual(d.label_weights[150], [0.7, 0.7, 0.7, 0.7, 0.7, 0.7])
+        self.assertEqual(d.label_weights[91], [1, 1, 1, 1])
+
+    def test_equalize_label_weights(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = Tiffconnector(img_path,label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
+                , ['40width26height6slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', '40width26height3slices_rgb.tif']\
+                ]
+        c.load_label_filenames()    
+
+        d = Dataset(c)
+        
+        d.equalize_label_weights()
+
+        print(d.label_weights)
+
+        res = np.unique(np.array(d.label_weights[91])) + \
+            np.unique(np.array(d.label_weights[109])) + \
+            np.unique(np.array(d.label_weights[150])) 
+        
+        print(res)
+        self.assertEqual(np.round(res[0],3), 1.)
+
+            
 
     def test_label_to_mask(self):
         shape = (5,4)
         pos = (2,1)
         size = (3,2)
         label_coors = [(0,0), (2,1), (2,2)]
-        label_value = 2
-        mat = ds.label2mask(shape, pos, size, label_coors, label_value)    
+        weights = [2, 2, 2]
+        mat = ds.label2mask(shape, pos, size, label_coors, weights)    
         val = \
             [[2., 2.],\
             [0., 0.],\
@@ -603,3 +786,61 @@ class TestDataset(TestCase):
 
         print(mat)
         self.assertTrue((val == mat).all())
+
+
+    def test_weights_to_mask(self):
+        shape = (5,4)
+        pos = (2,1)
+        size = (3,2)
+        label_coors = [(0,0), (2,1), (2,2)]
+        weights = [1, 2, 3]
+        
+        mat = ds.label2mask(shape, pos, size, label_coors, weights)    
+        val = \
+            [[2., 3.],\
+            [0., 0.],\
+            [0., 0.]]
+
+        val = np.array(val)    
+
+
+        print(mat)
+        self.assertTrue((val == mat).all())    
+
+    def test_calc_equalized_label_weights(self):
+        
+        label_n = {1: 10, 2 : 20}
+
+        weights = ds.calc_equalized_label_weights(label_n)
+
+        print(weights)
+        self.assertEqual(weights[1]/2, weights[2])
+        self.assertEqual(weights[1]+weights[2], 1)
+
+    # def test_get_augmented_template(self):
+        
+    #     def get_tpl_func(pos=None, size=None, img=None):
+    #         return img[get_template_meshgrid(img.shape, pos, size)]
+
+
+    #     im = np.zeros((7,5))
+    #     im[3,:] = 1
+    #     im[3,2] = 2
+
+    #     pos = (2,1)
+    #     size=(3,3)
+        
+
+    #     tpl = get_tpl_func(pos=pos, size=size, img=im)
+
+    #     tpl_rot = ds.get_augmented_template(im.shape, pos, size, \
+    #     get_tpl_func, rotation_angle=0, shear_angle=0, **{'img': im})
+
+    #     print(im)
+    #     print(tpl)
+    #     print(tpl_rot)
+
+    #     self.assertTrue(False)
+
+
+

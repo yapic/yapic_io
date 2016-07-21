@@ -3,6 +3,7 @@ from yapic_io.utils import get_template_meshgrid, is_valid_image_subset
 from functools import lru_cache
 import logging
 import os
+import yapic_io.transformations as trafo
 logger = logging.getLogger(os.path.basename(__file__))
 
 class Dataset(object):
@@ -28,8 +29,8 @@ class Dataset(object):
         
         self.n_images = pixel_connector.get_image_count()
         
-        self.label_coordinates = self.load_label_coordinates()
-
+        self.load_label_coordinates()
+        self.init_label_weights()
 
     def __repr__(self):
 
@@ -41,6 +42,29 @@ class Dataset(object):
         return infostring
 
     
+    def equalize_label_weights(self):
+        '''
+        equalizes labels according to their amount.
+        less frequent labels are weighted higher than more frequent labels
+        '''
+
+        label_n = {}
+        labels = self.label_weights.keys()
+        nn = 0# total nr of labels
+        for label in labels:
+            n = len(self.label_weights[label])
+            label_n[label] = n #nr of labels for that label value
+            
+
+       
+        eq_weights = calc_equalized_label_weights(label_n)
+
+        for label in labels:
+            self.set_weight_for_label(eq_weights[label], label)
+        return True    
+
+
+
     @lru_cache(maxsize = 1000)
     def get_img_dimensions(self, image_nr):
         '''
@@ -57,93 +81,189 @@ class Dataset(object):
     #def get_pre_template(image_nr, pos, size):
 
 
-    
+    # def get_template(self, image_nr, pos_zxy, size_zxy, channels, labels):
+
+    #     pixel_tpl =  []
+    #     for channel in channels:
+    #         pixel_tpl.append(self.get_template_singlechannel(image_nr, \
+    #                 pos_zxy, size_zxy, channel))
+    #     pixel_tpl = np.array(pixel_tpl)    
+                
+
 
 
     @lru_cache(maxsize = 1000)
-    def get_template_singlechannel(self, image_nr, pos_zxy, size_zxy, channel, reflect=True):
+    def get_template_singlechannel(self, image_nr\
+           , pos_zxy, size_zxy, channel, reflect=True,\
+            rotation_angle=0, shear_angle=0):
         '''
         returns a recangular subsection of an image with specified size.
-        :param image: n dimensional image
-        :type image: numpy array
-        :param pos: tuple defining the upper left position of the template in n dimensions
+        if requested template is out of bounds, values will be added by reflection
+
+        :param image_nr: image index
+        :type image: int
+        :param pos: tuple defining the upper left position of the template in 3 dimensions zxy
         :type pos: tuple
-        :param size: tuple defining size of template in all dimensions
+        :param size: tuple defining size of template in 3 dimensions zxy
         :type size: tuple
-        :returns: template as numpy array with same nr of dimensions as image
+        :returns: 3d template as numpy array with dimensions zxy
         '''
         
         if not self.image_nr_is_valid(image_nr): 
             return False
 
         
-        error_msg = \
-            'Wrong number of image dimensions.' +  \
-            'Nr of dimensions MUST be 3 (nr_zslices, nr_x, nr_y), but' + \
-            'is  %s for size and %s for pos' % (str(len(size_zxy)), str(len(pos_zxy)))    
-
-        if (len(pos_zxy) != 3) or (len(size_zxy) != 3):
-            logger.error(error_msg)
-            return False    
+        if not _check_pos_size(pos_zxy, size_zxy, 3):
+            return False
 
         pos_czxy = np.array([channel] + list(pos_zxy))
         size_czxy = np.array([1] + list(size_zxy)) # size in channel dimension is set to 1
         #to only select a single channel
 
         shape_czxy = self.get_img_dimensions(image_nr)
+        #shape_zxy = self.get_img_dimensions(image_nr)[1:]
         #shape[0] = 1 #set nr of channels to 1
 
-        pos_transient, size_transient, pos_inside_transient, pad_size = \
-                calc_inner_template_size(shape_czxy, pos_czxy, size_czxy)
+        # tpl = get_template_with_reflection(shape_czxy, pos_czxy, size_czxy,\
+        #      self.pixel_connector.get_template, reflect=True\
+        #      , **{'image_nr' : image_nr})
+        
+        tpl = get_augmented_template(shape_czxy, pos_czxy, size_czxy, \
+          self.pixel_connector.get_template,\
+          rotation_angle=rotation_angle, shear_angle=shear_angle, reflect=reflect,\
+          **{'image_nr' : image_nr})
 
-        if is_padding(pad_size) and not reflect:
-            #if image has to be padded to get the template
-            logger.error('requested template out of bounds')
+        # tpl = get_template_with_reflection(shape_czxy, pos_czxy, size_czxy,\
+        #      self.pixel_connector.get_template, reflect=True\
+        #      , **{'image_nr' : image_nr})
+
+        return np.squeeze(tpl, axis=(0,))
+
+        
+    def get_template_for_label(self, image_nr\
+           , pos_zxy, size_zxy, label_value, reflect=True,\
+           rotation_angle=0, shear_angle=0):
+
+
+        '''
+        returns a recangular subsection of label weights with specified size.
+        if requested template is out of bounds, values will be added by reflection
+
+        :param image_nr: image index
+        :type image: int
+        :param pos_zxy: tuple defining the upper left position of the template in 3 dimensions zxy
+        :type pos_zxy: tuple
+        :param size_zxy: tuple defining size of template in 3 dimensions zxy
+        :type size: tuple
+        :param label_value: label identifier
+        :type label_value: int
+        :returns: 3d template of label weights as numpy array with dimensions zxy
+        '''
+
+        if not self.image_nr_is_valid(image_nr): 
+            return False
+        shape_zxy = self.get_img_dimensions(image_nr)[1:]     
+        
+        if not _check_pos_size(pos_zxy, size_zxy, 3):
             return False
         
-        if is_padding(pad_size) and reflect:
-            #if image has to be padded to get the template and reflection mode is on
-            logger.info('requested template out of bounds')
-            logger.info('image will be extended with reflection')
+        tpl = get_augmented_template(shape_zxy, pos_zxy, size_zxy, \
+          self._get_template_for_label_inner,\
+          rotation_angle=rotation_angle, shear_angle=shear_angle, reflect=reflect,\
+          **{'image_nr' : image_nr, 'label_value' : label_value})    
 
-        
-        #get transient template
-        transient_tpl = self.pixel_connector.get_template( \
-            image_nr, pos_transient, size_transient)
+        # tpl = get_template_with_reflection(shape_zxy, pos_zxy, size_zxy,\
+        #      self._get_template_for_label_inner, reflect=True\
+        #      , **{'image_nr' : image_nr, 'label_value' : label_value})
 
-
-        
-
-        #pad transient template with reflection
-        transient_tpl_pad = np.pad(transient_tpl, pad_size, mode='symmetric')        
-
-        mesh = get_template_meshgrid(transient_tpl_pad.shape,\
-                         pos_inside_transient, size_czxy)
-
-        return transient_tpl_pad[mesh]
+        return np.squeeze(tpl, axis=(0,))     
 
 
 
-    def get_label_template(self, image_nr, pos_zxy, size_zxy, label_value):
+            
+
+
+    def _get_template_for_label_inner(self, image_nr=None\
+            , pos=None, size=None, label_value=None):
         '''
-        returns a 3d label matrix template for a ceratin label.
-        the label matrix has values 0 (no label) and 1 (label)
+        returns a 3d weight matrix template for a ceratin label with dimensions zxy.
         '''
         if not self.label_value_is_valid(label_value):
             return False
 
-        shape_zxy = self.get_img_dimensions(image_nr)[1:]
-        label_coors = self.label_coordinates[label_value]
-        print('labelcoors')
-        print(label_coors)  
-        label_coors_zxy = \
-            [coor[2:] for coor in label_coors if coor[0] == image_nr]
-        
-        print('labelcoors_zxy')
-        print(label_coors_zxy)    
-        return label2mask(shape_zxy, pos_zxy, size_zxy, label_coors_zxy, 1)
+        pos_zxy = pos
+        size_zxy = size
 
+        shape_zxy = self.get_img_dimensions(image_nr)[1:]
         
+
+        label_coors = self.label_coordinates[label_value]
+        label_weights = self.label_weights[label_value]
+        
+        label_coors_zxy = []
+        weights = []
+        for coor, weight in zip(label_coors, label_weights):
+            if coor[0] == image_nr:
+                label_coors_zxy.append(coor[2:])
+                weights.append(weight)
+        # label_coors_zxy = \
+        #     [coor[2:] for coor in label_coors if coor[0] == image_nr]
+        
+
+        print('labelcoors_zxy')
+        print(label_coors_zxy) 
+        print('shape')
+        print(shape_zxy) 
+        print('pos')
+        print(pos_zxy) 
+        print('size')
+        print(size_zxy) 
+        return label2mask(shape_zxy, pos_zxy, size_zxy, label_coors_zxy, weights)
+
+    def set_weight_for_label(self, weight, label_value):
+        '''
+        sets the same weight for all labels of label_value
+        in self.label_weights
+        :param weight: weight value
+        :param label_value: label 
+
+        '''
+        if not self.label_value_is_valid(label_value):
+            logger.warning(\
+                'could not set label weight for label value %s'\
+                , str(label_value))
+            return False
+        self.label_weights[label_value] = \
+            [weight for e in self.label_weights[label_value]]    
+        return True
+            
+    def init_label_weights(self):
+        '''
+        Inits a dictionary with label weights. All weights are set to 1.
+        the self.label_weights dict is complementary to self.label_coordinates. It defines
+        a weight for each coordinate.
+
+        { 
+            label_nr1 : [
+                            weight,
+                            weight,
+                            weight,
+                             ...],
+            label_nr2 : [
+                            weight,,
+                            weight,
+                            weight,
+                             ...],                 
+        }
+
+        '''
+        weight_dict = {}
+        label_values =  self.label_coordinates.keys()
+        for label in label_values:
+            weight_dict[label] = [1 for el in self.label_coordinates[label]]
+        self.label_weights = weight_dict
+        return True    
+
     
 
     def load_label_coordinates(self):
@@ -324,7 +444,8 @@ def get_padding_size(shape, pos, size):
 
 
 
-def label2mask(image_shape, pos, size, label_coors, label_value):
+
+def label2mask(image_shape, pos, size, label_coors, weights):
     '''
     transform label coordinate to mask of given pos and size inside image
     '''
@@ -334,14 +455,16 @@ def label2mask(image_shape, pos, size, label_coors, label_value):
     msk = np.zeros(size)
     #label_coors_corr = np.array(label_coors) - np.array(pos) + 1
 
-    for coor in label_coors:
+
+
+    for coor, weight in zip(label_coors, weights):
         coor_shifted = np.array(coor) - np.array(pos)
         #print(coor_shifted)
         #msk[coor[0],coor[1],coor[2]] = label_value
         #print(coor)
         #print(msk)
         if (coor_shifted >= 0).all() and (coor_shifted < np.array(size)).all():
-            msk[tuple(coor_shifted)] = label_value
+            msk[tuple(coor_shifted)] = weight
     return msk    
 
 
@@ -423,4 +546,102 @@ def pos_shift_for_padding(shape, pos, size):
     return dist + 1 - padding_size
 
 
+def calc_equalized_label_weights(label_n):
+    '''
+    :param label_n: dict with label numbers where keys are label_values
+    :returns dict with equalized weights for eahc label value
+    label_n = {
+            label_value_1 : n_labels,
+            label_value_2 : n_labels,
+            ...
+            }
+    '''
+    nn = 0
+    labels = label_n.keys()
+    for label in labels:
+        nn += label_n[label] 
+    
+    weight_total_per_labelvalue = float(nn)/float(len(labels))
+
+    #equalize
+    eq_weight = {}
+    eq_weight_total = 0
+    for label in labels:
+        eq_weight[label] = \
+         weight_total_per_labelvalue/float(label_n[label])
+        eq_weight_total += eq_weight[label] 
+
+    #normalize
+    for label in labels:
+        eq_weight[label] = eq_weight[label]/eq_weight_total
+
+    return eq_weight     
+
+
+def get_augmented_template(shape, pos, size, \
+        get_template_func, rotation_angle=0, shear_angle=0,\
+        reflect=True, **kwargs):
+
+    if (rotation_angle == 0) and (shear_angle == 0):
+        return get_template_with_reflection(shape, pos, size, get_template_func, reflect=reflect, **kwargs)
+    
+    size = np.array(size)
+    pos = np.array(pos)
+    
+    size_new = size * 3
+    pos_new = pos-size    
+    tpl_large = get_template_with_reflection(shape, pos_new, size_new, get_template_func, reflect=reflect, **kwargs)
+    tpl_large_morphed = trafo.warp_image_2d(tpl_large, rotation_angle, shear_angle)
+    
+    mesh = get_template_meshgrid(tpl_large_morphed.shape, size, size)
+
+    return tpl_large_morphed[mesh]
+
+
+def get_template_with_reflection(shape, pos, \
+        size, get_template_func, reflect=True, **kwargs):
+     
+
+    pos_transient, size_transient, pos_inside_transient, pad_size = \
+                calc_inner_template_size(shape, pos, size)
+
+    if is_padding(pad_size) and not reflect:
+        #if image has to be padded to get the template
+        logger.error('requested template out of bounds')
+        return False
+    
+    if is_padding(pad_size) and reflect:
+        #if image has to be padded to get the template and reflection mode is on
+        logger.info('requested template out of bounds')
+        logger.info('image will be extended with reflection')
+
+    
+    #get transient template
+    transient_tpl = get_template_func( \
+        pos=pos_transient, size=size_transient, **kwargs)
+
+
+    
+
+    #pad transient template with reflection
+    transient_tpl_pad = np.pad(transient_tpl, pad_size, mode='symmetric')        
+
+    mesh = get_template_meshgrid(transient_tpl_pad.shape,\
+                     pos_inside_transient, size)
+
+    return transient_tpl_pad[mesh]
+
+
+
+def _check_pos_size(pos, size, nr_dim):
+           
+    error_msg = \
+        'Wrong number of image dimensions.' +  \
+        'Nr of dimensions MUST be 3 (nr_zslices, nr_x, nr_y), but' + \
+        'is  %s for size and %s for pos' % (str(len(size)), str(len(pos)))    
+
+    if (len(pos) != nr_dim) or (len(size) != nr_dim):
+        logger.error(error_msg)
+        return False
+    return True    
 

@@ -81,6 +81,29 @@ class TestTransformations(TestCase):
         rot = tf.warp_image_2d(im, rotation_angle, shear_angle)
         
         self.assertTrue((rot==validation).all())
+
+
+    # def test_warp_image_2d_90(self):
+    #     '''
+    #     test 45 degrees center rotation with 3x3 matrix
+    #     '''
+    #     rotation_angle=90
+    #     shear_angle=0
+
+    #     im = [[0,1,0]\
+    #          ,[0,1,0]\
+    #          ,[0,1,0]]    
+        
+    #     validation =  [[0,0,0]\
+    #                  ,[1,1,1]\
+    #                  ,[0,0,0]]  
+        
+    #     im = np.array(im)
+    #     validation = np.array(validation)
+        
+    #     rot = tf.warp_image_2d(im, rotation_angle, shear_angle)
+    #     print(rot)
+    #     self.assertTrue((rot==validation).all())    
         
 
       
