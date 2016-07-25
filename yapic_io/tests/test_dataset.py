@@ -614,7 +614,7 @@ class TestDataset(TestCase):
         val[0,5,1] = 1 
 
         self.assertTrue((val==mat).all())   
-
+        self.assertEqual(len(mat.shape),3)
 
     def test_get_template_for_label_2(self):
 
@@ -817,30 +817,291 @@ class TestDataset(TestCase):
         self.assertEqual(weights[1]/2, weights[2])
         self.assertEqual(weights[1]+weights[2], 1)
 
-    # def test_get_augmented_template(self):
+    def test_get_augmented_template(self):
         
-    #     def get_tpl_func(pos=None, size=None, img=None):
-    #         return img[get_template_meshgrid(img.shape, pos, size)]
-
-
-    #     im = np.zeros((7,5))
-    #     im[3,:] = 1
-    #     im[3,2] = 2
-
-    #     pos = (2,1)
-    #     size=(3,3)
         
 
-    #     tpl = get_tpl_func(pos=pos, size=size, img=im)
+        '''
+        im = 
+        [[ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 1.  1.  1.  1.  1.  1.  1.  3.  1.  1.  1.  1.  1.  1.  1.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]]
 
-    #     tpl_rot = ds.get_augmented_template(im.shape, pos, size, \
-    #     get_tpl_func, rotation_angle=0, shear_angle=0, **{'img': im})
 
-    #     print(im)
-    #     print(tpl)
-    #     print(tpl_rot)
+         template without augmentation
+         tpl = 
+          [[ 0.  0.  0.  0.  2.  0.  0.  0.  0.]
+           [ 0.  0.  0.  0.  2.  0.  0.  0.  0.]
+           [ 0.  0.  0.  0.  2.  0.  0.  0.  0.]
+           [ 0.  0.  0.  0.  2.  0.  0.  0.  0.]
+           [ 1.  1.  1.  1.  3.  1.  1.  1.  1.]
+           [ 0.  0.  0.  0.  2.  0.  0.  0.  0.]
+           [ 0.  0.  0.  0.  2.  0.  0.  0.  0.]
+           [ 0.  0.  0.  0.  2.  0.  0.  0.  0.]
+           [ 0.  0.  0.  0.  2.  0.  0.  0.  0.]]
 
-    #     self.assertTrue(False)
+        augmented template afer 45 degree rotation
+        tpl_rot =
+            [[ 1.  1.  0.  0.  0.  0.  0.  0.  2.]
+             [ 0.  1.  1.  0.  0.  0.  0.  2.  2.]
+             [ 0.  0.  1.  1.  0.  0.  2.  2.  0.]
+             [ 0.  0.  0.  1.  1.  2.  2.  0.  0.]
+             [ 0.  0.  0.  0.  3.  3.  0.  0.  0.]
+             [ 0.  0.  0.  2.  2.  1.  1.  0.  0.]
+             [ 0.  0.  2.  2.  0.  0.  1.  1.  0.]
+             [ 0.  2.  2.  0.  0.  0.  0.  1.  1.]
+             [ 2.  2.  0.  0.  0.  0.  0.  0.  1.]]
+
+        '''
+
+        def get_tpl_func(pos=None, size=None, img=None):
+            return img[get_template_meshgrid(img.shape, pos, size)]
+
+
+        val = np.array(\
+            [[[[1., 1., 0., 0., 0., 0., 0., 0., 2.],\
+             [0., 1., 1., 0., 0., 0., 0., 2., 2.],\
+             [0., 0., 1., 1., 0., 0., 2., 2., 0.],\
+             [0., 0., 0., 1., 1., 2., 2., 0., 0.],\
+             [0., 0., 0., 0., 3., 3., 0., 0., 0.],\
+             [0., 0., 0., 2., 2., 1., 1., 0., 0.],\
+             [0., 0., 2., 2., 0., 0., 1., 1., 0.],\
+             [0., 2., 2., 0., 0., 0., 0., 1., 1.],\
+             [2., 2., 0., 0., 0., 0., 0., 0., 1.]]]])
 
 
 
+        im = np.zeros((1, 1, 15, 15))
+        im[0,0, 7, :] = 1
+        im[0,0, :, 7] = 2
+        im[0,0, 7, 7] = 3
+
+        pos = (0,0,3,3)
+        size=(1,1,9,9)
+        tpl = get_tpl_func(pos=pos, size=size, img=im)
+
+        tpl_rot = ds.get_augmented_template(im.shape, pos, size, \
+        get_tpl_func, rotation_angle=45, shear_angle=0, **{'img': im})
+
+        print(im)
+        print(tpl)
+        print(tpl_rot)
+
+        self.assertTrue((val==tpl_rot).all())
+
+
+
+    def test_get_augmented_template_2(self):
+    
+    
+
+        '''
+        im = 
+        [[ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 1.  1.  1.  1.  1.  1.  1.  3.  1.  1.  1.  1.  1.  1.  1.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]]
+
+        '''
+
+        def get_tpl_func(pos=None, size=None, img=None):
+            return img[get_template_meshgrid(img.shape, pos, size)]
+
+
+        val = np.array(\
+            [[[[3.]]]])
+
+
+
+        im = np.zeros((1, 1, 15, 15))
+        im[0, 0, 7, :] = 1
+        im[0, 0, :, 7] = 2
+        im[0, 0, 7, 7] = 3
+
+        pos = (0,0,7,7)
+        size=(1,1,1,1)
+        tpl = get_tpl_func(pos=pos, size=size, img=im)
+
+        tpl_rot = ds.get_augmented_template(im.shape, pos, size, \
+        get_tpl_func, rotation_angle=45, shear_angle=0, **{'img': im})
+
+        print(im)
+        print(tpl)
+        print(tpl_rot)
+
+        self.assertTrue((val==tpl_rot).all())
+
+
+    
+    def test_get_multichannel_pixel_template_1(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = Tiffconnector(img_path,label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
+                , ['40width26height6slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', '40width26height3slices_rgb.tif']\
+                ]
+        c.load_label_filenames()    
+
+        d = Dataset(c)
+
+        img = 0
+        pos_zxy = (0,0,0)
+        size_zxy = (1,4,3)
+        channels = [1]
+
+        val = np.array(\
+            [[[[102, 89, 82]\
+               ,[ 81, 37, 43]\
+               ,[ 87, 78, 68]\
+               ,[107, 153,125]]]]\
+            )
+
+        tpl = d.get_multichannel_pixel_template(img, pos_zxy, size_zxy, channels)
+        print(tpl.shape)
+        print(tpl)
+        print(val)
+        self.assertTrue((tpl==val).all())
+
+
+
+    def test_get_multichannel_pixel_template_2(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = Tiffconnector(img_path,label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
+                , ['40width26height6slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', '40width26height3slices_rgb.tif']\
+                ]
+        c.load_label_filenames()    
+
+        d = Dataset(c)
+
+        img = 0
+        pos_zxy = (0,0,0)
+        size_zxy = (1,4,3)
+        channels = [1]
+        pd = (0,2,3)
+
+        val = np.array(\
+            [[[[43, 37,  81,  81, 37, 43, 78, 78, 43]\
+              ,[82, 89, 102, 102, 89, 82, 87, 87, 82]\
+              ,[82, 89, 102, 102, 89, 82, 87, 87, 82]\
+              ,[43, 37, 81, 81, 37, 43, 78, 78, 43]\
+              ,[68, 78, 87, 87, 78, 68, 73, 73, 68]\
+              ,[125, 153, 107, 107, 153,125, 82, 82, 125]\
+              ,[161, 180, 121, 121, 180,161, 106, 106, 161]\
+              ,[147, 143, 111, 111, 143,147, 123, 123, 147]]]]\
+            )
+
+        tpl = d.get_multichannel_pixel_template(img, pos_zxy, size_zxy, channels\
+                , pixel_padding=pd, rotation_angle=0)
+        print(tpl.shape)
+        print(val.shape)
+        print(tpl)
+        print(val)
+        self.assertTrue((tpl==val).all())    
+
+
+
+
+    def test_get_multichannel_pixel_template_3(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = Tiffconnector(img_path,label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
+                , ['40width26height6slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', '40width26height3slices_rgb.tif']\
+                ]
+        c.load_label_filenames()    
+
+        d = Dataset(c)
+
+        img = 0
+        pos_zxy = (0,0,0)
+        size_zxy = (1,4,3)
+        channels = [1]
+        pd = (0,2,3)
+
+        val = np.array(\
+            [[[[ 73,  73,  43,  89,  89, 102,  81,  87,  78]\
+               ,[ 82,  68,  78,  37, 102, 102, 102,  37,  68]\
+               ,[161, 153,  78,  87,  81, 102,  89,  82,  78]\
+               ,[180, 180, 107,  87,  87,  37,  82,  87,  87]\
+               ,[143, 121, 121, 107,  78,  68,  78,  87,  87]\
+               ,[111, 111, 121, 180, 125,  73,  73,  78,  82]\
+               ,[121, 111, 143, 161, 106,  82,  73,  68,  43]\
+               ,[121, 180, 147, 123, 106, 106, 125,  68,  78]]]]
+            )
+
+        tpl = d.get_multichannel_pixel_template(img, pos_zxy, size_zxy, channels\
+                , pixel_padding=pd, rotation_angle=45)
+        print(tpl.shape)
+        print(val.shape)
+        print(tpl)
+        print(val)
+        self.assertTrue((tpl==val).all())
+
+
+    def test_get_training_template_1(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = Tiffconnector(img_path,label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
+                , ['40width26height6slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', '40width26height3slices_rgb.tif']\
+                ]
+        c.load_label_filenames()    
+
+        d = Dataset(c)
+
+        img = 0
+        pos_zxy = (0,0,0)
+        size_zxy = (1,4,3)
+        channels = [1]
+        labels = [109, 150]
+        
+
+        tr = d.get_training_template(img, pos_zxy, size_zxy, channels, labels,\
+            pixel_padding=(0, 1, 2))
+
+        print(tr)
+        self.assertEqual(tr['pixels'].shape, (1,1,6,7))
+        self.assertEqual(tr['weights'].shape, (2,1,4,3))
+
+        #self.assertTrue(False)

@@ -79,8 +79,84 @@ class TestTransformations(TestCase):
         validation = np.array(validation)
         
         rot = tf.warp_image_2d(im, rotation_angle, shear_angle)
-        
+        print(validation)
+        print(rot)
         self.assertTrue((rot==validation).all())
+
+    
+    def test_warp_image_2d_stack(self):
+        rotation_angle=45
+        shear_angle=0
+
+        im = [[[0,1,0]\
+              ,[0,1,0]\
+              ,[0,1,0]],\
+              [[0,2,0]\
+              ,[0,2,0]\
+              ,[0,2,0]]]
+
+        val = [[[0,0,1]\
+              ,[0,1,0]\
+              ,[1,0,0]],\
+              [[0,0,2]\
+              ,[0,2,0]\
+              ,[2,0,0]]]      
+        val = np.array(val)      
+        im = np.array(im)      
+        rot = tf.warp_image_2d_stack(im, rotation_angle, shear_angle)
+        print(rot)
+        self.assertTrue((rot==val).all())
+        self.assertEqual(len(rot.shape), 3)
+
+
+    def test_warp_image_2d_stack_4d(self):
+        rotation_angle=45
+        shear_angle=0
+
+        im = [[[[0,1,0]\
+              ,[0,1,0]\
+              ,[0,1,0]],\
+              [[0,2,0]\
+              ,[0,2,0]\
+              ,[0,2,0]]],\
+              [[[0,1,0]\
+              ,[0,1,0]\
+              ,[0,1,0]],\
+              [[0,2,0]\
+              ,[0,2,0]\
+              ,[0,2,0]]]]
+
+        val = [[[[0,0,1]\
+              ,[0,1,0]\
+              ,[1,0,0]],\
+              [[0,0,2]\
+              ,[0,2,0]\
+              ,[2,0,0]]],\
+              [[[0,0,1]\
+              ,[0,1,0]\
+              ,[1,0,0]],\
+              [[0,0,2]\
+              ,[0,2,0]\
+              ,[2,0,0]]]]
+
+
+
+        val = np.array(val)      
+        im = np.array(im)      
+        rot = tf.warp_image_2d_stack(im, rotation_angle, shear_angle)
+        print(rot)
+        self.assertTrue((rot==val).all())
+        self.assertEqual(len(rot.shape), 4)    
+
+
+    # def test_calc_warping_shift(self):
+
+    #     img_shape = (7,7)
+
+    #     tf.calc_warping_shift(img_shape, 0, 20)
+
+    #     self.assertTrue(False)
+
 
 
     # def test_warp_image_2d_90(self):

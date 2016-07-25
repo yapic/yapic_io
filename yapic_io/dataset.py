@@ -82,27 +82,63 @@ class Dataset(object):
 
 
     def get_training_template(self, image_nr, pos_zxy, size_zxy, channels, labels,\
-            rotation_angle=0, shear_angle=0):
+            pixel_padding=(0, 0, 0), rotation_angle=0, shear_angle=0):
 
-        pixel_tpl =  []
-        for channel in channels:
-            pixel_tpl.append(self.get_template_singlechannel(image_nr,\
-                    pos_zxy, size_zxy, channel,\
-                    rotation_angle=rotation_angle, shear_angle=shear_angle))
-        pixel_tpl = np.array(pixel_tpl) #4d pixel template with selected channels in
+               
+        pixel_tpl =  self.get_multichannel_pixel_template(image_nr, pos_zxy, size_zxy, channels,\
+            pixel_padding=pixel_padding, rotation_angle=rotation_angle,\
+             shear_angle=shear_angle)#4d pixel template with selected channels in
         #1st dimension
 
         label_tpl = []
+
+
+
         for label in labels:
             label_tpl.append(self.get_template_for_label(image_nr,\
                     pos_zxy, size_zxy, label,\
                     rotation_angle=rotation_angle, shear_angle=shear_angle))
+        label_tpl = np.array(label_tpl) #4d label template with selected labels in
+        #1st dimension
+
+        return {'pixels' : pixel_tpl,\
+                'channels' : channels,\
+                'weights' : label_tpl,\
+                'labels' : labels}
+
+
+
+    def get_multichannel_pixel_template(self, image_nr, pos_zxy, size_zxy, channels,\
+            pixel_padding=(0, 0, 0), rotation_angle=0, shear_angle=0):
+
+        if not _check_pos_size(pos_zxy, size_zxy,3):
+            logger.debug('checked pos size in get_multichannel_pixel_template')
+            return False
+
+        image_shape_zxy = self.get_img_dimensions(image_nr)[1:]
+        if not is_valid_image_subset(image_shape_zxy, pos_zxy, size_zxy):
+            return False
+
+        pos_zxy = np.array(pos_zxy)
+        size_zxy = np.array(size_zxy)
+        pixel_padding = np.array(pixel_padding)
+
+        size_padded = size_zxy + 2 * pixel_padding
+        pos_padded = pos_zxy - pixel_padding
+
+        pixel_tpl =  []
+        for channel in channels:
+            
+            pixel_tpl.append(self.get_template_singlechannel(image_nr,\
+                    tuple(pos_padded), tuple(size_padded), channel,\
+                    rotation_angle=rotation_angle, shear_angle=shear_angle))
         pixel_tpl = np.array(pixel_tpl) #4d pixel template with selected channels in
         #1st dimension
 
+        return pixel_tpl
 
 
-                
+                        
 
 
 
@@ -128,7 +164,7 @@ class Dataset(object):
 
         
         if not _check_pos_size(pos_zxy, size_zxy, 3):
-            return False
+           return False
 
         pos_czxy = np.array([channel] + list(pos_zxy))
         size_czxy = np.array([1] + list(size_zxy)) # size in channel dimension is set to 1
@@ -175,22 +211,25 @@ class Dataset(object):
         '''
 
         if not self.image_nr_is_valid(image_nr): 
-            return False
-        shape_zxy = self.get_img_dimensions(image_nr)[1:]     
+            raise ValueError('no valid image nr: %s'\
+                                % str(image_nr))
+        
         
         if not _check_pos_size(pos_zxy, size_zxy, 3):
-            return False
+            raise ValueError('pos, size or shape have %s dimensions instead of 3'\
+                                % len(pos_zxy))
         
+        shape_zxy = self.get_img_dimensions(image_nr)[1:]    
+        #shape_czxy = self.get_img_dimensions(image_nr)
+        #pos_czxy = (0,) + tuple(pos_zxy)
+        #size_czxy = (1,) + tuple(size_zxy)
+
         tpl = get_augmented_template(shape_zxy, pos_zxy, size_zxy, \
           self._get_template_for_label_inner,\
           rotation_angle=rotation_angle, shear_angle=shear_angle, reflect=reflect,\
           **{'image_nr' : image_nr, 'label_value' : label_value})    
 
-        # tpl = get_template_with_reflection(shape_zxy, pos_zxy, size_zxy,\
-        #      self._get_template_for_label_inner, reflect=True\
-        #      , **{'image_nr' : image_nr, 'label_value' : label_value})
-
-        return np.squeeze(tpl, axis=(0,))     
+        return tpl 
 
 
 
@@ -592,23 +631,41 @@ def calc_equalized_label_weights(label_n):
     return eq_weight     
 
 
-def get_augmented_template(shape, pos, size, \
+def get_augmented_template(shape, pos, size,\
         get_template_func, rotation_angle=0, shear_angle=0,\
         reflect=True, **kwargs):
     '''
     fixme: morph template works only in 2d.
     morphing has to be applied slice by slice
     '''
-    if (rotation_angle == 0) and (shear_angle == 0):
-        return get_template_with_reflection(shape, pos, size, get_template_func, reflect=reflect, **kwargs)
     
+    # if not _check_pos_size(pos_czxy, shape_czxy,4):
+    #     logger.debug('checked pos size in get_augmented_template')
+    #     print(pos_czxy)
+    #     print(shape_czxy)
+    #     print(size_czxy)
+    #     raise ValueError('pos, size or shape have %s dimensions instead of 4'\
+    #                             % len(pos_czxy))
+
+    if (rotation_angle == 0) and (shear_angle == 0):
+        return get_template_with_reflection(shape,\
+             pos, size, get_template_func, reflect=reflect, **kwargs)
+    
+    if (size[-2]) == 1 and (size[-1] == 1):
+        #if the requested template is only of size 1 in x and y,
+        #augmentation can be omitted, since rotation always
+        #occurs around the center axis. 
+        return get_template_with_reflection(shape,\
+             pos, size, get_template_func, reflect=reflect, **kwargs)
+
+
     size = np.array(size)
     pos = np.array(pos)
     
     size_new = size * 3 #triple template size if morphing takes place
     pos_new = pos-size    
     tpl_large = get_template_with_reflection(shape, pos_new, size_new, get_template_func, reflect=reflect, **kwargs)
-    tpl_large_morphed = trafo.warp_image_2d(tpl_large, rotation_angle, shear_angle)
+    tpl_large_morphed = trafo.warp_image_2d_stack(tpl_large, rotation_angle, shear_angle)
     
     mesh = get_template_meshgrid(tpl_large_morphed.shape, size, size)
 
