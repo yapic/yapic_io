@@ -73,4 +73,14 @@ class TestUtils(TestCase):
 
         for i in list(range(1500)):                
             rpos = ut.get_random_pos_for_coordinate(coor, size, shape)
-            self.assertTrue(rpos in pos_allowed)             
+            self.assertTrue(rpos in pos_allowed) 
+
+
+
+    def test_compute_pos(self):
+        shape = (8,5)
+        size = (5,2)
+
+        res = ut.compute_pos(shape, size)
+        val = [(0, 0), (0, 2), (0, 3), (3, 0), (3, 2), (3, 3)]
+        self.assertEqual(res, val)                   

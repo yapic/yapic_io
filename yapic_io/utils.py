@@ -3,6 +3,7 @@ import numpy as np
 import logging
 import os
 import random
+import itertools
 logger = logging.getLogger(os.path.basename(__file__))
 
 
@@ -197,6 +198,42 @@ def get_random_pos_for_coordinate(coor, size, shape):
         random_pos.append(random.choice(dim_range))
 
     return tuple(random_pos)    
+
+
+
+def compute_pos(shape, size):
+    '''
+    computes all possible positions for fetching templates of a given size
+    if the templates do not fit perfectly in the image, the last positions 
+    are corrected, such that the last and the second-last template would
+    have some overlap.
+    '''
+
+
+    shape = np.array(shape)
+    size = np.array(size)
+
+
+    nr_tpl = np.ceil(shape/size)
+    
+
+    shift_last_tpl = shape % size - size
+
+    pos_per_dim = \
+        [list(range(0,imlength,templength)) for imlength, templength in zip(shape,size)]
+
+    
+    
+
+    for el,shift in zip(pos_per_dim, shift_last_tpl):   
+        el[-1] = el[-1] + shift
+        
+        
+    pos = list(itertools.product(*pos_per_dim))
+    
+
+    return pos 
+
 
 
 
