@@ -52,8 +52,7 @@ class Tiffconnector(object):
         
         if self.filenames is None:
             return 0
-        #print('self.filenames')
-        #print(self.filenames)
+        
         return len(self.filenames)
 
     def get_template(self, image_nr=None, pos=None, size=None):

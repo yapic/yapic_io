@@ -1101,7 +1101,64 @@ class TestDataset(TestCase):
             pixel_padding=(0, 1, 2))
 
         print(tr)
-        self.assertEqual(tr['pixels'].shape, (1,1,6,7))
-        self.assertEqual(tr['weights'].shape, (2,1,4,3))
+        self.assertEqual(tr.pixels.shape, (1,1,6,7))
+        self.assertEqual(tr.weights.shape, (2,1,4,3))
 
         #self.assertTrue(False)
+
+
+    def test_pick_random_label_coordinate(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = Tiffconnector(img_path,label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
+                , ['40width26height6slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', '40width26height3slices_rgb.tif']\
+                ]
+        c.load_label_filenames()    
+
+        d = Dataset(c)
+
+
+        res_1 = d.pick_random_label_coordinate(equalized=False)
+        res_2 = d.pick_random_label_coordinate(equalized=False)
+        print(res_1)
+        print(res_2)
+        #self.assertTrue(False) 
+
+    
+    def test_pick_random_training_template(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = Tiffconnector(img_path,label_path)
+        
+        # c.filenames = [\
+        #         ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
+        #         , ['40width26height6slices_rgb.tif', None]\
+        #         , ['40width26height3slices_rgb.tif', '40width26height3slices_rgb.tif']\
+        #         ]
+        # c.load_label_filenames()    
+
+        d = Dataset(c)
+
+        size = (1,3,4)
+        pad = (1,2,2)
+        channels = [0,1,2]
+
+        pixel_shape_val = (3,3,7,8)
+        weight_shape_val = (3,1,3,4)
+        labels_val = [91, 109, 150]
+        tpl = d.pick_random_training_template(\
+            size, channels, pixel_padding=pad, rotation_angle=45)
+
+        
+        self.assertEqual(tpl.pixels.shape,pixel_shape_val)
+        self.assertEqual(tpl.channels,channels)
+        self.assertEqual(tpl.weights.shape,weight_shape_val)
+        self.assertEqual(tpl.labels,labels_val)
+
+        

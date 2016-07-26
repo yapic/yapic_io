@@ -1,9 +1,12 @@
 import numpy as np
-from yapic_io.utils import get_template_meshgrid, is_valid_image_subset
+
+import yapic_io.utils as ut
 from functools import lru_cache
 import logging
 import os
 import yapic_io.transformations as trafo
+import random
+import collections
 logger = logging.getLogger(os.path.basename(__file__))
 
 class Dataset(object):
@@ -12,14 +15,11 @@ class Dataset(object):
     (optionally) assigned weights for classifier training
 
     provides methods for getting image templates and data 
-    augmentation (mini batch) for training
+    augmentation for training
 
-    an image object is loaded into memory, so it should not
-    exceed a certain size.
-
-    to handle large images, these should be divided into
-    multiple image objects and handled in a training_data class
-    (or prediction_data) class
+    pixel data is loaded lazily to allow images of arbitrary size
+    pixel data is cached in memory for repeated requests
+    
     '''
     
 
@@ -31,6 +31,9 @@ class Dataset(object):
         
         self.load_label_coordinates()
         self.init_label_weights()
+
+        self.training_template = collections.namedtuple(\
+            'TrainingTemplate',['pixels', 'channels', 'weights', 'labels', 'augmentation'])
 
     def __repr__(self):
 
@@ -77,8 +80,36 @@ class Dataset(object):
         '''      
         return self.pixel_connector.load_img_dimensions(image_nr)
 
+    
+    def get_channels(self):
+        nr_channels = self.get_img_dimensions(0)[0]
+        
+        return list(range(nr_channels))
+
+
 
     #def get_pre_template(image_nr, pos, size):
+
+
+    def pick_random_training_template(self, size_zxy, channels, pixel_padding=(0,0,0),\
+             equalized=False, rotation_angle=0, shear_angle=0):
+
+        labels = list(self.label_coordinates.keys())
+        labels.sort()  
+
+        label, coor = self.pick_random_label_coordinate(equalized=equalized)
+        
+        img_nr = coor[0]
+        coor_zxy = list(coor)[2:]
+        shape_zxy = self.get_img_dimensions(img_nr)[1:]
+        pos_zxy = ut.get_random_pos_for_coordinate(coor_zxy, size_zxy, shape_zxy)
+
+        tpl_data = self.get_training_template(img_nr, pos_zxy, size_zxy,\
+                channels, labels, pixel_padding=pixel_padding,\
+                rotation_angle=rotation_angle, shear_angle=shear_angle)
+
+
+        return tpl_data
 
 
     def get_training_template(self, image_nr, pos_zxy, size_zxy, channels, labels,\
@@ -101,10 +132,13 @@ class Dataset(object):
         label_tpl = np.array(label_tpl) #4d label template with selected labels in
         #1st dimension
 
-        return {'pixels' : pixel_tpl,\
-                'channels' : channels,\
-                'weights' : label_tpl,\
-                'labels' : labels}
+        augmentation = {'rotation_angle' : rotation_angle, 'shear_angle' : shear_angle}
+        return self.training_template(pixel_tpl, channels, label_tpl, labels, augmentation)
+
+        # return {'pixels' : pixel_tpl,\
+        #         'channels' : channels,\
+        #         'weights' : label_tpl,\
+        #         'labels' : labels}
 
 
 
@@ -113,11 +147,13 @@ class Dataset(object):
 
         if not _check_pos_size(pos_zxy, size_zxy,3):
             logger.debug('checked pos size in get_multichannel_pixel_template')
-            return False
+            raise ValueError('pos and size must have length 3. pos_zxy: %s, size_zxy: %s' \
+            % (str(pos_zxy), str(size_zxy)))
+            
 
         image_shape_zxy = self.get_img_dimensions(image_nr)[1:]
-        if not is_valid_image_subset(image_shape_zxy, pos_zxy, size_zxy):
-            return False
+        if not ut.is_valid_image_subset(image_shape_zxy, pos_zxy, size_zxy):
+            raise ValueError('image subset not correct')
 
         pos_zxy = np.array(pos_zxy)
         size_zxy = np.array(size_zxy)
@@ -259,18 +295,7 @@ class Dataset(object):
             if coor[0] == image_nr:
                 label_coors_zxy.append(coor[2:])
                 weights.append(weight)
-        # label_coors_zxy = \
-        #     [coor[2:] for coor in label_coors if coor[0] == image_nr]
         
-
-        print('labelcoors_zxy')
-        print(label_coors_zxy) 
-        print('shape')
-        print(shape_zxy) 
-        print('pos')
-        print(pos_zxy) 
-        print('size')
-        print(size_zxy) 
         return label2mask(shape_zxy, pos_zxy, size_zxy, label_coors_zxy, weights)
 
     def set_weight_for_label(self, weight, label_value):
@@ -461,7 +486,26 @@ class Dataset(object):
 
         return True    
 
+    def pick_random_label_coordinate(self, equalized=False):
+        '''
+        returns a rondomly chosen label coordinate and the label value:
+        
+        (label_value, (img_nr,channel,z,x,y))
 
+        channel is always zero!!
+
+        :param equalized: If true, less frequent label_values are picked with same probability as frequent label_values
+        :type equalized: bool 
+        '''
+        labels = self.label_coordinates.keys()
+        if equalized:
+            label_sel = random.choice(labels)
+            label_coordinate_sel = \
+                    random.choice(self.label_coordinates[label_sel])
+            return label_sel, label_coordinate_sel
+
+        else:
+            return random.choice(ut.flatten_label_coordinates(self.label_coordinates))
            
 
 
@@ -503,7 +547,7 @@ def label2mask(image_shape, pos, size, label_coors, weights):
     transform label coordinate to mask of given pos and size inside image
     '''
 
-    if not is_valid_image_subset(image_shape, pos, size):
+    if not ut.is_valid_image_subset(image_shape, pos, size):
         raise ValueError('image subset (labels) not valid')
     msk = np.zeros(size)
     #label_coors_corr = np.array(label_coors) - np.array(pos) + 1
@@ -512,10 +556,7 @@ def label2mask(image_shape, pos, size, label_coors, weights):
 
     for coor, weight in zip(label_coors, weights):
         coor_shifted = np.array(coor) - np.array(pos)
-        #print(coor_shifted)
-        #msk[coor[0],coor[1],coor[2]] = label_value
-        #print(coor)
-        #print(msk)
+        
         if (coor_shifted >= 0).all() and (coor_shifted < np.array(size)).all():
             msk[tuple(coor_shifted)] = weight
     return msk    
@@ -639,13 +680,7 @@ def get_augmented_template(shape, pos, size,\
     morphing has to be applied slice by slice
     '''
     
-    # if not _check_pos_size(pos_czxy, shape_czxy,4):
-    #     logger.debug('checked pos size in get_augmented_template')
-    #     print(pos_czxy)
-    #     print(shape_czxy)
-    #     print(size_czxy)
-    #     raise ValueError('pos, size or shape have %s dimensions instead of 4'\
-    #                             % len(pos_czxy))
+    
 
     if (rotation_angle == 0) and (shear_angle == 0):
         return get_template_with_reflection(shape,\
@@ -667,7 +702,7 @@ def get_augmented_template(shape, pos, size,\
     tpl_large = get_template_with_reflection(shape, pos_new, size_new, get_template_func, reflect=reflect, **kwargs)
     tpl_large_morphed = trafo.warp_image_2d_stack(tpl_large, rotation_angle, shear_angle)
     
-    mesh = get_template_meshgrid(tpl_large_morphed.shape, size, size)
+    mesh = ut.get_template_meshgrid(tpl_large_morphed.shape, size, size)
 
     return tpl_large_morphed[mesh]
 
@@ -700,7 +735,7 @@ def get_template_with_reflection(shape, pos, \
     #pad transient template with reflection
     transient_tpl_pad = np.pad(transient_tpl, pad_size, mode='symmetric')        
 
-    mesh = get_template_meshgrid(transient_tpl_pad.shape,\
+    mesh = ut.get_template_meshgrid(transient_tpl_pad.shape,\
                      pos_inside_transient, size)
 
     return transient_tpl_pad[mesh]

@@ -2,6 +2,7 @@ import os
 import numpy as np
 import logging
 import os
+import random
 logger = logging.getLogger(os.path.basename(__file__))
 
 
@@ -110,7 +111,7 @@ def is_valid_image_subset(image_shape, pos, size):
 def filterList(inp,pattern,mode='include'):
     out = []
     
-    #print inp, 'pattern=', pattern
+    
     if mode =='include':
         for el in inp:
             if el.find(pattern) != -1:
@@ -161,3 +162,45 @@ def my_toList(pattern):
         return [pattern]
     else:
         return pattern  
+
+
+
+def flatten_label_coordinates(label_coordinates):
+    return [(label, coor) for label in label_coordinates.keys() for coor in label_coordinates[label]]
+
+
+def get_max_pos_for_tpl(size, shape):
+    return tuple(np.array(shape) - np.array(size))
+
+
+def get_random_pos_for_coordinate(coor, size, shape):
+
+    if len(coor) != len(size):
+        raise ValueError('coor and size must have same lengths. coor: %s, size: %s' \
+            % (str(coor), str(size)))
+
+    coor = np.array(coor)
+    size = np.array(size)
+
+    
+    maxpos = np.array(get_max_pos_for_tpl(size, shape))
+    maxpos[maxpos>coor] = coor[maxpos>coor]
+
+    minpos = coor - size + 1
+    minpos[minpos < 0] = 0
+    
+    
+
+    random_pos = []
+    for maxdim, mindim in zip(maxpos, minpos):
+        dim_range = range(mindim, maxdim+1)
+        random_pos.append(random.choice(dim_range))
+
+    return tuple(random_pos)    
+
+
+
+
+
+
+
