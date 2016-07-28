@@ -1,5 +1,5 @@
 import random
-
+import numpy as np
 class Minibatch(object):
     '''
     
@@ -42,7 +42,7 @@ class Minibatch(object):
         self.padding_zxy = padding_zxy
         self.size_zxy = size_zxy
         self.channels = self.dataset.get_channels()
-
+        self.labels = self.dataset.get_label_values()
         
         self.batch_size = batch_size
         self.equalized = equalized
@@ -51,7 +51,11 @@ class Minibatch(object):
         self.rotation_range = rotation_range
         self.shear_range = shear_range
         
-        self._template_data = [self._pick_random_tpl() for _ in list(range(self.batch_size))]
+        self.pixels = None
+        self.weights = None
+
+        self._fetch_minibatch_data() 
+        #self._template_data = [self._pick_random_tpl() for _ in list(range(self.batch_size))]
         
         
 
@@ -67,14 +71,28 @@ class Minibatch(object):
 
         return infostring
 
+    def __iter__(self):
+        return self
 
-    def __len__(self):
-        return self.batch_size
-
-    
-    def __getitem__(self, position):
-        return self._template_data[position]
+    def __next__(self):
+        self._fetch_minibatch_data()
+        return self
+        
  
+    def _fetch_minibatch_data(self):
+        pixels = []
+        weights = []
+        augmentations = []
+        for i in list(range(self.batch_size)):
+            tpl_data = self._pick_random_tpl()
+            pixels.append(tpl_data.pixels)
+            weights.append(tpl_data.weights)
+            augmentations.append(tpl_data.augmentation)
+
+        self.pixels = np.array(pixels)
+        self.weights = np.array(weights)    
+        self.augmentations = augmentations    
+
 
 
     def _get_random_rotation(self):
@@ -100,7 +118,7 @@ class Minibatch(object):
         if not self.augment:
             return self.dataset.pick_random_training_template(self.size_zxy\
             , self.channels, pixel_padding=self.padding_zxy,\
-                 equalized=self.equalized)       
+                 equalized=self.equalized, labels=self.labels)       
 
         shear_angle = self._get_random_shear()
         rotation_angle = self._get_random_rotation()    
@@ -108,6 +126,6 @@ class Minibatch(object):
         return self.dataset.pick_random_training_template(self.size_zxy\
             , self.channels, pixel_padding=self.padding_zxy\
             , equalized=self.equalized, rotation_angle=rotation_angle\
-            , shear_angle=shear_angle)       
+            , shear_angle=shear_angle, labels=self.labels)       
         
                 

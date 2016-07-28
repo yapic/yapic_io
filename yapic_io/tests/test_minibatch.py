@@ -26,6 +26,10 @@ class TestMinibatch(TestCase):
 
         tpl = m._pick_random_tpl()
         print(tpl)
+
+        print(tpl.pixels.shape)
+        print(tpl.weights.shape)
+
         #self.assertTrue(False)
 
 
@@ -44,10 +48,16 @@ class TestMinibatch(TestCase):
         batch_size = 4
 
         m = Minibatch(d, batch_size, size, padding_zxy=pad)
+        #m._fetch_minibatch_data()
+        c=0
+        for mini in m:
+            print(mini.augmentations)
 
-       
-        print(m)
-        print(len(m))
-        print(m[-1])
+            c+=1
+            if c>10:
+                break
+
+
+        
         #self.assertTrue(False)    
 

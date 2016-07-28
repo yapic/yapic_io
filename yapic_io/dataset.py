@@ -86,18 +86,22 @@ class Dataset(object):
         
         return list(range(nr_channels))
 
-
+    def get_label_values(self):
+        labels = list(self.label_coordinates.keys())
+        labels.sort()  
+        return labels    
 
     #def get_pre_template(image_nr, pos, size):
 
 
     def pick_random_training_template(self, size_zxy, channels, pixel_padding=(0,0,0),\
-             equalized=False, rotation_angle=0, shear_angle=0):
+             equalized=False, rotation_angle=0, shear_angle=0, labels='all'):
 
-        labels = list(self.label_coordinates.keys())
-        labels.sort()  
+        if labels == 'all':
+            labels = self.get_label_values()
+            
 
-        label, coor = self.pick_random_label_coordinate(equalized=equalized)
+        _, coor = self.pick_random_label_coordinate(equalized=equalized)
         
         img_nr = coor[0]
         coor_zxy = list(coor)[2:]
