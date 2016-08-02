@@ -5,18 +5,14 @@ import logging
 import os
 from yapic_io.utils import get_template_meshgrid
 from functools import lru_cache
-
+from yapic_io.connector import Connector
 logger = logging.getLogger(os.path.basename(__file__))
 
 
-class Tiffconnector(object):
+class Tiffconnector(Connector):
     '''
-    provides connectors to pixel data source and
-    assigned weights for classifier training
-
-    provides methods for getting image templates 
-
-    
+    implementation of Connector for normal sized tiff images
+    and corresponding label masks in tiff format.
     '''
     
 
