@@ -83,4 +83,17 @@ class TestUtils(TestCase):
 
         res = ut.compute_pos(shape, size)
         val = [(0, 0), (0, 2), (0, 3), (3, 0), (3, 2), (3, 3)]
-        self.assertEqual(res, val)                   
+        self.assertEqual(res, val)      
+
+
+
+    def test_compute_pos_2(self):
+        shape = (6,4)
+        size = (2,2)
+
+        res = ut.compute_pos(shape, size)
+        print(res)
+        val = [(0, 0), (0, 2), (2, 0), (2, 2), (4, 0), (4, 2)]
+        self.assertEqual(val, res)
+
+

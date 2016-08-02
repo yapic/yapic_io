@@ -210,14 +210,31 @@ def compute_pos(shape, size):
     '''
 
 
+
     shape = np.array(shape)
     size = np.array(size)
+
+    if (size > shape).any():
+        raise ValueError('template size is larger than image shape. size: %s, shape: %s' \
+            % (str(size), str(shape)))
 
 
     nr_tpl = np.ceil(shape/size)
     
 
-    shift_last_tpl = shape % size - size
+    shift_last_tpl = np.zeros(len(shape)).astype(int)
+    mod = shape % size #nr of out of bounds pixels for last template
+    # print('mod')
+    # print(mod)
+    # print('size')
+    # print(size)
+    # print('shift_last_tpl')
+    # print(shift_last_tpl)
+    
+
+    if mod.any():
+        shift_last_tpl[mod!=0] = mod[mod!=0] - size[mod!=0]
+    
 
     pos_per_dim = \
         [list(range(0,imlength,templength)) for imlength, templength in zip(shape,size)]

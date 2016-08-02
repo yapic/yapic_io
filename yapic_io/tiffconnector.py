@@ -27,7 +27,7 @@ class Tiffconnector(Connector):
     '''
     
 
-    def __init__(self, img_filepath, label_filepath):
+    def __init__(self, img_filepath, label_filepath, savepath=None):
         
         self.img_filepath = os.path.normpath(img_filepath)
         self.label_filepath = os.path.normpath(label_filepath)
@@ -161,6 +161,7 @@ class Tiffconnector(Connector):
         values.sort()
         return list(values)
 
+    @lru_cache(maxsize = 500)
     def get_label_coordinates(self, image_nr):
         ''''
         returns label coordinates as dict in following format:
