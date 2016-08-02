@@ -5,9 +5,25 @@ class Connector(metaclass=ABCMeta):
     Interface to pixel and label data source for classifier 
     training and prediction.
 
+    - Connects to a fixed collection of images and corresponding labels
 
-    -
-    -Provides methods for getting image subsets and label coordinates.
+    - Provides methods for getting sizes of all images
+
+    - Provides methods for getting image subsets and label coordinates.
+
+
+    Prerequisites for the Image data:
+
+    - Images are 4D datasets with following dimensions: (channel, z, x, y)
+    
+    - All images must have the same nr of channels but can vary in z,x, and y.
+    
+    - Time series are not supported. However, time frames can be modeled as
+      individual images.  
+    
+    - Images with lower dimensions can be modeled. E.g. grayscale single plane images
+      have the shape (1, 1, width, height). 
+
 
 
     The Connector methods are used by the Dataset class.
@@ -18,7 +34,7 @@ class Connector(metaclass=ABCMeta):
     @abstractmethod
     def get_image_count(self):
         '''
-        returns the number of images in the dataset
+        :returns: the number of images in the dataset
         '''
         pass
 

@@ -5,7 +5,9 @@ class Minibatch(object):
     Infinite iterator providing pixel and label data for classifier training.
 
     - Provides template data for classifier training.
+
     - All data is loaded to memory on initialization of a minibatch.
+    
     - Data is loaded from the dataset object.
 
     Code example for initializing a Minibatch:
