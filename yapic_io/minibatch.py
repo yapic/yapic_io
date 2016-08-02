@@ -2,12 +2,36 @@ import random
 import numpy as np
 class Minibatch(object):
     '''
-    
-    Provides template data for classifier training.
-    
-    All data is loaded to memory on initialization of a minibatch.
+    Infinite iterator providing pixel and label data for classifier training.
 
-    Data is loaded from the dataset object.
+    - Provides template data for classifier training.
+    - All data is loaded to memory on initialization of a minibatch.
+    - Data is loaded from the dataset object.
+
+    Code example for initializing a Minibatch:
+
+    >>> from yapic_io.tiffconnector import Tiffconnector
+    >>> from yapic_io.dataset import Dataset
+    >>> 
+    >>> pixel_image_dir = '/path/to/my/tiff/images/'
+    >>> label_image_dir = '/path/to/my/label/images/'
+    >>> t = Tiffconnector(pixel_image_dir, label_image_dir)
+    >>> d = Dataset(t)
+    >>>
+    >>> size = (1,3,4)
+    >>> pad = (1,2,2)
+    >>> batch_size = 4
+    >>>
+    >>> m = Minibatch(d, batch_size, size, padding_zxy=pad)
+    >>> 
+    >>> c=0
+    >>> for mini in m:
+    >>>     print(mini.pixels)
+    >>>     print(mini.weights)
+    >>>     c+=1
+    >>>     if c>10:
+    >>>         break
+
 
 
 

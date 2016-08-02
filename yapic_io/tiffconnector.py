@@ -13,6 +13,17 @@ class Tiffconnector(Connector):
     '''
     implementation of Connector for normal sized tiff images
     and corresponding label masks in tiff format.
+    
+    Initiate a new Tiffconnector as follows:
+
+    >>> from yapic_io.tiffconnector import Tiffconnector
+    >>> pixel_image_dir = '/path/to/my/tiff/images/'
+    >>> label_image_dir = '/path/to/my/label/images/'
+    >>> t = Tiffconnector(pixel_image_dir, label_image_dir)
+    >>> print(t)
+    Connector_tiff object 
+    image filepath: /path/to/my/tiff/images/ 
+    label filepath: /path/to/my/label/images/ 
     '''
     
 
@@ -34,7 +45,7 @@ class Tiffconnector(Connector):
             'image filepath: %s \n' \
             'label filepath: %s \n' \
              % (self.img_filepath\
-                , self.img_filepath)
+                , self.label_filepath)
 
         return infostring
 
