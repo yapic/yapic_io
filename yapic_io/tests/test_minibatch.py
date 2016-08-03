@@ -49,12 +49,12 @@ class TestMinibatch(TestCase):
 
         m = Minibatch(d, batch_size, size, padding_zxy=pad)
         #m._fetch_minibatch_data()
-        c=0
+        c = 0
+        
         for mini in m:
             print(mini.augmentations)
-
-            c+=1
-            if c>10:
+            c += 1
+            if c > 10:
                 break
 
 

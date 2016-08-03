@@ -53,11 +53,7 @@ class TestImageImports(TestCase):
         path = os.path.join(base_path, '../test_data/tmp/empty.tif')
         
         
-        try:
-            os.remove(path)
-        except:
-            pass
-
+        
         xsize = 70
         ysize = 50
         ip.init_empty_tiff_image(path, xsize, ysize)
@@ -71,6 +67,13 @@ class TestImageImports(TestCase):
         print (type(np.unique(img2[:])[0]))
         self.assertTrue(isinstance(np.unique(img2[:])[0], np.float32))
 
+
+        try:
+            os.remove(path)
+        except:
+            pass
+
+
     def test_autocomplete(self):
         path =  'path/to/image'
 
@@ -80,10 +83,7 @@ class TestImageImports(TestCase):
     def test_add_vals_to_tiff_image(self):
         path = os.path.join(base_path, '../test_data/tmp/tpl.tif')
 
-        # try:
-        #     os.remove(path)
-        # except:
-        #     pass
+        
 
         xsize = 5
         ysize = 7
@@ -121,7 +121,10 @@ class TestImageImports(TestCase):
         #img = ip.import_tiff_image(path)
         #print img 
 
-
+        try:
+            os.remove(path)
+        except:
+            pass
 
 
 
