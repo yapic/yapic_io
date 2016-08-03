@@ -28,11 +28,11 @@ class Minibatch(object):
     >>> 
     >>> c=0
     >>> for mini in m:
-    >>>     print(mini.pixels)
-    >>>     print(mini.weights)
-    >>>     c+=1
-    >>>     if c>10:
-    >>>         break
+    ...     print(mini.pixels)
+    ...     print(mini.weights)
+    ...     c+=1
+    ...     if c>10:
+    ...         break
 
 
 
