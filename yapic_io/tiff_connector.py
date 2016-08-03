@@ -9,17 +9,17 @@ from yapic_io.connector import Connector
 logger = logging.getLogger(os.path.basename(__file__))
 
 
-class Tiffconnector(Connector):
+class TiffConnector(Connector):
     '''
     implementation of Connector for normal sized tiff images
     and corresponding label masks in tiff format.
     
-    Initiate a new Tiffconnector as follows:
+    Initiate a new TiffConnector as follows:
 
-    >>> from yapic_io.tiffconnector import Tiffconnector
+    >>> from yapic_io.tiff_connector import TiffConnector
     >>> pixel_image_dir = '/path/to/my/tiff/images/'
     >>> label_image_dir = '/path/to/my/label/images/'
-    >>> t = Tiffconnector(pixel_image_dir, label_image_dir)
+    >>> t = TiffConnector(pixel_image_dir, label_image_dir)
     >>> print(t)
     Connector_tiff object 
     image filepath: /path/to/my/tiff/images/ 

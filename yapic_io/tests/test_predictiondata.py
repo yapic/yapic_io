@@ -1,6 +1,6 @@
 from unittest import TestCase
 import os
-from yapic_io.tiffconnector import Tiffconnector
+from yapic_io.tiff_connector import TiffConnector
 from yapic_io.dataset import Dataset
 from yapic_io.prediction_data import Prediction_data
 
@@ -12,7 +12,7 @@ class TestPredictiondata(TestCase):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path,label_path)
+        c = TiffConnector(img_path,label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', None]\
@@ -36,7 +36,7 @@ class TestPredictiondata(TestCase):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path,label_path)
+        c = TiffConnector(img_path,label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', None]\
@@ -59,7 +59,7 @@ class TestPredictiondata(TestCase):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path,label_path)
+        c = TiffConnector(img_path,label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', None]\
@@ -82,7 +82,7 @@ class TestPredictiondata(TestCase):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path,label_path)
+        c = TiffConnector(img_path,label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', None]\

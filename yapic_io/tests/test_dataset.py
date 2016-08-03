@@ -2,7 +2,7 @@ from unittest import TestCase
 import os
 import numpy as np
 
-from yapic_io.tiffconnector import Tiffconnector
+from yapic_io.tiff_connector import TiffConnector
 from yapic_io.dataset import Dataset
 from yapic_io.utils import get_template_meshgrid
 import yapic_io.dataset as ds
@@ -16,7 +16,7 @@ class TestDataset(TestCase):
     def test_n_images(self):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        c = Tiffconnector(img_path,'path/to/nowhere/')
+        c = TiffConnector(img_path,'path/to/nowhere/')
         d = Dataset(c)
 
         self.assertEqual(d.n_images, 3)
@@ -319,7 +319,7 @@ class TestDataset(TestCase):
     def test_get_template_singlechannel_1(self):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        c = Tiffconnector(img_path,'path/to/nowhere/')
+        c = TiffConnector(img_path,'path/to/nowhere/')
         
         c.filenames = [\
                 ('6width4height3slices_rgb.tif', None)\
@@ -341,7 +341,7 @@ class TestDataset(TestCase):
     def test_get_template_singlechannel_2(self):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        c = Tiffconnector(img_path,'path/to/nowhere/')
+        c = TiffConnector(img_path,'path/to/nowhere/')
         
         c.filenames = [\
                 ('6width4height3slices_rgb.tif', None)\
@@ -373,7 +373,7 @@ class TestDataset(TestCase):
     def test_get_template_singlechannel_3(self):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        c = Tiffconnector(img_path,'path/to/nowhere/')
+        c = TiffConnector(img_path,'path/to/nowhere/')
         
         c.filenames = [\
                 ('6width4height3slices_rgb.tif', None)\
@@ -403,7 +403,7 @@ class TestDataset(TestCase):
     def test_get_template_singlechannel_4(self):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        c = Tiffconnector(img_path,'path/to/nowhere/')
+        c = TiffConnector(img_path,'path/to/nowhere/')
         
         c.filenames = [\
                 ('6width4height3slices_rgb.tif',  None)\
@@ -454,7 +454,7 @@ class TestDataset(TestCase):
     def test_label_coordinates_is_valid(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path,label_path)
+        c = TiffConnector(img_path,label_path)
         
         c.filenames = [\
                 ('6width4height3slices_rgb.tif', None)\
@@ -532,7 +532,7 @@ class TestDataset(TestCase):
     def test_load_label_coordinates(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path,label_path)
+        c = TiffConnector(img_path,label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
@@ -558,7 +558,7 @@ class TestDataset(TestCase):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path,label_path)
+        c = TiffConnector(img_path,label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
@@ -589,7 +589,7 @@ class TestDataset(TestCase):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path,label_path)
+        c = TiffConnector(img_path,label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
@@ -620,7 +620,7 @@ class TestDataset(TestCase):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path,label_path)
+        c = TiffConnector(img_path,label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
@@ -664,7 +664,7 @@ class TestDataset(TestCase):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path,label_path)
+        c = TiffConnector(img_path,label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
@@ -697,7 +697,7 @@ class TestDataset(TestCase):
     def test_load_label_coordinates(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path,label_path)
+        c = TiffConnector(img_path,label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
@@ -726,7 +726,7 @@ class TestDataset(TestCase):
     def test_set_weight_for_label(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path,label_path)
+        c = TiffConnector(img_path,label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
@@ -745,7 +745,7 @@ class TestDataset(TestCase):
     def test_equalize_label_weights(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path,label_path)
+        c = TiffConnector(img_path,label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
@@ -960,7 +960,7 @@ class TestDataset(TestCase):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path,label_path)
+        c = TiffConnector(img_path,label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
@@ -995,7 +995,7 @@ class TestDataset(TestCase):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path,label_path)
+        c = TiffConnector(img_path,label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
@@ -1038,7 +1038,7 @@ class TestDataset(TestCase):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path,label_path)
+        c = TiffConnector(img_path,label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
@@ -1079,7 +1079,7 @@ class TestDataset(TestCase):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path,label_path)
+        c = TiffConnector(img_path,label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
@@ -1111,7 +1111,7 @@ class TestDataset(TestCase):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path,label_path)
+        c = TiffConnector(img_path,label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
@@ -1134,7 +1134,7 @@ class TestDataset(TestCase):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path,label_path)
+        c = TiffConnector(img_path,label_path)
         
         # c.filenames = [\
         #         ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
