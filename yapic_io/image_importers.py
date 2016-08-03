@@ -3,6 +3,8 @@ from PIL import Image, ImageSequence
 import logging
 import os
 import numpy as np
+import yapic_io.utils as ut
+from tifffile import imsave
 logger = logging.getLogger(os.path.basename(__file__))
 
 
@@ -69,7 +71,69 @@ def import_tiff_image(path):
     return image
 
     
+def init_empty_tiff_image(path, x_size, y_size):
+    '''
+    initializes dark 32 bit floating point grayscale tiff image
+    '''
     
+    path = autocomplete_filename_extension(path)
+    check_filename_extension(path)
+        
+
+
+    data = np.zeros((y_size, x_size))
+
+    img = Image.fromarray(data)
+    img.save(path)
+
+
+def add_vals_to_tiff_image(path, pos_xy, pixels):
+    '''
+    opens a tiff image, overwrites pixels values with pixels at pos_xy
+    and overwrites the input tiff image with the new pixels.
+    pixels and pos_xy are in order (x,y)
+
+    '''
+    path = autocomplete_filename_extension(path)
+    check_filename_extension(path)
+
+    img = import_tiff_image(path)
+
+    pos_czxy = (0, 0) + pos_xy
+    size_czxy = (1, 1) + pixels.shape
+    mesh = ut.get_template_meshgrid(img.shape, pos_czxy, size_czxy)
+
+    img[mesh] = pixels
+    print(img.shape)
+    img = np.squeeze(img)
+    print(img.shape)
+    img = np.swapaxes(img,1,0) # (y,x) -> (x,y)
+    print(img.shape)
+    #imsave(path, img)
+    im = Image.fromarray(img)
+
+    im.save(path)
+    
+
+
+
+
+
+def check_filename_extension(path, format_str='.tif'):
+    ext = os.path.splitext(path)[1]
+
+    
+    if ext != format_str:
+        raise ValueError('extension must be %s, but is %s', (format_str, ext))
+
+def autocomplete_filename_extension(path, format_str='.tif'):
+    ext = os.path.splitext(path)[1]
+    if ext == '':
+        return path + format_str
+    return path    
+
+
+
 
 
         
