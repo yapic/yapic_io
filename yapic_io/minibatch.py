@@ -14,22 +14,17 @@ class Minibatch(object):
 
     >>> from yapic_io.tiff_connector import TiffConnector
     >>> from yapic_io.dataset import Dataset
-    >>> 
-    >>> pixel_image_dir = '/path/to/my/tiff/images/'
-    >>> label_image_dir = '/path/to/my/label/images/'
+    >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/'
+    >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
     >>> t = TiffConnector(pixel_image_dir, label_image_dir)
     >>> d = Dataset(t)
-    >>>
     >>> size = (1,3,4)
     >>> pad = (1,2,2)
     >>> batch_size = 4
-    >>>
     >>> m = Minibatch(d, batch_size, size, padding_zxy=pad)
-    >>> 
     >>> c=0
     >>> for mini in m:
-    ...     print(mini.pixels)
-    ...     print(mini.weights)
+    ...     #here: apply training on mini.pixels and mini.weights
     ...     c+=1
     ...     if c>10:
     ...         break

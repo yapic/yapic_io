@@ -17,13 +17,13 @@ class TiffConnector(Connector):
     Initiate a new TiffConnector as follows:
 
     >>> from yapic_io.tiff_connector import TiffConnector
-    >>> pixel_image_dir = '/path/to/my/tiff/images/'
-    >>> label_image_dir = '/path/to/my/label/images/'
+    >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/'
+    >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
     >>> t = TiffConnector(pixel_image_dir, label_image_dir)
     >>> print(t)
     Connector_tiff object 
-    image filepath: /path/to/my/tiff/images/ 
-    label filepath: /path/to/my/label/images/ 
+    image filepath: yapic_io/test_data/tiffconnector_1/im 
+    label filepath: yapic_io/test_data/tiffconnector_1/labels
     '''
     
 
@@ -43,7 +43,7 @@ class TiffConnector(Connector):
         infostring = \
             'Connector_tiff object \n' \
             'image filepath: %s \n' \
-            'label filepath: %s \n' \
+            'label filepath: %s' \
              % (self.img_filepath\
                 , self.label_filepath)
 
