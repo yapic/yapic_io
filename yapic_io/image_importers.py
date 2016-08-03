@@ -4,7 +4,7 @@ import logging
 import os
 import numpy as np
 import yapic_io.utils as ut
-from tifffile import imsave
+
 logger = logging.getLogger(os.path.basename(__file__))
 
 
