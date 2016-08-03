@@ -12,12 +12,12 @@ class Minibatch(object):
 
     Code example for initializing a Minibatch:
 
-    >>> from yapic_io.tiffconnector import Tiffconnector
+    >>> from yapic_io.tiff_connector import TiffConnector
     >>> from yapic_io.dataset import Dataset
     >>> 
     >>> pixel_image_dir = '/path/to/my/tiff/images/'
     >>> label_image_dir = '/path/to/my/label/images/'
-    >>> t = Tiffconnector(pixel_image_dir, label_image_dir)
+    >>> t = TiffConnector(pixel_image_dir, label_image_dir)
     >>> d = Dataset(t)
     >>>
     >>> size = (1,3,4)

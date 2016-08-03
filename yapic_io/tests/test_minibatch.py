@@ -1,6 +1,6 @@
 from unittest import TestCase
 import os
-from yapic_io.tiffconnector import Tiffconnector
+from yapic_io.tiff_connector import TiffConnector
 from yapic_io.dataset import Dataset
 
 import yapic_io.minibatch as mb 
@@ -12,7 +12,7 @@ class TestMinibatch(TestCase):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path,label_path)
+        c = TiffConnector(img_path,label_path)
         
 
         d = Dataset(c)
@@ -37,7 +37,7 @@ class TestMinibatch(TestCase):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path,label_path)
+        c = TiffConnector(img_path,label_path)
         
 
         d = Dataset(c)

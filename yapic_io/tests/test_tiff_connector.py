@@ -2,7 +2,7 @@ from unittest import TestCase
 import os
 
 import numpy as np
-from yapic_io.tiffconnector import Tiffconnector
+from yapic_io.tiff_connector import TiffConnector
 import logging
 logger = logging.getLogger(os.path.basename(__file__))
 
@@ -12,7 +12,7 @@ class TestTiffconnector(TestCase):
     def test_load_filenames(self):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        c = Tiffconnector(img_path,'path/to/nowhere/')
+        c = TiffConnector(img_path,'path/to/nowhere/')
 
         img_filenames = [\
                 ['6width4height3slices_rgb.tif', None]\
@@ -33,7 +33,7 @@ class TestTiffconnector(TestCase):
 
     def test_load_filenames_emptyfolder(self):
         img_path = os.path.join(base_path, '../test_data/empty_folder/')
-        c = Tiffconnector(img_path,'path/to/nowhere/')
+        c = TiffConnector(img_path,'path/to/nowhere/')
         #c.load_img_filenames()
         self.assertIsNone(c.filenames)
 
@@ -43,7 +43,7 @@ class TestTiffconnector(TestCase):
 
     def test_load_img_dimensions(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        c = Tiffconnector(img_path,'path/to/nowhere/')
+        c = TiffConnector(img_path,'path/to/nowhere/')
         
         c.filenames = [\
                 ('6width4height3slices_rgb.tif',)\
@@ -62,7 +62,7 @@ class TestTiffconnector(TestCase):
 
     def test_load_image(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        c = Tiffconnector(img_path,'path/to/nowhere/')
+        c = TiffConnector(img_path,'path/to/nowhere/')
         
         im = c.load_image(0)
         print(im)
@@ -72,7 +72,7 @@ class TestTiffconnector(TestCase):
     def test_get_template(self):
         
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        c = Tiffconnector(img_path,'path/to/nowhere/')
+        c = TiffConnector(img_path,'path/to/nowhere/')
         
 
         image_nr = 0
@@ -92,7 +92,7 @@ class TestTiffconnector(TestCase):
     def test_exists_label_for_image_nr(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path, label_path)
+        c = TiffConnector(img_path, label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', None]\
@@ -107,7 +107,7 @@ class TestTiffconnector(TestCase):
     def test_load_label_filenames(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path, label_path)
+        c = TiffConnector(img_path, label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', None]\
@@ -126,7 +126,7 @@ class TestTiffconnector(TestCase):
     def test_load_label_matrix(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path, label_path)
+        c = TiffConnector(img_path, label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', None]\
@@ -143,7 +143,7 @@ class TestTiffconnector(TestCase):
     def test_check_labelmat_dimensions(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path, label_path)
+        c = TiffConnector(img_path, label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', None]\
@@ -159,7 +159,7 @@ class TestTiffconnector(TestCase):
     def test_get_labelvalues_for_im(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path, label_path)
+        c = TiffConnector(img_path, label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', None]\
@@ -176,7 +176,7 @@ class TestTiffconnector(TestCase):
     def test_get_label_coordinates(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = Tiffconnector(img_path, label_path)
+        c = TiffConnector(img_path, label_path)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', None]\
