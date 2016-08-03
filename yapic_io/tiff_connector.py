@@ -1,8 +1,8 @@
 import numpy as np
-from yapic_io.utils import getFilelistFromDir
 import yapic_io.image_importers as ip
 import logging
 import os
+import glob
 from yapic_io.utils import get_template_meshgrid
 from functools import lru_cache
 from yapic_io.connector import Connector
@@ -17,43 +17,43 @@ class TiffConnector(Connector):
     Initiate a new TiffConnector as follows:
 
     >>> from yapic_io.tiff_connector import TiffConnector
-    >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/'
-    >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
+    >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/*.tif'
+    >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/*.tif'
     >>> t = TiffConnector(pixel_image_dir, label_image_dir)
     >>> print(t)
-    Connector_tiff object 
-    image filepath: yapic_io/test_data/tiffconnector_1/im 
-    label filepath: yapic_io/test_data/tiffconnector_1/labels
+    Connector_tiff object
+    image filepath: yapic_io/test_data/tiffconnector_1/im/*.tif
+    label filepath: yapic_io/test_data/tiffconnector_1/labels/*.tif
+    <BLANKLINE>
     '''
-    
-
     def __init__(self, img_filepath, label_filepath, savepath=None):
-        
-        self.img_filepath = os.path.normpath(img_filepath)
-        self.label_filepath = os.path.normpath(label_filepath)
+        img_filepath   = os.path.normpath(os.path.expanduser(img_filepath))
+        label_filepath = os.path.normpath(os.path.expanduser(label_filepath))
+
+        if os.path.isdir(img_filepath):
+            img_filepath = os.path.join(img_filepath, '*.tif')
+        if os.path.isdir(label_filepath):
+            label_filepath = os.path.join(label_filepath, '*.tif')
+
+        self.img_path, self.img_filemask = os.path.split(img_filepath)
+        self.label_path, self.label_filemask = os.path.split(label_filepath)
 
         self.load_img_filenames()
         self.load_label_filenames()
         self.check_labelmat_dimensions()
-        
-        
+
 
     def __repr__(self):
 
         infostring = \
-            'Connector_tiff object \n' \
-            'image filepath: %s \n' \
-            'label filepath: %s' \
-             % (self.img_filepath\
-                , self.label_filepath)
+            'Connector_tiff object\n' \
+            'image filepath: %s\n' \
+            'label filepath: %s\n' \
+             % (os.path.join(self.img_path, self.img_filemask)\
+                , os.path.join(self.label_path, self.label_filemask))
 
         return infostring
 
-
-    
-    
-
-    
 
     def get_image_count(self):
         
@@ -61,6 +61,7 @@ class TiffConnector(Connector):
             return 0
         
         return len(self.filenames)
+
 
     def get_template(self, image_nr=None, pos=None, size=None):
 
@@ -83,7 +84,7 @@ class TiffConnector(Connector):
         if not self.is_valid_image_nr(image_nr):
             return False          
 
-        path =  self.img_filepath + '/' + self.filenames[image_nr][0]   
+        path = os.path.join(self.img_path, self.filenames[image_nr][0])
         return ip.get_tiff_image_dimensions(path) 
 
     def load_labelmat_dimensions(self, image_nr):
@@ -100,7 +101,7 @@ class TiffConnector(Connector):
             return False          
 
         if self.exists_label_for_img(image_nr):
-            path =  self.label_filepath + '/' + self.filenames[image_nr][1]   
+            path = os.path.join(self.label_path, self.filenames[image_nr][1])
             return ip.get_tiff_image_dimensions(path)               
     
 
@@ -121,20 +122,23 @@ class TiffConnector(Connector):
                     logger.info('check image nr %s: ok ', image_nr)
                 else:
                     logger.info('check image nr %s: dims do not match ', image_nr)   
-        
+
+
     @lru_cache(maxsize = 20)
     def load_image(self, image_nr):
         if not self.is_valid_image_nr(image_nr):
             return None      
-        path =  self.img_filepath + '/' + self.filenames[image_nr][0]       
+        path = os.path.join(self.img_path, self.filenames[image_nr][0])
         return ip.import_tiff_image(path)    
-    
+
+
     def exists_label_for_img(self, image_nr):
         if not self.is_valid_image_nr(image_nr):
             return None      
         if self.filenames[image_nr][1] is None:
             return False
         return True    
+
 
     @lru_cache(maxsize = 20)    
     def load_label_matrix(self, image_nr):
@@ -148,10 +152,11 @@ class TiffConnector(Connector):
             logger.warning('no label matrix file found for image file %s', str(image_nr))    
             return None
         
-        path =  self.label_filepath + '/' + label_filename         
+        path = os.path.join(self.label_path, label_filename)
         logger.info('try loading labelmat %s',path)
         return ip.import_tiff_image(path)    
-        
+
+
     def get_labelvalues_for_im(self, image_nr):
         mat = self.load_label_matrix(image_nr)
         if mat is None:
@@ -160,6 +165,7 @@ class TiffConnector(Connector):
         values = values[values!=0]
         values.sort()
         return list(values)
+
 
     @lru_cache(maxsize = 500)
     def get_label_coordinates(self, image_nr):
@@ -194,10 +200,10 @@ class TiffConnector(Connector):
         
         return label_coor    
 
+
     def is_valid_image_nr(self, image_nr):
         count = self.get_image_count()
         
-
         error_msg = \
         'wrong image number. image numbers in range 0 to %s' % str(count-1)
         
@@ -207,7 +213,7 @@ class TiffConnector(Connector):
 
         return True          
 
-    
+
     def load_label_filenames(self, mode='identical'):
         if self.filenames is None:
             return
@@ -216,23 +222,21 @@ class TiffConnector(Connector):
             #if label filenames should match exactly with img filenames
             for name_tuple in self.filenames:
                 img_filename = name_tuple[0]   
-                label_path =  self.label_filepath + '/' +  img_filename
+                label_path = os.path.join(self.label_path, img_filename)
                 if os.path.isfile(label_path): #if label file exists for image file
                     name_tuple[1] = img_filename
+
+
     def load_img_filenames(self):
         '''
-        find all tiff images in specified folder (self.img_filepath)
+        find all tiff images in specified folder (self.img_path, self.img_filemask)
         '''
-
-        img_filenames = getFilelistFromDir(self.img_filepath,'.tif')
+        img_filenames = glob.glob(os.path.join(self.img_path, self.img_filemask))
         
-        filenames = [[filename, None] for filename in img_filenames]
+        filenames = [[os.path.split(filename)[1], None] for filename in img_filenames]
         if len(filenames) == 0:
             self.filenames = None
             return
         self.filenames = filenames
         return True 
 
-
-    
-                          
