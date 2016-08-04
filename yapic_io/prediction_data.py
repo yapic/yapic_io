@@ -44,8 +44,47 @@ class Prediction_data(object):
         return self
        
 
-        
+    def put_probmap_data(self, probmap_data):
+        if len(probmap_data.shape) != 4: 
+            raise ValueError(\
+                '''no valid dimension for probmap template: 
+                   shape is %s, len of shape should be 4: (c,z,x,y)'''\
+                                % str(probmap_data.shape))
 
+        n_c, n_z, n_x, n_y = probmap_data.shape
+
+        if n_c != len(self.labels):
+            raise ValueError(\
+                '''template must have %s channels, one channel for each
+                   label in follwoing label order: %s'''\
+                                % (str(len(self.labels)), str(self.labels)))
+
+        if (n_z, n_x, n_y) != self.size_zxy:
+            raise ValueError(\
+                '''zxy shape of probmap template is not valid: 
+                   is %s, should be %s''' \
+                   % ((str((n_z, n_x, n_y)), str(self.size_zxy))))    
+          
+    def put_probmap_data_for_label(self, probmap_data, label):
+        if len(probmap_data.shape) != 3: 
+            raise ValueError(\
+                '''no valid dimension for probmap template: 
+                   shape is %s, len of shape should be 3: (z,x,y)'''\
+                                % str(probmap_data.shape))
+
+        n_z, n_x, n_y = probmap_data.shape
+        if (n_z, n_x, n_y) != self.size_zxy:
+            raise ValueError(\
+                '''zxy shape of probmap template is not valid: 
+                   is %s, should be %s''' \
+                   % ((str((n_z, n_x, n_y)), str(self.size_zxy))))    
+
+            
+        if label not in self.labels:
+            raise ValueError('label %s not found in labels %s' % (str(label), str(self.labels)))
+
+        self.dataset.put_prediction_template(probmap_data, self.pos_zxy, self.image_nr, label)    
+            
     def get_pixels(self):
         return self.dataset.get_multichannel_pixel_template(\
             self.image_nr, self.pos_zxy, self.size_zxy, self.channels,\

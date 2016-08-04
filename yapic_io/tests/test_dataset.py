@@ -6,7 +6,8 @@ from yapic_io.tiff_connector import TiffConnector
 from yapic_io.dataset import Dataset
 from yapic_io.utils import get_template_meshgrid
 import yapic_io.dataset as ds
-
+import yapic_io.image_importers as ip
+from pprint import pprint
 import logging
 logger = logging.getLogger(os.path.basename(__file__))
 
@@ -1161,4 +1162,66 @@ class TestDataset(TestCase):
         self.assertEqual(tpl.weights.shape,weight_shape_val)
         self.assertEqual(tpl.labels,labels_val)
 
+    
+    def test_put_prediction_template_1(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        savepath = os.path.join(base_path, '../test_data/tmp/')
         
+
+
+        c = TiffConnector(img_path, label_path, savepath = savepath)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', None]\
+                , ['40width26height6slices_rgb.tif', None]\
+                ]
+        c.load_label_filenames()        
+        d = Dataset(c)
+        #d.load_label_coordinates()
+        #d.init_label_weights()
+
+
+        pixels = np.array([[[.1, .2, .3],\
+                            [.4, .5, .6]]], dtype=np.float32)
+        
+        path = savepath + '6width4height3slices_rgb_class_109.tif'
+        
+        try:
+            os.remove(path)
+        except:
+            pass    
+
+        d.put_prediction_template(pixels, pos_zxy=(0,1,1), image_nr=0, label_value=109)
+        probim = ip.import_tiff_image(path)
+        pprint(probim)
+
+        val = \
+        np.array([[[[ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.1       ,  0.2       ,  0.3       ],\
+         [ 0.        ,  0.4       ,  0.5       ,  0.6       ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ]],\
+        [[ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ]],\
+        [[ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ]]]], dtype=np.float32)
+        
+        self.assertTrue((val==probim).all())
+
+        try:
+            os.remove(path)
+        except:
+            pass    
+    

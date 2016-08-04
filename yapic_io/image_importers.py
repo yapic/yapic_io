@@ -117,16 +117,15 @@ def add_vals_to_tiff_image(path, pos_zxy, pixels):
     mesh = ut.get_template_meshgrid(img.shape, pos_czxy, size_czxy)
 
     img[mesh] = pixels
-    print(img.shape)
     img = np.squeeze(img, axis=0) #remove channel axis, which should be 1
-    print(img.shape)
     img = np.swapaxes(img,2,1) # (z,x,y) -> (z,y,x)
-    print(img.shape)
+    
     #imsave(path, img)
     #im = Image.fromarray(img)
 
     #im.save(path)
     try:
+        logger.info('update image %s', path)
         imsave(path, img, imagej=True)
     except:
         return False    

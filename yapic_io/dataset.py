@@ -94,6 +94,25 @@ class Dataset(object):
     #def get_pre_template(image_nr, pos, size):
 
 
+    def put_prediction_template(self, probmap_tpl, pos_zxy, image_nr, label_value):
+        #check if pos and tpl size are 3d
+        if not self.image_nr_is_valid(image_nr): 
+            raise ValueError('no valid image nr: %s'\
+                                % str(image_nr))
+        
+        
+        if not _check_pos_size(pos_zxy, probmap_tpl.shape, 3):
+            raise ValueError('pos, size or shape have %s dimensions instead of 3'\
+                                % str(len(pos_zxy)))
+
+        if not self.label_value_is_valid(label_value):
+            print(self.label_coordinates)
+            raise ValueError('label value not found: %s'\
+                                % str(label_value))    
+
+        
+        return self.pixel_connector.put_template(probmap_tpl, pos_zxy, image_nr, label_value)  
+
     def pick_random_training_template(self, size_zxy, channels, pixel_padding=(0,0,0),\
              equalized=False, rotation_angle=0, shear_angle=0, labels='all'):
 

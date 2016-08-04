@@ -3,7 +3,7 @@ import os
 from yapic_io.tiff_connector import TiffConnector
 from yapic_io.dataset import Dataset
 from yapic_io.prediction_data import Prediction_data
-
+import numpy as np
 import yapic_io.utils as ut
 base_path = os.path.dirname(__file__)
 
@@ -103,5 +103,92 @@ class TestPredictiondata(TestCase):
         self.assertEqual(p[1].get_pixels().shape, (3,1,6,4))
         self.assertEqual(p[2].get_pixels().shape, (3,1,6,4))
 
+    def test_put_probmap_data(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path,label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', None]\
+                ]
+        c.load_label_filenames()    
+
+        d = Dataset(c)
+
+        size = (1,3,4)
+
+        p = Prediction_data(d, size)
+
+        data = np.ones((2,1,3,4))
+        p[0].put_probmap_data(data)
+
+        
+
+
+
+    def test_put_probmap_data_for_label(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        savepath = os.path.join(base_path, '../test_data/tmp/')
+
+
+
+        c = TiffConnector(img_path,label_path, savepath = savepath)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', None]\
+                , ['40width26height6slices_rgb.tif', None]\
+                ]
+        c.load_label_filenames()    
+
+        d = Dataset(c)
+
+        size = (3,3,3)
+
+        p = Prediction_data(d, size)
+
+        data = np.ones((3,3,3))
+        
+        path1 = savepath + '6width4height3slices_rgb_class_109.tif'
+        path2 = savepath + '40width26height3slices_rgb_class_109.tif'
+        path3 = savepath + '40width26height6slices_rgb_class_109.tif'
+        
+        try:
+            os.remove(path1)
+        except:
+            pass
+        try:
+            os.remove(path2)
+        except:
+            pass
+        try:
+            os.remove(path3)
+        except:
+            pass               
+
+
+
+
+        for t in p:
+            data = data+1
+            t.put_probmap_data_for_label(data, label=109)
+    
+
+
+        try:
+            os.remove(path1)
+        except:
+            pass
+        try:
+            os.remove(path2)
+        except:
+            pass
+        try:
+            os.remove(path3)
+        except:
+            pass             
+
+            
             
 
