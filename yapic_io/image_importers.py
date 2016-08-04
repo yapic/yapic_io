@@ -4,7 +4,7 @@ import logging
 import os
 import numpy as np
 import yapic_io.utils as ut
-
+from tifffile import imsave, imread
 logger = logging.getLogger(os.path.basename(__file__))
 
 
@@ -48,6 +48,8 @@ def import_tiff_image(path):
     in following dimension order:
     (channel, zslice, x, y)
 
+
+
     :param  path: path to image file
     :type path: str
     :returns 4 dimensional numpy array (channel, zslice, x, y)
@@ -58,7 +60,12 @@ def import_tiff_image(path):
     im = Image.open(path)
 
     image = np.array([np.array(frame) for frame in ImageSequence.Iterator(im)])
-    
+    # image = imread(path)
+    # print(path)
+    # print('shape')
+    # print(image.shape)
+    # print('dims')
+    # print(dims)
     # add dimension for channel
     if dims[0] == 1:
         image = np.expand_dims(image,axis=-1)
@@ -71,7 +78,7 @@ def import_tiff_image(path):
     return image
 
     
-def init_empty_tiff_image(path, x_size, y_size):
+def init_empty_tiff_image(path, x_size, y_size, z_size=1):
     '''
     initializes dark 32 bit floating point grayscale tiff image
     '''
@@ -81,40 +88,48 @@ def init_empty_tiff_image(path, x_size, y_size):
         
 
 
-    data = np.zeros((y_size, x_size))
+    data = np.zeros((z_size, y_size, x_size), dtype=np.float32)
+    logger.info('write empty tiff image with %s values to %s'\
+        , type(data[0,0,0]), path)
+    #print(type(data[0,0]))
+    #img = Image.fromarray(data)
+    #img.save(path)
+    imsave(path, data, imagej=True)
 
-    img = Image.fromarray(data)
-    img.save(path)
 
-
-def add_vals_to_tiff_image(path, pos_xy, pixels):
+def add_vals_to_tiff_image(path, pos_zxy, pixels):
     '''
-    opens a tiff image, overwrites pixels values with pixels at pos_xy
+    opens a tiff image, overwrites pixels values with pixels at pos_zxy
     and overwrites the input tiff image with the new pixels.
-    pixels and pos_xy are in order (x,y)
+    pixels and pos_zxy are in order (z,x,y)
 
     '''
+    
+    pixels = np.array(pixels, dtype=np.float32)
+
     path = autocomplete_filename_extension(path)
     check_filename_extension(path)
 
     img = import_tiff_image(path)
 
-    pos_czxy = (0, 0) + pos_xy
-    size_czxy = (1, 1) + pixels.shape
+    pos_czxy = (0,) + pos_zxy
+    size_czxy = (1,) + pixels.shape
     mesh = ut.get_template_meshgrid(img.shape, pos_czxy, size_czxy)
 
     img[mesh] = pixels
     print(img.shape)
-    img = np.squeeze(img)
+    img = np.squeeze(img, axis=0) #remove channel axis, which should be 1
     print(img.shape)
-    img = np.swapaxes(img,1,0) # (y,x) -> (x,y)
+    img = np.swapaxes(img,2,1) # (z,x,y) -> (z,y,x)
     print(img.shape)
     #imsave(path, img)
-    im = Image.fromarray(img)
+    #im = Image.fromarray(img)
 
-    im.save(path)
-    
-
+    #im.save(path)
+    try:
+        imsave(path, img, imagej=True)
+    except:
+        return False    
 
 
 

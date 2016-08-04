@@ -3,7 +3,9 @@ import os
 
 import numpy as np
 from yapic_io.tiff_connector import TiffConnector
+import yapic_io.image_importers as ip
 import logging
+from pprint import pprint
 logger = logging.getLogger(os.path.basename(__file__))
 
 base_path = os.path.dirname(__file__)
@@ -207,7 +209,232 @@ class TestTiffconnector(TestCase):
         self.assertEqual(val_150, labelc[150])    
     
     
+    def test_get_probmap_path(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path, label_path, savepath = 'path/to/probmaps')
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', None]\
+                , ['40width26height6slices_rgb.tif', None]\
+                ]
+
+
+        p = c.get_probmap_path(0,3)
+
+        self.assertEqual(p, 'path/to/probmaps/6width4height3slices_rgb_class_3.tif')
+
+
+    def test_get_probmap_path_2(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path, label_path, savepath = 'path/to/probmaps/')
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', None]\
+                , ['40width26height6slices_rgb.tif', None]\
+                ]
+
+
+        p = c.get_probmap_path(0,3)
+
+        self.assertEqual(p, 'path/to/probmaps/6width4height3slices_rgb_class_3.tif')
+
+
+    
+
+    def test_init_probmap_image(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        savepath = os.path.join(base_path, '../test_data/tmp/')
+        
+
+
+        c = TiffConnector(img_path, label_path, savepath = savepath)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', None]\
+                , ['40width26height6slices_rgb.tif', None]\
+                ]
 
         
 
+        path1 = savepath + '6width4height3slices_rgb_class_1.tif'
+        path2 = savepath + '6width4height3slices_rgb_class_2.tif'
+        
+        try:
+            os.remove(path1)
+        except:
+            pass
+
+        try:
+            os.remove(path2)
+        except:
+            pass    
+
+        c.init_probmap_image(0,1, overwrite=True)
+        c.init_probmap_image(0,2, overwrite=True)    
+            
+        probim_1 = ip.import_tiff_image(path1)
+        probim_2 = ip.import_tiff_image(path2)
+
+
+        self.assertEqual(probim_1.shape, (1,3,6,4))
+        self.assertEqual(probim_2.shape, (1,3,6,4))
+
+        try:
+            os.remove(path1)
+        except:
+            pass
+
+        try:
+            os.remove(path2)
+        except:
+            pass    
+
+    def test_put_template_1(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        savepath = os.path.join(base_path, '../test_data/tmp/')
+        
+
+
+        c = TiffConnector(img_path, label_path, savepath = savepath)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', None]\
+                , ['40width26height6slices_rgb.tif', None]\
+                ]
+
+        pixels = np.array([[[.1, .2, .3],\
+                            [.4, .5, .6]]], dtype=np.float32)
+        
+        path = savepath + '6width4height3slices_rgb_class_3.tif'
+        
+        try:
+            os.remove(path)
+        except:
+            pass    
+
+        c.put_template(pixels, pos_zxy=(0,1,1), image_nr=0, label_value=3)
+        probim = ip.import_tiff_image(path)
+        pprint(probim)
+
+        val = \
+        np.array([[[[ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.1       ,  0.2       ,  0.3       ],\
+         [ 0.        ,  0.4       ,  0.5       ,  0.6       ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ]],\
+        [[ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ]],\
+        [[ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ]]]], dtype=np.float32)
+        
+        self.assertTrue((val==probim).all())
+
+        try:
+            os.remove(path)
+        except:
+            pass    
+
+        
+
+    def test_put_template_2(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        savepath = os.path.join(base_path, '../test_data/tmp/')
+        
+
+
+        c = TiffConnector(img_path, label_path, savepath = savepath)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', None]\
+                , ['40width26height6slices_rgb.tif', None]\
+                ]
+
+        pixels = np.array([[[.1, .2, .3],\
+                            [.4, .5, .6]]], dtype=np.float32)
+        
+        path = savepath + '6width4height3slices_rgb_class_3.tif'
+        
+        try:
+            os.remove(path)
+        except:
+            pass    
+
+        c.put_template(pixels, pos_zxy=(0,1,1), image_nr=0, label_value=3)
+        probim = ip.import_tiff_image(path)
+        pprint(probim)
+
+        val = \
+        np.array([[[[ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.1       ,  0.2       ,  0.3       ],\
+         [ 0.        ,  0.4       ,  0.5       ,  0.6       ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ]],\
+        [[ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ]],\
+        [[ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ]]]], dtype=np.float32)
+        
+        self.assertTrue((val==probim).all())
+
+
+        c.put_template(pixels, pos_zxy=(2,1,1), image_nr=0, label_value=3)
+        probim_2 = ip.import_tiff_image(path)
+        pprint(probim_2)
+
+        val_2 = \
+        np.array([[[[ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.1       ,  0.2       ,  0.3       ],\
+         [ 0.        ,  0.4       ,  0.5       ,  0.6       ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ]],\
+        [[ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ]],\
+        [[ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.1       ,  0.2       ,  0.3        ],\
+         [ 0.        ,  0.4       ,  0.5       ,  0.6        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ],\
+         [ 0.        ,  0.        ,  0.        ,  0.        ]]]], dtype=np.float32)
+
+        self.assertTrue((val_2==probim_2).all())    
+
+        try:
+            os.remove(path)
+        except:
+            pass    
 

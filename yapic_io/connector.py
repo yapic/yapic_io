@@ -51,6 +51,22 @@ class Connector(metaclass=ABCMeta):
         '''
         pass
 
+    @abstractmethod    
+    def put_template(self, pixels, pos_zxy, image_nr, label_value):
+        '''
+        Puts probabilities (pixels) for a certain label to the data storage.
+        These probabilities are prediction values from a classifier (i.e. the
+        output of the classier)
+
+        :param pixels: 3D matrix of probability values
+        :type pixels: 3D numpy array of floats with shape (z,x,y)
+        :param pos_zxy: upper left position of pixels in source image_nr
+        :type pos_zxy: tuple of length 3 (z,x,y) with integer values
+        :param image_nr: index of image
+        :returns: bool (True if successful)
+        '''
+
+
     @abstractmethod
     def load_img_dimensions(self, image_nr):
         '''

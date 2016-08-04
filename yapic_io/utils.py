@@ -194,6 +194,38 @@ def compute_pos(shape, size):
 
 
 
+def add_to_filename(path, insert_str, suffix=True):
+    '''
+    adds suffix ore prefix to filename
+
+    >>> from yapic_io.utils import add_to_filename
+    >>> path = 'path/to/tiff/file.tif'
+    >>> add_str = 'label_1'
+    >>> add_to_filename(path, add_str, suffix=True)
+    'path/to/tiff/file_label_1.tif'
+    >>> add_to_filename(path, add_str, suffix=False) #add as prefix
+    'path/to/tiff/label_1_file.tif'
+
+    '''
+    
+    if not insert_str.replace('_','').isalnum():
+        #underscore and alphanumeric characters are allowed
+        raise ValueError('insert_str characters must only be alphanumeric, not the case here: %s' \
+            % insert_str)
+
+
+    filename = os.path.basename(path)
+    dirname = os.path.dirname(path)
+    filename_trunk, ext = os.path.splitext(filename)
+
+    if suffix:
+        out_filename = filename_trunk + '_' + insert_str + ext
+    else:
+        out_filename = insert_str + '_' + filename_trunk + ext 
+    return os.path.join(dirname, out_filename)   
+
+
+
 
 
 

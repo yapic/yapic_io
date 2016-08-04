@@ -3,7 +3,7 @@ import yapic_io.image_importers as ip
 import logging
 import os
 import glob
-from yapic_io.utils import get_template_meshgrid
+from yapic_io.utils import get_template_meshgrid, add_to_filename
 from functools import lru_cache
 from yapic_io.connector import Connector
 logger = logging.getLogger(os.path.basename(__file__))
@@ -37,6 +37,7 @@ class TiffConnector(Connector):
 
         self.img_path, self.img_filemask = os.path.split(img_filepath)
         self.label_path, self.label_filemask = os.path.split(label_filepath)
+        self.savepath = savepath #path for probability maps
 
         self.load_img_filenames()
         self.load_label_filenames()
@@ -62,6 +63,43 @@ class TiffConnector(Connector):
         
         return len(self.filenames)
 
+
+    
+    def put_template(self, pixels, pos_zxy, image_nr, label_value):
+        
+        if not len(pos_zxy) == 3:
+            raise ValueError('pos_zxy has not length 3: %s' % str(pos_zxy))
+
+        if not len(pixels.shape) == 3:
+            raise ValueError('''probability map pixel template
+             must have 3 dimensions (z,x,y), but has %s : 
+             pixels shape is %s''' % \
+             (str(len(pixels.shape)), str(pixels.shape)))
+
+        out_path = self.init_probmap_image(image_nr, label_value)
+
+        ip.add_vals_to_tiff_image(out_path, pos_zxy, pixels)
+
+
+    def init_probmap_image(self, image_nr, label_value, overwrite=False):
+        out_path = self.get_probmap_path(image_nr, label_value)
+        _, z_shape, x_shape, y_shape = self.load_img_dimensions(image_nr)
+        
+        if not os.path.isfile(out_path) or overwrite:
+            ip.init_empty_tiff_image(out_path, x_shape, y_shape, z_size=z_shape)
+            logger.info('initialize a new probmap image: %s', out_path)
+        return out_path        
+
+    def get_probmap_path(self, image_nr, label_value):
+        if self.savepath is None:
+            raise ValueError('savepath not set')
+        image_filename = self.filenames[image_nr][0]
+        probmap_filename = add_to_filename(image_filename,\
+                     'class_' + str(label_value))
+        return os.path.join(self.savepath, probmap_filename)
+
+
+            
 
     def get_template(self, image_nr=None, pos=None, size=None):
 

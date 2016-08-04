@@ -96,4 +96,31 @@ class TestUtils(TestCase):
         val = [(0, 0), (0, 2), (2, 0), (2, 2), (4, 0), (4, 2)]
         self.assertEqual(val, res)
 
+    def test_add_to_filename(self):
 
+        path = 'path/to/tiff/file.tif'
+        add_str = 'label_1'
+
+        out_s = ut.add_to_filename(path, add_str, suffix=True)
+        out_p = ut.add_to_filename(path, add_str, suffix=False)
+
+        self.assertEqual(out_s, 'path/to/tiff/file_label_1.tif')
+        self.assertEqual(out_p, 'path/to/tiff/label_1_file.tif')
+
+    def test_add_to_filename_2(self):
+
+        path = 'tifffile.tif'
+        add_str = 'label_1'
+
+        out_s = ut.add_to_filename(path, add_str, suffix=True)
+        out_p = ut.add_to_filename(path, add_str, suffix=False)
+
+        self.assertEqual(out_s, 'tifffile_label_1.tif')
+        self.assertEqual(out_p, 'label_1_tifffile.tif')
+    
+
+
+
+
+
+            
