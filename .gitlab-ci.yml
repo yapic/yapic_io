@@ -18,6 +18,7 @@ stages:
 run_cpu_tests:
   stage: test
   script:
+    - pip install tifffile #should be shifted to docker image later
     - pip install nose
     - cd ${CI_PROJECT_DIR}
     - nosetests --with-doctest --with-timer --with-coverage --cover-package=yapic_io
