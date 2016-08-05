@@ -12,21 +12,29 @@ class Minibatch(object):
 
     Code example for initializing a Minibatch:
 
-    >>> from yapic_io.tiff_connector import TiffConnector
-    >>> from yapic_io.dataset import Dataset
-    >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/'
-    >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
-    >>> t = TiffConnector(pixel_image_dir, label_image_dir)
-    >>> d = Dataset(t)
-    >>> size = (1,3,4)
-    >>> pad = (1,2,2)
-    >>> batch_size = 4
-    >>> m = Minibatch(d, batch_size, size, padding_zxy=pad)
-    >>> c=0
+    >>> from yapic_io.factories import make_tiff_interface
+    >>>
+    >>> #define data loacations
+    >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/*.tif'
+    >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/*.tif'
+    >>> savepath = 'yapic_io/test_data/tmp/'
+    >>> 
+    >>> tpl_size = (1,5,4) # size of network output layer in zxy
+    >>> padding = (0,2,2) # padding of network input layer in zxy, in respect to output layer
+    >>>
+    >>> # make minibatch mb and prediction interface p with TiffConnector binding
+    >>> m, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size, padding_zxy=padding) 
+    >>>
+    >>> counter=0
     >>> for mini in m:
+    ...     weights = mini.weights #shape is (3,1,5,4) : 3 label-classes, 1 z, 5 x, 4 y
+    ...     #shape of weights is (6,3,1,5,4) : batchsize 6 , 3 label-classes, 1 z, 5 x, 4 y
+    ...        
+    ...     pixels = mini.pixels 
+    ...     # shape of pixels is (3,1,9,8) : 3 channels, 1 z, 9 x, 4 y (more xy due to padding)
     ...     #here: apply training on mini.pixels and mini.weights
-    ...     c+=1
-    ...     if c>10:
+    ...     counter += 1
+    ...     if counter > 10: #m is infinite
     ...         break
 
 

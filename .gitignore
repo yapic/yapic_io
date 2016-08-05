@@ -11,6 +11,9 @@
 # Setuptools distribution folder.
 /dist/
 
+#output data from tests
+yapic_io/test_data/tmp/
+
 # Python egg metadata, regenerated from source files by setuptools.
 /*.egg-info
 

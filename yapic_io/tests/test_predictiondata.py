@@ -106,7 +106,8 @@ class TestPredictiondata(TestCase):
     def test_put_probmap_data(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = TiffConnector(img_path,label_path)
+        savepath = os.path.join(base_path, '../test_data/tmp/')
+        c = TiffConnector(img_path,label_path, savepath=savepath)
         
         c.filenames = [\
                 ['6width4height3slices_rgb.tif', None]\
@@ -190,5 +191,38 @@ class TestPredictiondata(TestCase):
             pass             
 
             
-            
+    # def test_is_tpl_size_valid(self):
+    #     img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+    #     label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+    #     savepath = os.path.join(base_path, '../test_data/tmp/')
+
+
+
+    #     c = TiffConnector(img_path,label_path, savepath = savepath)
+        
+    #     c.filenames = [\
+    #             ['6width4height3slices_rgb.tif', None]\
+    #             , ['40width26height3slices_rgb.tif', None]\
+    #             , ['40width26height6slices_rgb.tif', None]\
+    #             ]
+    #     c.load_label_filenames()    
+
+    #     d = Dataset(c)
+
+    #     size = (3,3,3)
+    #     p = PredictionData(d, size)
+    #     self.assertTrue(p._is_tpl_size_valid(size))
+
+    #     size = (3,6,4)
+    #     p = PredictionData(d, size)
+    #     self.assertTrue(p._is_tpl_size_valid(size))
+
+    #     size = (3,6,5)
+    #     p = PredictionData(d, size)
+    #     self.assertFalse(p._is_tpl_size_valid(size))
+
+
+
+
+
 
