@@ -2,7 +2,7 @@ from unittest import TestCase
 import os
 from yapic_io.tiff_connector import TiffConnector
 from yapic_io.dataset import Dataset
-from yapic_io.prediction_data import Prediction_data
+from yapic_io.prediction_data import PredictionData
 import numpy as np
 import yapic_io.utils as ut
 base_path = os.path.dirname(__file__)
@@ -23,7 +23,7 @@ class TestPredictiondata(TestCase):
 
         size = (1,1,1)
 
-        p = Prediction_data(d, size)
+        p = PredictionData(d, size)
 
         print(p._tpl_pos_all)
         print(len(p._tpl_pos_all))
@@ -47,7 +47,7 @@ class TestPredictiondata(TestCase):
 
         size = (3,6,4)
 
-        p = Prediction_data(d, size)
+        p = PredictionData(d, size)
 
         print(p._tpl_pos_all)
         print(len(p._tpl_pos_all))
@@ -70,7 +70,7 @@ class TestPredictiondata(TestCase):
 
         size = (2,6,4)
 
-        p = Prediction_data(d, size)
+        p = PredictionData(d, size)
 
         print(p._tpl_pos_all)
         print(len(p._tpl_pos_all))
@@ -93,7 +93,7 @@ class TestPredictiondata(TestCase):
 
         size = (1,6,4)
 
-        p = Prediction_data(d, size)
+        p = PredictionData(d, size)
 
         print(p[0].get_pixels().shape)
         print(p[1].get_pixels().shape)
@@ -117,7 +117,7 @@ class TestPredictiondata(TestCase):
 
         size = (1,3,4)
 
-        p = Prediction_data(d, size)
+        p = PredictionData(d, size)
 
         data = np.ones((2,1,3,4))
         p[0].put_probmap_data(data)
@@ -146,7 +146,7 @@ class TestPredictiondata(TestCase):
 
         size = (3,3,3)
 
-        p = Prediction_data(d, size)
+        p = PredictionData(d, size)
 
         data = np.ones((3,3,3))
         
