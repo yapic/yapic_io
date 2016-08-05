@@ -47,7 +47,7 @@ Classifier training:
     >>>
     >>> counter=0
     >>> for mini in m:
-    ...     weights = mini.weights #shape is (3,1,5,4) : 3 label-classes, 1 z, 5 x, 4 y
+    ...     weights = mini.weights
     ...     #shape of weights is (6,3,1,5,4) : batchsize 6 , 3 label-classes, 1 z, 5 x, 4 y
     ...        
     ...     pixels = mini.pixels 
