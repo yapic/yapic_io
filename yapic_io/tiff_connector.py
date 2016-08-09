@@ -6,6 +6,7 @@ import glob
 from yapic_io.utils import get_template_meshgrid, add_to_filename
 from functools import lru_cache
 from yapic_io.connector import Connector
+from pprint import pprint
 logger = logging.getLogger(os.path.basename(__file__))
 
 
@@ -150,18 +151,26 @@ class TiffConnector(Connector):
         everything identical except nr of channels (label mat always 1)
         '''
         logger.info('labelmat dimensions check')
+        nr_channels = []
         for image_nr in list(range(self.get_image_count())):
             im_dim = self.load_img_dimensions(image_nr)
             label_dim = self.load_labelmat_dimensions(image_nr)
             
+
             if label_dim is None:
                 logger.info('check image nr %s: ok (no labelmat found) ', image_nr)
             else:
-                if (label_dim[0]  == 1) and (label_dim[1:] == im_dim[1:]):
+                nr_channels.append(label_dim[0])
+                logger.info('found %s label channel(s)', nr_channels[-1])
+                pprint(self.filenames)
+                logger.info('labeldim: %s', label_dim)
+                logger.info('imdim: %s ', im_dim)
+                if label_dim[1:] == im_dim[1:]:
                     logger.info('check image nr %s: ok ', image_nr)
                 else:
-                    logger.info('check image nr %s: dims do not match ', image_nr)   
-
+                    raise ValueError('check image nr %s: dims do not match ' % str(image_nr))   
+        if len(set(nr_channels))>1:
+            raise ValueError('nr of channels not consitent in input data, found following nr of labelmask channels: %s' , str(set(nr_channels)))            
 
     @lru_cache(maxsize = 20)
     def load_image(self, image_nr):

@@ -158,6 +158,22 @@ class TestTiffconnector(TestCase):
         #self.assertTrue(False)
 
 
+    # def test_check_labelmat_dimensions_2(self):
+    #     img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+    #     label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel_not_valid/')
+    #     c = TiffConnector(img_path, label_path)
+        
+    #     c.filenames = [\
+    #             ['6width4height3slices_rgb.tif', None]\
+    #             , ['40width26height3slices_rgb.tif', None]\
+    #             , ['40width26height6slices_rgb.tif', None]\
+    #             ]    
+    #     print(c.filenames)
+    #     c.load_label_filenames()
+    #     c.check_labelmat_dimensions()
+    #     #self.assertTrue(False)    
+
+
     def test_get_labelvalues_for_im(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')

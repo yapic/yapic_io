@@ -1,5 +1,8 @@
 
 
+
+
+
 40width26height3slices_rgb.tif
 
 label positions and values:
@@ -36,3 +39,8 @@ x y z labels
 0 0 2 109
 1 0 2 109
 1 2 2 109
+
+
+
+
+the multichannel label test data have 2 channels. each channel has identical label values (i.e. channels are just copied)
