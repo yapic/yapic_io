@@ -162,9 +162,9 @@ class TiffConnector(Connector):
             else:
                 nr_channels.append(label_dim[0])
                 logger.info('found %s label channel(s)', nr_channels[-1])
-                pprint(self.filenames)
-                logger.info('labeldim: %s', label_dim)
-                logger.info('imdim: %s ', im_dim)
+                #pprint(self.filenames)
+                #logger.info('labeldim: %s', label_dim)
+                #logger.info('imdim: %s ', im_dim)
                 if label_dim[1:] == im_dim[1:]:
                     logger.info('check image nr %s: ok ', image_nr)
                 else:
