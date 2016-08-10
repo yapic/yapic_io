@@ -1,10 +1,13 @@
-import numpy as np
-import yapic_io.image_importers as ip
 import logging
 import os
 import glob
-from yapic_io.utils import get_template_meshgrid, add_to_filename
+import itertools
 from functools import lru_cache
+
+import numpy as np
+
+import yapic_io.image_importers as ip
+from yapic_io.utils import get_template_meshgrid, add_to_filename, lev_distance
 from yapic_io.connector import Connector
 from pprint import pprint
 logger = logging.getLogger(os.path.basename(__file__))
@@ -46,7 +49,6 @@ class TiffConnector(Connector):
 
 
     def __repr__(self):
-
         infostring = \
             'Connector_tiff object\n' \
             'image filepath: %s\n' \
@@ -58,16 +60,13 @@ class TiffConnector(Connector):
 
 
     def get_image_count(self):
-        
         if self.filenames is None:
             return 0
         
         return len(self.filenames)
 
 
-    
     def put_template(self, pixels, pos_zxy, image_nr, label_value):
-        
         if not len(pos_zxy) == 3:
             raise ValueError('pos_zxy has not length 3: %s' % str(pos_zxy))
 
@@ -150,15 +149,14 @@ class TiffConnector(Connector):
         check if label mat dimensions fit to image dimensions, i.e.
         everything identical except nr of channels (label mat always 1)
         '''
-        logger.info('labelmat dimensions check')
+        logger.debug('labelmat dimensions check')
         nr_channels = []
         for image_nr in list(range(self.get_image_count())):
             im_dim = self.load_img_dimensions(image_nr)
             label_dim = self.load_labelmat_dimensions(image_nr)
-            
 
             if label_dim is None:
-                logger.info('check image nr %s: ok (no labelmat found) ', image_nr)
+                logger.debug('check image nr %s: ok (no labelmat found) ', image_nr)
             else:
                 nr_channels.append(label_dim[0])
                 logger.info('found %s label channel(s)', nr_channels[-1])
@@ -201,7 +199,7 @@ class TiffConnector(Connector):
             return None
         
         path = os.path.join(self.label_path, label_filename)
-        logger.info('try loading labelmat %s',path)
+        logger.debug('try loading labelmat %s',path)
         return ip.import_tiff_image(path)    
 
 
@@ -262,9 +260,15 @@ class TiffConnector(Connector):
         return True          
 
 
-    def load_label_filenames(self, mode='identical'):
+    def load_label_filenames(self, mode=None):
         if self.filenames is None:
             return
+
+        if mode is None:
+            if os.path.isdir(self.label_path) and os.path.samefile(self.label_path, self.img_path):
+                mode = 'order'
+            else:
+                mode = 'identical'
 
         if mode == 'identical':
             #if label filenames should match exactly with img filenames
@@ -273,13 +277,37 @@ class TiffConnector(Connector):
                 label_path = os.path.join(self.label_path, img_filename)
                 if os.path.isfile(label_path): #if label file exists for image file
                     name_tuple[1] = img_filename
+        elif mode == 'order':
+            image_filenames = [pair[0] for pair in self.filenames]
+            label_filenames = sorted(glob.glob(os.path.join(self.label_path, self.label_filemask)))
+            label_filenames = [os.path.split(fname)[1] for fname in label_filenames]
+
+            if len(image_filenames) != len(label_filenames):
+                msg = 'Number of image files ({}) and label files ({}) differ!'
+                logger.critical(msg.format(len(image_filenames), len(label_filenames)))
+
+            self.filenames = list(zip(image_filenames, label_filenames))
+        else:
+            raise NotImplemented
+
+
+    def check_filename_similarity(self):
+        distances = list(itertools.starmap(lev_distance, self.filenames))
+        dist_min = np.amin(distances)
+        dist_argmax = np.argmax(distances)
+        dist_max = distances[dist_argmax]
+
+        if dist_max - dist_min > 0:
+            logger.warn('Odd filename pair detected {}'.format(self.filenames[dist_argmax]))
+            return False
+        return True
 
 
     def load_img_filenames(self):
         '''
         find all tiff images in specified folder (self.img_path, self.img_filemask)
         '''
-        img_filenames = glob.glob(os.path.join(self.img_path, self.img_filemask))
+        img_filenames = sorted(glob.glob(os.path.join(self.img_path, self.img_filemask)))
         
         filenames = [[os.path.split(filename)[1], None] for filename in img_filenames]
         if len(filenames) == 0:

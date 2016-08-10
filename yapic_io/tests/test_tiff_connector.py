@@ -12,7 +12,6 @@ base_path = os.path.dirname(__file__)
 
 class TestTiffconnector(TestCase):
     def test_load_filenames(self):
-
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         c = TiffConnector(img_path,'path/to/nowhere/')
 
@@ -33,15 +32,35 @@ class TestTiffconnector(TestCase):
         self.assertEqual(set(img_fnames), set(fnames))
 
 
+    def test_load_filenames_from_same_path(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/together/img*.tif')
+        lbl_path = os.path.join(base_path, '../test_data/tiffconnector_1/together/lbl*.tif')
+        c = TiffConnector(img_path, lbl_path)
+
+        img_filenames = [\
+                 ('img_40width26height3slices_rgb.tif', 'lbl_40width26height3slices_rgb.tif')\
+                ,('img_6width4height3slices_rgb.tif', 'lbl_6width4height3slices_rgb.tif')\
+                ]
+
+        c.load_img_filenames()
+        c.load_label_filenames()
+        actual_fnames = [e[0] for e in c.filenames]
+        expected_fnames = [e[0] for e in img_filenames]
+        print('c filenames:')
+        print(c.filenames)
+        print('fnames')
+        print(actual_fnames)
+        print(set(actual_fnames))
+        self.assertEqual(set(expected_fnames), set(actual_fnames))
+        self.assertEqual(img_filenames, c.filenames)
+
+
     def test_load_filenames_emptyfolder(self):
         img_path = os.path.join(base_path, '../test_data/empty_folder/')
         c = TiffConnector(img_path,'path/to/nowhere/')
         #c.load_img_filenames()
         self.assertIsNone(c.filenames)
 
-
-
-    
 
     def test_load_img_dimensions(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
@@ -62,6 +81,7 @@ class TestTiffconnector(TestCase):
         self.assertEqual(c.load_img_dimensions(1), (3, 3, 40, 26))
         self.assertEqual(c.load_img_dimensions(2), (3, 6, 40, 26))
 
+
     def test_load_image(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         c = TiffConnector(img_path,'path/to/nowhere/')
@@ -69,7 +89,8 @@ class TestTiffconnector(TestCase):
         im = c.load_image(0)
         print(im)
         
-        self.assertEqual(im.shape, (3, 3, 6, 4))   
+        self.assertEqual(im.shape, (3, 3, 40, 26))
+
 
     def test_get_template(self):
         
@@ -84,11 +105,11 @@ class TestTiffconnector(TestCase):
         tpl = c.get_template(image_nr=image_nr, pos=pos, size=size)
         val = np.empty(shape=size)
         val[0,0,0,0] = 151
-        val[0,0,0,1] = 132
+        val[0,0,0,1] = 151
         val = val.astype(int)
         print(val)
         print(tpl)
-        self.assertTrue((tpl == val).all())
+        np.testing.assert_array_equal(tpl, val)
 
 
     def test_exists_label_for_image_nr(self):

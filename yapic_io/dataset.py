@@ -393,7 +393,6 @@ class Dataset(object):
         labels = {}
         
         for image_nr in list(range(self.n_images)):
-            
             label_coor = self.pixel_connector.get_label_coordinates(image_nr)
             if label_coor is not None:
                 label_coor_5d = label_coordinates_to_5d(label_coor, image_nr)
