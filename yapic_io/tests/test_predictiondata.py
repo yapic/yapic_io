@@ -173,7 +173,7 @@ class TestPredictiondata(TestCase):
 
         for t in p:
             data = data+1
-            t.put_probmap_data_for_label(data, label=109)
+            t.put_probmap_data_for_label(data, label=1)
     
 
 

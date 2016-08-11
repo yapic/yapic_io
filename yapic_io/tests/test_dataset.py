@@ -574,7 +574,7 @@ class TestDataset(TestCase):
         img_nr = 0
         pos_czxy = (0,0,0)
         size_czxy = (1,6,4)
-        label_value = 150
+        label_value = 3
         mat = d._get_template_for_label_inner(img_nr,\
          pos_czxy, size_czxy, label_value)
         
@@ -605,7 +605,7 @@ class TestDataset(TestCase):
         img_nr = 0
         pos_czxy = (0,0,0)
         size_czxy = (1,6,4)
-        label_value = 150
+        label_value = 3
         mat = d.get_template_for_label(img_nr,\
          pos_czxy, size_czxy, label_value)
         
@@ -636,7 +636,7 @@ class TestDataset(TestCase):
         img_nr = 0
         pos_czxy = (0,2,1)
         size_czxy = (1,7,2)
-        label_value = 150
+        label_value = 3
         mat = d.get_template_for_label(img_nr,\
          pos_czxy, size_czxy, label_value)
         
@@ -644,7 +644,7 @@ class TestDataset(TestCase):
         # val[0,0,1] = 1
         # val[0,4,1] = 1
         # val[0,5,1] = 1 
-        print(d.label_coordinates[150])
+        print(d.label_coordinates[3])
         print('tpl')
         print(mat)
 
@@ -676,11 +676,12 @@ class TestDataset(TestCase):
 
         d = Dataset(c)
         d.load_label_coordinates()
-        d.set_weight_for_label(1.2, 150)
+        d.set_weight_for_label(1.2, 3)
         img_nr = 0
         pos_czxy = (0,0,0)
         size_czxy = (1,6,4)
-        label_value = 150
+        label_value = 3
+        pprint(d.label_coordinates)
         mat = d._get_template_for_label_inner(img_nr,\
          pos_czxy, size_czxy, label_value)
         
@@ -690,7 +691,9 @@ class TestDataset(TestCase):
         val[0,0,1] = 1.2
         val[0,4,1] = 1.2
         val[0,5,1] = 1.2 
-
+        pprint('mat')
+        pprint(mat)
+        pprint(val)
         self.assertTrue((val==mat).all())    
 
 
@@ -715,13 +718,13 @@ class TestDataset(TestCase):
         print(d.label_coordinates)
         #check if dimensions match
         self.assertEqual(d.label_weights.keys(), d.label_coordinates.keys())
-        self.assertEqual(len(d.label_weights[91]), len(d.label_coordinates[91]))
-        self.assertEqual(len(d.label_weights[109]), len(d.label_coordinates[109]))
-        self.assertEqual(len(d.label_weights[150]), len(d.label_coordinates[150]))
+        self.assertEqual(len(d.label_weights[1]), len(d.label_coordinates[1]))
+        self.assertEqual(len(d.label_weights[2]), len(d.label_coordinates[2]))
+        self.assertEqual(len(d.label_weights[3]), len(d.label_coordinates[3]))
         
-        self.assertEqual(set(d.label_weights[91]), set([1]))    
-        self.assertEqual(set(d.label_weights[109]), set([1]))    
-        self.assertEqual(set(d.label_weights[150]), set([1]))    
+        self.assertEqual(set(d.label_weights[1]), set([1]))    
+        self.assertEqual(set(d.label_weights[2]), set([1]))    
+        self.assertEqual(set(d.label_weights[3]), set([1]))    
 
     
     def test_set_weight_for_label(self):
@@ -738,10 +741,10 @@ class TestDataset(TestCase):
 
         d = Dataset(c)
         
-        d.set_weight_for_label(0.7, 150)
+        d.set_weight_for_label(0.7, 3)
 
-        self.assertEqual(d.label_weights[150], [0.7, 0.7, 0.7, 0.7, 0.7, 0.7])
-        self.assertEqual(d.label_weights[91], [1, 1, 1, 1])
+        self.assertEqual(d.label_weights[3], [0.7, 0.7, 0.7, 0.7, 0.7, 0.7])
+        self.assertEqual(d.label_weights[1], [1, 1, 1, 1])
 
     def test_equalize_label_weights(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
@@ -761,9 +764,9 @@ class TestDataset(TestCase):
 
         print(d.label_weights)
 
-        res = np.unique(np.array(d.label_weights[91])) + \
-            np.unique(np.array(d.label_weights[109])) + \
-            np.unique(np.array(d.label_weights[150])) 
+        res = np.unique(np.array(d.label_weights[1])) + \
+            np.unique(np.array(d.label_weights[2])) + \
+            np.unique(np.array(d.label_weights[3])) 
         
         print(res)
         self.assertEqual(np.round(res[0],3), 1.)
@@ -1095,7 +1098,7 @@ class TestDataset(TestCase):
         pos_zxy = (0,0,0)
         size_zxy = (1,4,3)
         channels = [1]
-        labels = [109, 150]
+        labels = [2, 3]
         
 
         tr = d.get_training_template(img, pos_zxy, size_zxy, channels, labels,\
@@ -1152,7 +1155,10 @@ class TestDataset(TestCase):
 
         pixel_shape_val = (3,3,7,8)
         weight_shape_val = (3,1,3,4)
-        labels_val = [91, 109, 150]
+        #labels_val = [91, 109, 150]
+        
+        #mapping [{91: 1, 109: 2, 150: 3}]
+        labels_val = [1, 2, 3]
         tpl = d.pick_random_training_template(\
             size, channels, pixel_padding=pad, rotation_angle=45)
 
@@ -1187,14 +1193,14 @@ class TestDataset(TestCase):
         pixels = np.array([[[.1, .2, .3],\
                             [.4, .5, .6]]], dtype=np.float32)
         
-        path = savepath + '6width4height3slices_rgb_class_109.tif'
+        path = savepath + '6width4height3slices_rgb_class_2.tif'
         
         try:
             os.remove(path)
         except:
             pass    
 
-        d.put_prediction_template(pixels, pos_zxy=(0,1,1), image_nr=0, label_value=109)
+        d.put_prediction_template(pixels, pos_zxy=(0,1,1), image_nr=0, label_value=2)
         probim = ip.import_tiff_image(path, zstack=True)
         pprint(probim)
 

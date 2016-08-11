@@ -1,6 +1,8 @@
 from unittest import TestCase
 import os
+import numpy as np 
 
+from pprint import pprint
 
 import yapic_io.utils as ut
 
@@ -121,6 +123,57 @@ class TestUtils(TestCase):
 
 
 
+    def test_remove_exclusive_vals_from_set(self):
+        list_of_sets = [{1,2,3}, {1,2}, {1,4}, {5,6}]
 
+        res = ut.remove_exclusive_vals_from_set(list_of_sets)
+        val = [{1,2}, {1,2}, {1}, set()]
+        self.assertEqual(res, val)
 
+    def test_remove_exclusive_vals_from_set(self):
+        list_of_sets = [{1,2,3}, {1,2}, {1,4}, {5,6}]
+
+        res = ut.remove_exclusive_vals_from_set(list_of_sets)
+        val = [{1,2}, {1,2}, {1}, set()]
+        self.assertEqual(res, val)
+    
+    def test_get_exclusive_vals_from_set(self):
+        list_of_sets = [{1,2,3}, {1,2}, {1,4}, {5,6}]
+
+        res = ut.get_exclusive_vals_from_set(list_of_sets)
+        val = [{3}, set(), {4}, {5,6}]
+        self.assertEqual(res, val)
+
+            
+    def test_assign_slice_by_slice(self):
+        
+        vol = np.array([[[ 0.,  0.,  0.],
+                         [ 0.,  1.,  2.]],
+                        [[ 0.,  0.,  0.],
+                         [ 0.,  1.,  2.]],
+                        [[ 0.,  0.,  0.],
+                         [ 0.,  1.,  2.]]])
+
+        val = np.array([[[ 0.,  0.,  0.],
+                         [ 0.,  3.,  4.]],
+                        [[ 0.,  0.,  0.],
+                         [ 0.,  5.,  6.]],
+                        [[ 0.,  0.,  0.],
+                         [ 0.,  7.,  8.]]])
+
+        # vol = np.zeros((3,2,3))
+        
+        # vol[0,1,1] = 1
+        # vol[0,1,2] = 2
+        # vol[1,1,1] = 1
+        # vol[1,1,2] = 2
+        # vol[2,1,1] = 1
+        # vol[2,1,2] = 2
+
+        d = [{1:3, 2: 4}, {1:5, 2: 6}, {1:7, 2: 8}]
+
+        out = ut.assign_slice_by_slice(d, vol)
+        pprint(out)
+        self.assertTrue(np.array_equal(out,val))
+    
             

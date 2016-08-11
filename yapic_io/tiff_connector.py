@@ -3,7 +3,7 @@ import os
 import glob
 import itertools
 from functools import lru_cache
-
+import yapic_io.utils as ut
 import numpy as np
 
 import yapic_io.image_importers as ip
@@ -76,14 +76,24 @@ class TiffConnector(Connector):
 
         '''
 
-        img_filepath   = os.path.normpath(os.path.expanduser(img_filepath))
-        label_filepath = os.path.normpath(os.path.expanduser(label_filepath))
+        self.filenames = None # list of tuples: [(imgfile_1.tif, labelfile_1.tif), (imgfile_2.tif, labelfile_2.tif), ...] 
 
+        self.labelvalue_mapping = None #list of dicts of original and assigned labelvalues
         
+        #reason: assign unique labelvalues
+        # [{orig_label1: 1, orig_label2: 2}, {orig_label1: 3, orig_label2: 4}, ...]
+
         self.zstack = zstack
         self.multichannel_pixel_image = multichannel_pixel_image
         self.multichannel_label_image = multichannel_label_image
 
+
+
+        img_filepath   = os.path.normpath(os.path.expanduser(img_filepath))
+        label_filepath = os.path.normpath(os.path.expanduser(label_filepath))
+
+        
+        
 
         if os.path.isdir(img_filepath):
             img_filepath = os.path.join(img_filepath, '*.tif')
@@ -97,7 +107,7 @@ class TiffConnector(Connector):
         self.load_img_filenames()
         self.load_label_filenames()
         self.check_labelmat_dimensions()
-
+        self.map_labelvalues()
         
 
     def __repr__(self):
@@ -214,15 +224,13 @@ class TiffConnector(Connector):
             else:
                 nr_channels.append(label_dim[0])
                 logger.info('found %s label channel(s)', nr_channels[-1])
-                #pprint(self.filenames)
-                #logger.info('labeldim: %s', label_dim)
-                #logger.info('imdim: %s ', im_dim)
+                
                 if label_dim[1:] == im_dim[1:]:
                     logger.info('check image nr %s: ok ', image_nr)
                 else:
                     raise ValueError('check image nr %s: dims do not match ' % str(image_nr))   
         if len(set(nr_channels))>1:
-            raise ValueError('nr of channels not consitent in input data, found following nr of labelmask channels: %s' , str(set(nr_channels)))            
+            raise ValueError('nr of channels not consitent in input data, found following nr of labelmask channels: %s' % str(set(nr_channels)))            
 
     @lru_cache(maxsize = 20)
     def load_image(self, image_nr):
@@ -241,7 +249,7 @@ class TiffConnector(Connector):
 
 
     @lru_cache(maxsize = 20)    
-    def load_label_matrix(self, image_nr):
+    def load_label_matrix(self, image_nr, original_labelvalues=False):
         
         if not self.is_valid_image_nr(image_nr):
             return None      
@@ -254,8 +262,92 @@ class TiffConnector(Connector):
         
         path = os.path.join(self.label_path, label_filename)
         logger.debug('try loading labelmat %s',path)
-        return ip.import_tiff_image(path,\
-          zstack=self.zstack, multichannel=self.multichannel_label_image)    
+        
+        label_image = ip.import_tiff_image(path,\
+                zstack=self.zstack, multichannel=self.multichannel_label_image)    
+
+        if original_labelvalues:
+            return label_image
+        
+        label_image = ut.assign_slice_by_slice(self.labelvalue_mapping, label_image) 
+        
+        return label_image 
+
+
+    
+    def map_labelvalues(self):
+        '''
+        assign unique labelvalues to original labelvalues.
+        for multichannel label images it might happen, that identical
+        labels occur in different channels.
+        to avoid conflicts, original labelvalues are mapped to unique values
+        in ascending order 1,2,3,4...
+
+        This is defined in self.labelvalue_mapping:
+
+        [{orig_label1: 1, orig_label2: 2}, {orig_label1: 3, orig_label2: 4}, ...]
+
+        Each element of the list correponds to one label channel.
+        Keys are the original labels, values are the assigned labels that
+        will be seen by the Dataset object.
+        '''
+        label_mappings = []
+        o_labelvals = self.get_original_labelvalues()
+        new_label = 1
+        for labels_per_channel in o_labelvals:
+            label_mapping = {}
+            labels_per_channel = sorted(list(labels_per_channel))
+            for label in labels_per_channel:
+                label_mapping[label] = new_label
+                new_label += 1
+            label_mappings.append(label_mapping)
+        
+        self.labelvalue_mapping = label_mappings
+        return label_mappings           
+
+
+
+
+    def get_original_labelvalues(self):
+        '''
+        returns a list of sets. each set corresponds to 1 label channel.
+        each set contains the label values of that channel.
+        '''
+        
+        label_list_of_lists = []
+        for image_nr in range(self.get_image_count()):
+            labels_per_im = self.get_original_labelvalues_for_im(image_nr)
+            if labels_per_im is not None:
+                label_list_of_lists.append(labels_per_im)
+        if len(label_list_of_lists)==0:
+            return []
+
+        out = label_list_of_lists[0]
+        for labels_per_im in label_list_of_lists:
+            for channel, outchannel in zip(labels_per_im, out):
+                outchannel = outchannel.union(channel)
+        return out        
+
+
+
+    def get_original_labelvalues_for_im(self, image_nr):
+        mat = self.load_label_matrix(image_nr, original_labelvalues=True)
+        if mat is None:
+            return None
+        
+
+        out = []    
+        nr_channels = mat.shape[0]
+        for channel in range(nr_channels):
+            values =  np.unique(mat[channel,:,:,:])
+            values = values[values!=0]
+            out.append(set(values))
+        return out
+
+
+
+
+
 
 
     def get_labelvalues_for_im(self, image_nr):

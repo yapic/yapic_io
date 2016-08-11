@@ -7,6 +7,64 @@ import itertools
 logger = logging.getLogger(os.path.basename(__file__))
 
 
+def assign_slice_by_slice(assignment_dicts, vol):
+    nr_channels = vol.shape[0]
+    for c,cd in zip(range(nr_channels),assignment_dicts):
+        for key in cd.keys():
+            vol[c][vol[c]==key] = cd[key]
+    return vol        
+
+
+
+
+def remove_exclusive_vals_from_set(list_of_sets):
+    '''
+    takes a list of sets and removes for each set the values
+    that are not present any of the other sets of the list.
+
+    example:
+    list_of_sets = [{1,2,3}, {1,2}, {1,4}]
+    remove_exclusive_vals_from_set(list_of_sets)
+    [{1,2}, {1,2}, {1}]
+
+    '''
+
+    out = []
+    for i in range(len(list_of_sets)):
+        subset = set()
+        for j in range(len(list_of_sets)):        
+            if j==i:
+                pass
+            else:
+                subset = subset.union(list_of_sets[j])
+        out.append(list_of_sets[i].intersection(subset))         
+    return out            
+
+def get_exclusive_vals_from_set(list_of_sets):
+    '''
+    takes a list of sets and removes for each set the values
+    that are also present in the other sets of the list.
+
+    example:
+    list_of_sets = [{1,2,3}, {1,2}, {1,4}]
+    remove_exclusive_vals_from_set(list_of_sets)
+    [{3}, set(), {4}]
+
+    '''
+
+    out = []
+    for i in range(len(list_of_sets)):
+        subset = set()
+        for j in range(len(list_of_sets)):        
+            if j==i:
+                pass
+            else:
+                subset = subset.union(list_of_sets[j])
+        out.append(list_of_sets[i].difference(subset))         
+    return out            
+
+
+
 def get_indices(pos, size):
     '''
     returns all indices for a sub matrix, given a certain n-dimensional position (upper left)

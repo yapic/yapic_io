@@ -1,6 +1,6 @@
 from unittest import TestCase
 import os
-
+from pprint import pprint
 import numpy as np
 from yapic_io.tiff_connector import TiffConnector
 import yapic_io.image_importers as ip
@@ -176,23 +176,15 @@ class TestTiffconnector(TestCase):
         print(c.filenames)
         c.load_label_filenames()
         c.check_labelmat_dimensions()
-        #self.assertTrue(False)
-
-
-    # def test_check_labelmat_dimensions_2(self):
-    #     img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-    #     label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel_not_valid/')
-    #     c = TiffConnector(img_path, label_path)
         
-    #     c.filenames = [\
-    #             ['6width4height3slices_rgb.tif', None]\
-    #             , ['40width26height3slices_rgb.tif', None]\
-    #             , ['40width26height6slices_rgb.tif', None]\
-    #             ]    
-    #     print(c.filenames)
-    #     c.load_label_filenames()
-    #     c.check_labelmat_dimensions()
-    #     #self.assertTrue(False)    
+
+
+    def test_check_labelmat_dimensions_2(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel_not_valid/')
+    
+        
+        self.assertRaises(ValueError, lambda: TiffConnector(img_path, label_path))    
 
 
     def test_get_labelvalues_for_im(self):
@@ -210,7 +202,8 @@ class TestTiffconnector(TestCase):
 
         print('lbklals')
         print(labelvals)
-        self.assertEqual(labelvals, [109, 150])
+        self.assertEqual(labelvals, [2, 3])
+
 
     def test_get_label_coordinates(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
@@ -226,6 +219,7 @@ class TestTiffconnector(TestCase):
         labelc = c.get_label_coordinates(0)
         labelmat = c.load_label_matrix(0)
         
+        #label mapping [{91: 1, 109: 2, 150: 3}]               
         val_109 =\
            [(0, 0, 2, 1), (0, 0, 2, 2), (0, 0, 2, 3)\
            , (0, 0, 3, 1), (0, 0, 3, 2), (0, 0, 3, 3)\
@@ -236,14 +230,14 @@ class TestTiffconnector(TestCase):
             [(0, 0, 0, 1), (0, 0, 4, 1), (0, 0, 5, 1)]   
 
         print('109')
-        print(labelc[109])
+        print(labelc[2])
         print('150')
-        print(labelc[150])
+        print(labelc[3])
 
         print(labelmat)
         print(labelmat.shape)
-        self.assertEqual(val_109, labelc[109])
-        self.assertEqual(val_150, labelc[150])    
+        self.assertEqual(val_109, labelc[2])
+        self.assertEqual(val_150, labelc[3])    
     
     
     def test_get_probmap_path(self):
@@ -474,4 +468,64 @@ class TestTiffconnector(TestCase):
             os.remove(path)
         except:
             pass    
+
+    
+
+
+    def test_get_original_labelvalues_for_im(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path, label_path)
+
+        res = c.get_original_labelvalues_for_im(0)
+        self.assertEqual(res, [{91, 109, 150}])
+        res = c.get_original_labelvalues_for_im(1)
+        self.assertIsNone(res)
+        res = c.get_original_labelvalues_for_im(2)
+        
+        self.assertEqual(res, [{109, 150}])
+
+    def test_get_original_labelvalues_for_im_2(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/')
+        c = TiffConnector(img_path, label_path)
+
+        res = c.get_original_labelvalues_for_im(0)
+        self.assertEqual(res, [{91, 109, 150}, {91, 109, 150}])
+        res = c.get_original_labelvalues_for_im(1)
+        self.assertIsNone(res)
+        res = c.get_original_labelvalues_for_im(2)
+        
+        self.assertEqual(res, [{109, 150}, {109, 150}])
+
+    def test_get_original_labelvalues(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/')
+        c = TiffConnector(img_path, label_path)
+
+        res = c.get_original_labelvalues()
+        self.assertEqual(res, [{91, 109, 150}, {91, 109, 150}])
+        
+
+    def test_map_labelvalues(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/')
+        c = TiffConnector(img_path, label_path)
+
+        res = c.map_labelvalues()
+        self.assertEqual(res, [{91:1, 109:2, 150:3}, {91:4, 109:5, 150:6}])
+
+    def test_map_labelvalues_2(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path, label_path)
+
+        res = c.map_labelvalues()
+        self.assertEqual(res, [{91:1, 109:2, 150:3}])
+
+    
+    
+
+    
+
 

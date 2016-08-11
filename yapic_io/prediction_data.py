@@ -42,9 +42,9 @@ class PredictionData(object):
         ...     pixels_for_classifier = item.get_pixels() #input for classifier
         ...     mock_classifier_result = np.ones(tpl_size) * counter #classifier output
         ...     #pass classifier results for each class to data source
-        ...     item.put_probmap_data_for_label(mock_classifier_result, label=91)
-        ...     item.put_probmap_data_for_label(mock_classifier_result, label=109)
-        ...     item.put_probmap_data_for_label(mock_classifier_result, label=150)
+        ...     item.put_probmap_data_for_label(mock_classifier_result, label=1)
+        ...     item.put_probmap_data_for_label(mock_classifier_result, label=2)
+        ...     item.put_probmap_data_for_label(mock_classifier_result, label=3)
         ...     counter += 1
         >>>
 
@@ -314,11 +314,11 @@ class PredictionData(object):
         >>>
         >>>
         >>> p.get_labels() #we have 3 label classes
-        [91, 109, 150]
-        >>> p.remove_label(109) #remove label class 109
+        [1, 2, 3]
+        >>> p.remove_label(2) #remove label class 109
         True
         >>> p.get_labels() #only 2 classes remain selected
-        [91, 150]
+        [1, 3]
         
 
         '''    
@@ -345,23 +345,23 @@ class PredictionData(object):
         >>>
         >>>
         >>> p.get_labels() #we have 3 label classes
-        [91, 109, 150]
-        >>> p.remove_label(109) #remove label class 109
+        [1, 2, 3]
+        >>> p.remove_label(2) #remove label class 2
         True
         >>> p.get_labels() #only 2 classes remain selected
-        [91, 150]
-        >>> p.remove_label(91) #remove label class 91
+        [1, 3]
+        >>> p.remove_label(1) #remove label class 1
         True
         >>> p.get_labels() #only 1 class remains selected
-        [150]
-        >>> p.add_label(91)
+        [3]
+        >>> p.add_label(1)
         True
         >>> p.get_labels() 
-        [91, 150]
-        >>> p.add_label(109)
+        [1, 3]
+        >>> p.add_label(2)
         True
         >>> p.get_labels() 
-        [91, 109, 150]
+        [1, 2, 3]
 
 
         '''
@@ -401,7 +401,7 @@ class PredictionData(object):
         >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size)
         >>> #upon object initialization all available classes are set
         >>> p.get_labels()
-        [91, 109, 150]
+        [1, 2, 3]
         >>>
         >>> dummy_predictions_class_91 = np.ones(tpl_size)*0.1 #mocking some prediction data
         >>> dummy_predictions_class_109 = np.ones(tpl_size)*0.2
@@ -426,7 +426,7 @@ class PredictionData(object):
                 [ 0.3,  0.3,  0.3,  0.3]]])
         >>> 
         >>> p.get_labels()
-        [91, 109, 150]
+        [1, 2, 3]
         >>> probmap_4d = np.array([dummy_predictions_class_91, dummy_predictions_class_109, dummy_predictions_class_150])
         >>> probmap_4d.shape #has to match 3 classes, 1 z slice, 5 x, 4 y 
         (3, 1, 5, 4)
