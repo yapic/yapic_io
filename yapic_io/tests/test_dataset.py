@@ -1195,7 +1195,7 @@ class TestDataset(TestCase):
             pass    
 
         d.put_prediction_template(pixels, pos_zxy=(0,1,1), image_nr=0, label_value=109)
-        probim = ip.import_tiff_image(path)
+        probim = ip.import_tiff_image(path, zstack=True)
         pprint(probim)
 
         val = \

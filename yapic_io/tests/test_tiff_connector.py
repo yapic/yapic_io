@@ -315,8 +315,8 @@ class TestTiffconnector(TestCase):
         c.init_probmap_image(0,1, overwrite=True)
         c.init_probmap_image(0,2, overwrite=True)    
             
-        probim_1 = ip.import_tiff_image(path1)
-        probim_2 = ip.import_tiff_image(path2)
+        probim_1 = ip.import_tiff_image(path1, zstack=True)
+        probim_2 = ip.import_tiff_image(path2, zstack=True)
 
 
         self.assertEqual(probim_1.shape, (1,3,6,4))
@@ -359,7 +359,7 @@ class TestTiffconnector(TestCase):
             pass    
 
         c.put_template(pixels, pos_zxy=(0,1,1), image_nr=0, label_value=3)
-        probim = ip.import_tiff_image(path)
+        probim = ip.import_tiff_image(path, zstack=True)
         pprint(probim)
 
         val = \
@@ -418,7 +418,7 @@ class TestTiffconnector(TestCase):
             pass    
 
         c.put_template(pixels, pos_zxy=(0,1,1), image_nr=0, label_value=3)
-        probim = ip.import_tiff_image(path)
+        probim = ip.import_tiff_image(path, zstack=True)
         pprint(probim)
 
         val = \
@@ -445,7 +445,7 @@ class TestTiffconnector(TestCase):
 
 
         c.put_template(pixels, pos_zxy=(2,1,1), image_nr=0, label_value=3)
-        probim_2 = ip.import_tiff_image(path)
+        probim_2 = ip.import_tiff_image(path, zstack=True)
         pprint(probim_2)
 
         val_2 = \

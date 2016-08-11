@@ -15,8 +15,8 @@ logger = logging.getLogger(os.path.basename(__file__))
 
 class TiffConnector(Connector):
     '''
-    implementation of Connector for normal sized tiff images
-    and corresponding label masks in tiff format.
+    implementation of Connector for normal sized tiff images (up to 4 dimensions)
+    and corresponding label masks (up to 4 dimensions) in tiff format.
     
     Initiate a new TiffConnector as follows:
 
@@ -30,9 +30,60 @@ class TiffConnector(Connector):
     label filepath: yapic_io/test_data/tiffconnector_1/labels/*.tif
     <BLANKLINE>
     '''
-    def __init__(self, img_filepath, label_filepath, savepath=None):
+    def __init__(self\
+            , img_filepath, label_filepath, savepath=None\
+            , multichannel_pixel_image=None\
+            , multichannel_label_image=None\
+            , zstack=True):
+        
+        '''
+        :param img_filepath: path to source pixel images, use wildcards for filtering
+        :param label_filepath: path to label images, use wildcards for filtering
+        :param savepath: path for output probability images
+        :param multichannel_pixel_image: set True if pixel images have multiple channels
+        :type multichannel_pixel_image: bool
+        :param multichannel_label_image: set True if label images have multiple channels
+        :type multichannel_label_image: bool
+        :param zstack: set True if label- and pixel images are zstacks
+        :type zstack: bool
+
+        Label images and pixel images have to be equal in zxy dimensions, but can differ
+        in nr of channels.
+
+        Labels can be read from multichannel images. This is needed for networks
+        with multple output layers. Each channel is assigned one output layer.
+        Different labels from different channels can overlap (can share identical
+        xyz positions).
+
+        Multichannel_pixel_image,  multichannel_pixel_image and zstack
+        can be set to None. In this case the importer tries to map 
+        dimensions automatically. This does not always work, esp. in case
+        of 3 dimensional images. 
+
+        
+        Examples:
+        
+        - If zstack is set to False and multichannel_pixel_image is set to None,
+          the importer will assign the thrid dimensions (in case of 3 dimensional images)
+          to channels, i.e. interprets the image as multichannel, single z image.
+
+        - If zstack is set to None and multichannel_pixel_image is set to None,
+          the importer will assign all dims correctly in case of 4 dimensional images
+          and in case of 2 dimensional images (single z, singechannel). In case of 3
+          dimensional images, it throws an error, because it is not clear if the thrid
+          dimension is z or channel (RGB images will still be mapped correctly) 
+
+
+        '''
+
         img_filepath   = os.path.normpath(os.path.expanduser(img_filepath))
         label_filepath = os.path.normpath(os.path.expanduser(label_filepath))
+
+        
+        self.zstack = zstack
+        self.multichannel_pixel_image = multichannel_pixel_image
+        self.multichannel_label_image = multichannel_label_image
+
 
         if os.path.isdir(img_filepath):
             img_filepath = os.path.join(img_filepath, '*.tif')
@@ -47,6 +98,7 @@ class TiffConnector(Connector):
         self.load_label_filenames()
         self.check_labelmat_dimensions()
 
+        
 
     def __repr__(self):
         infostring = \
@@ -124,7 +176,8 @@ class TiffConnector(Connector):
             return False          
 
         path = os.path.join(self.img_path, self.filenames[image_nr][0])
-        return ip.get_tiff_image_dimensions(path) 
+        return ip.get_tiff_image_dimensions(path,\
+            zstack=self.zstack, multichannel=self.multichannel_pixel_image) 
 
     def load_labelmat_dimensions(self, image_nr):
         '''
@@ -141,7 +194,8 @@ class TiffConnector(Connector):
 
         if self.exists_label_for_img(image_nr):
             path = os.path.join(self.label_path, self.filenames[image_nr][1])
-            return ip.get_tiff_image_dimensions(path)               
+            return ip.get_tiff_image_dimensions(path,\
+                zstack=self.zstack, multichannel=self.multichannel_label_image)               
     
 
     def check_labelmat_dimensions(self):
@@ -200,7 +254,8 @@ class TiffConnector(Connector):
         
         path = os.path.join(self.label_path, label_filename)
         logger.debug('try loading labelmat %s',path)
-        return ip.import_tiff_image(path)    
+        return ip.import_tiff_image(path,\
+          zstack=self.zstack, multichannel=self.multichannel_label_image)    
 
 
     def get_labelvalues_for_im(self, image_nr):
