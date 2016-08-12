@@ -9,19 +9,29 @@ Its aim is to provide a convenient image data interface for training of
 fully convolutional neural networks, as well as automatic handling of 
 prediction data output for a trained classifier.
 
+yapic_io is designed as a convenient image data input/output interface for  
+libraries such as Theano or TensorFlow.
+
+
 Following problems occuring with training/classification are handeled by yapic_io:
 
-- Images of different sizes in z,x, and y can be applied to the same convolutional   
-  network. This is implemented by splitting images into smaller templates of identical sizes on the fly. The size these templates corresponds to the size of
-  the convolutional network's input layer. 
+- Images of different sizes in z,x, and y can be applied to the
+  same convolutional network. This is implemented by sliding windows. The size these windows correspond to the size of the convolutional network's input layer. 
 
 - Due to lazy data loading, images can be extremely large.
 
-- Image dimensions can be up to 4D (multchannel z-stack), as e.g. required for   
-  bioimages.
+- Image dimensions can be up to 4D (multchannel z-stack), as e.g. required
+  for bioimages.
 
 - Data augmentation for classifier training in built in.  
 
+- Made for sparsly labelled datasets: Training data is only (randomly) picked
+  from regions where labels are present. 
+
+- Usually, input layers of CNNs are larger than output layers. Thus, pixels
+  located at image edges are normally not classified. With yapic_io also
+  edge pixels are classified. This is achieved by mirroring pixel data in edge
+  regions. As a result, output classification images have identical dimensions as source images and can be overlayed easily.    
 
 
 
@@ -39,11 +49,13 @@ Classifier training:
     >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/*.tif'
     >>> savepath = 'yapic_io/test_data/tmp/'
     >>> 
+    >>>
     >>> tpl_size = (1,5,4) # size of network output layer in zxy
     >>> padding = (0,2,2) # padding of network input layer in zxy, in respect to output layer
     >>>
     >>> # make minibatch mb and prediction interface p with TiffConnector binding
-    >>> m, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size, padding_zxy=padding) 
+    >>> m, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size, padding_zxy=padding, multichannel_pixel_image=True, zstack=True,
+    multichannel_label_image=False) 
     >>>
     >>> counter=0
     >>> for mini in m:
