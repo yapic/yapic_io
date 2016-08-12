@@ -122,10 +122,20 @@ class TestImageImports(TestCase):
         self.assertEqual(dims, im.shape)
 
         path = os.path.join(base_path, '../test_data/tif_images/6width_4height_2slices_8bit_grayscale_zstack.tif')
-        dims = ip.get_tiff_image_dimensions(path, zstack=True)
+        
         im = ip.import_tiff_image(path, zstack=True)
-        self.assertEqual(dims, im.shape)
+        self.assertEqual((1,2,6,4), im.shape)
+        
+        
 
+
+
+    def test_import_tiff_image_2(self):
+        path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/6width4height3slices_rgb.tif')
+        im = ip.import_tiff_image(path)
+        print(im.shape)
+        print(np.unique(im.flatten()))
+        self.assertEqual((2,3,6,4), im.shape)
 
     def test_init_empty_tiff_image(self):
         path = os.path.join(base_path, '../test_data/tmp/empty.tif')

@@ -123,8 +123,61 @@ class TestPredictiondata(TestCase):
         data = np.ones((2,1,3,4))
         p[0].put_probmap_data(data)
 
-        
 
+    def test_put_probmap_data_multichannel_label(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/')
+        savepath = os.path.join(base_path, '../test_data/tmp/')
+        c = TiffConnector(img_path,label_path, savepath=savepath)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', None]\
+                ]
+        print('labels')
+        print(c.labelvalue_mapping)
+        c.load_label_filenames()    
+        c.map_labelvalues()
+        print('labels')
+        print(c.labelvalue_mapping)
+        d = Dataset(c)
+        print('label coors in dataset')
+        print(d.label_coordinates.keys())
+        size = (1,3,4)
+
+        p = PredictionData(d, size)
+        print('_labels')
+        print(p._labels)
+
+        data = np.ones((4,1,3,4))
+        p[0].put_probmap_data(data)
+
+        #self.assertTrue(False)
+
+        
+    def test_put_probmap_data_multichannel_label_2(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/')
+        savepath = os.path.join(base_path, '../test_data/tmp/')
+        c = TiffConnector(img_path,label_path, savepath=savepath)
+        
+        
+        print('labels')
+        print(c.labelvalue_mapping)
+        c.load_label_filenames()    
+        c.map_labelvalues()
+        print('labels')
+        print(c.labelvalue_mapping)
+        d = Dataset(c)
+        print('label coors in dataset')
+        print(d.label_coordinates.keys())
+        size = (1,3,4)
+
+        p = PredictionData(d, size)
+        print('_labels')
+        print(p._labels)
+
+        data = np.ones((6,1,3,4))
+        p[0].put_probmap_data(data)    
 
 
     def test_put_probmap_data_for_label(self):

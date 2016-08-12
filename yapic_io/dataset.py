@@ -106,7 +106,7 @@ class Dataset(object):
                                 % str(len(pos_zxy)))
 
         if not self.label_value_is_valid(label_value):
-            print(self.label_coordinates)
+            
             raise ValueError('label value not found: %s'\
                                 % str(label_value))    
 
@@ -394,7 +394,12 @@ class Dataset(object):
         
         for image_nr in list(range(self.n_images)):
             label_coor = self.pixel_connector.get_label_coordinates(image_nr)
+            
+           
+
+
             if label_coor is not None:
+                
                 label_coor_5d = label_coordinates_to_5d(label_coor, image_nr)
                 if not self.label_coordinates_is_valid(label_coor_5d):
                     logger.warning('failed to load label coordinates because of non valid data')
@@ -441,7 +446,8 @@ class Dataset(object):
         z,x,y within image size
         channel = 0 (for label data, always only one channel)
         image_nr between 0 and n_images-1
-        no duplicate positions within and across labels
+        no duplicate positions within labels
+        duplicate positions across labels is allowed
 
 
         label_cooridnates = 
@@ -454,15 +460,21 @@ class Dataset(object):
         
         '''
         
-        #check for duplicates
+        for key in label_coordinates.keys():
+            coor = label_coordinates[key]
+            if len(set(coor)) != len(coor):
+                logger.warning(\
+                    'duplicates detected in coordinates,' +\
+                    ' for label value %s',\
+                     str(key))
+                return False
+
+
         coor_flat = []
         for key in label_coordinates.keys():
             coor_flat = coor_flat + label_coordinates[key]
+        
 
-        if len(set(coor_flat)) != len(coor_flat):
-            #if threre are duplicate postitions
-            logger.warning('duplicate label positions detected')
-            return False
 
         for coor in coor_flat:
             #check for correct nr of dimensions    

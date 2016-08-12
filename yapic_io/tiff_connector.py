@@ -248,7 +248,7 @@ class TiffConnector(Connector):
         return True    
 
 
-    @lru_cache(maxsize = 20)    
+    
     def load_label_matrix(self, image_nr, original_labelvalues=False):
         
         if not self.is_valid_image_nr(image_nr):
@@ -388,7 +388,10 @@ class TiffConnector(Connector):
         label_coor = {}
         for label in labels:
             coors = np.array(np.where(mat==label))
+            
+            
             coor_list = [tuple(coors[:,i]) for i in list(range(coors.shape[1]))]
+            coor_list = [(0,) + c[1:] for c in coor_list] #set channel always to 1
             label_coor[label] = coor_list#np.array(np.where(mat==label))
         
         return label_coor    

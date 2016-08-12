@@ -465,15 +465,28 @@ class TestDataset(TestCase):
         
         d = Dataset(c)
 
+        #duplicates within one label are not allowed
+        coor = \
+            {
+            2 : [(2, 0, 3, 0, 0), (2, 0, 5, 1, 2), (2, 0, 3, 0, 0)],
+            3 : [(2, 0, 3, 1, 2), (2, 0, 5, 3, 4), (2, 0,1,1,1), (2, 0, 3, 0, 0)],
+            }
+        self.assertFalse(d.label_coordinates_is_valid(coor))    
+        
+
+        
+        #duplicates for different labels are allowed
         #duplicate
         coor = \
             {
             2 : [(2, 0, 3, 0, 0), (2, 0, 5, 1, 2)],
             3 : [(2, 0, 3, 1, 2), (2, 0, 5, 3, 4), (2, 0,1,1,1), (2, 0, 3, 0, 0)],
             }
+        self.assertTrue(d.label_coordinates_is_valid(coor))       
 
 
-        self.assertFalse(d.label_coordinates_is_valid(coor))
+
+        # self.assertFalse(d.label_coordinates_is_valid(coor))
 
         # one tuple with 4 instead 5 coordinate dimensions
         coor = \
