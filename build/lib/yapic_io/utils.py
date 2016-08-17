@@ -5,8 +5,7 @@ import os
 import random
 import itertools
 logger = logging.getLogger(os.path.basename(__file__))
-from difflib import SequenceMatcher
-from munkres import Munkres
+
 
 def assign_slice_by_slice(assignment_dicts, vol):
     nr_channels = vol.shape[0]
@@ -224,7 +223,12 @@ def compute_pos(shape, size):
 
     shift_last_tpl = np.zeros(len(shape)).astype(int)
     mod = shape % size #nr of out of bounds pixels for last template
-    
+    # print('mod')
+    # print(mod)
+    # print('size')
+    # print(size)
+    # print('shift_last_tpl')
+    # print(shift_last_tpl)
     
 
     if mod.any():
@@ -279,84 +283,29 @@ def add_to_filename(path, insert_str, suffix=True):
     return os.path.join(dirname, out_filename)   
 
 
-# def lev_distance(s1, s2):
-#     '''
-#     Levenshtein distance of two strings
-
-#     >>> lev_distance('kitten', 'sitting')
-#     3
-#     '''
-#     if len(s1) < len(s2):
-#         return lev_distance(s2, s1)
-
-#     # len(s1) >= len(s2)
-#     if len(s2) == 0:
-#         return len(s1)
-
-#     previous_row = range(len(s2) + 1)
-#     for i, c1 in enumerate(s1):
-#         current_row = [i + 1]
-#         for j, c2 in enumerate(s2):
-#             insertions = previous_row[j + 1] + 1 # j+1 instead of j since previous_row and current_row are one character longer
-#             deletions = current_row[j] + 1       # than s2
-#             substitutions = previous_row[j] + (c1 != c2)
-#             current_row.append(min(insertions, deletions, substitutions))
-#         previous_row = current_row
-
-#     return previous_row[-1]
-
-
-def string_distance(a, b):
-    return 1-SequenceMatcher(None, a, b).ratio()
-
-def compute_str_dist_matrix(s1, s2):
+def lev_distance(s1, s2):
     '''
-    -compute matrix of string distances for two lists of strings
-    - normalize lengths of string lists (fill shorter list with empty strings)
+    Levenshtein distance of two strings
+
+    >>> lev_distance('kitten', 'sitting')
+    3
     '''
-    lendiff = len(s1)-len(s2)
+    if len(s1) < len(s2):
+        return lev_distance(s2, s1)
 
-    appendix = ['' for _ in range(abs(lendiff))]
-    if lendiff < 0: #if s2 is longer:
-        s1 = s1 + appendix
-    if lendiff >0: #if s1 is longer:
-        s2 = s2 + appendix 
+    # len(s1) >= len(s2)
+    if len(s2) == 0:
+        return len(s1)
 
-    
-    mat = np.zeros((len(s1), len(s2)))
+    previous_row = range(len(s2) + 1)
+    for i, c1 in enumerate(s1):
+        current_row = [i + 1]
+        for j, c2 in enumerate(s2):
+            insertions = previous_row[j + 1] + 1 # j+1 instead of j since previous_row and current_row are one character longer
+            deletions = current_row[j] + 1       # than s2
+            substitutions = previous_row[j] + (c1 != c2)
+            current_row.append(min(insertions, deletions, substitutions))
+        previous_row = current_row
 
-    for i in range(len(s1)):
-        for j in range(len(s2)):
-            mat[i,j] = string_distance(s1[i],s2[j])
-    return mat, s1, s2        
-
-
-def find_best_matching_pairs(s1,s2):
-    '''
-    find global minimum for pairwise assignment of strings
-    by using the munkres (hungarian) algorithm
-    '''
-
-    mat, s1norm, s2norm = compute_str_dist_matrix(s1,s2)
-
-    m = Munkres()
-    indexes = m.compute(mat) #find assignment combination with lowest global cost
-    
-    
-    pairs = [[s1norm[i[0]], s2norm[i[1]]] for i in indexes]
-
-    #change empty strings to None
-    for pair in pairs:
-        if pair[0] == '':
-            pair[0] = None
-        elif pair[1] == '':
-            pair[1] = None
-        pair = tuple(pair)    
-    return [pair for pair in pairs if pair[0] is not None]        
-
-
-
-
-
-
+    return previous_row[-1]
 

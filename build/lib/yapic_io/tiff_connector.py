@@ -7,7 +7,7 @@ import yapic_io.utils as ut
 import numpy as np
 
 import yapic_io.image_importers as ip
-from yapic_io.utils import get_template_meshgrid, add_to_filename, find_best_matching_pairs
+from yapic_io.utils import get_template_meshgrid, add_to_filename, lev_distance
 from yapic_io.connector import Connector
 from pprint import pprint
 logger = logging.getLogger(os.path.basename(__file__))
@@ -106,7 +106,6 @@ class TiffConnector(Connector):
 
         self.load_img_filenames()
         self.load_label_filenames()
-        
         self.check_labelmat_dimensions()
         self.map_labelvalues()
         
@@ -229,8 +228,6 @@ class TiffConnector(Connector):
                 if label_dim[1:] == im_dim[1:]:
                     logger.info('check image nr %s: ok ', image_nr)
                 else:
-                    logger.error('check image nr %s (%s): image dim is %s, label dim is %s '\
-                        , image_nr, self.filenames[image_nr], im_dim, label_dim)
                     raise ValueError('check image nr %s: dims do not match ' % str(image_nr))   
         if len(set(nr_channels))>1:
             raise ValueError('nr of channels not consitent in input data, found following nr of labelmask channels: %s' % str(set(nr_channels)))            
@@ -413,48 +410,47 @@ class TiffConnector(Connector):
         return True          
 
 
-    def load_label_filenames(self):
+    def load_label_filenames(self, mode=None):
         if self.filenames is None:
             return
 
-        # if mode is None:
-        #     if os.path.isdir(self.label_path) and os.path.samefile(self.label_path, self.img_path):
-        #         mode = 'order'
-        #     else:
-        #         mode = 'identical'
+        if mode is None:
+            if os.path.isdir(self.label_path) and os.path.samefile(self.label_path, self.img_path):
+                mode = 'order'
+            else:
+                mode = 'identical'
 
-        # if mode == 'identical':
-        #     #if label filenames should match exactly with img filenames
-        #     for name_tuple in self.filenames:
-        #         img_filename = name_tuple[0]   
-        #         label_path = os.path.join(self.label_path, img_filename)
-        #         if os.path.isfile(label_path): #if label file exists for image file
-        #             name_tuple[1] = img_filename
-        #elif mode == 'order':
-        image_filenames = [pair[0] for pair in self.filenames]
-        label_filenames = sorted(glob.glob(os.path.join(self.label_path, self.label_filemask)))
-        label_filenames = [os.path.split(fname)[1] for fname in label_filenames]
+        if mode == 'identical':
+            #if label filenames should match exactly with img filenames
+            for name_tuple in self.filenames:
+                img_filename = name_tuple[0]   
+                label_path = os.path.join(self.label_path, img_filename)
+                if os.path.isfile(label_path): #if label file exists for image file
+                    name_tuple[1] = img_filename
+        elif mode == 'order':
+            image_filenames = [pair[0] for pair in self.filenames]
+            label_filenames = sorted(glob.glob(os.path.join(self.label_path, self.label_filemask)))
+            label_filenames = [os.path.split(fname)[1] for fname in label_filenames]
 
-        if len(image_filenames) != len(label_filenames):
-            msg = 'Number of image files ({}) and label files ({}) differ!'
-            logger.info(msg.format(len(image_filenames), len(label_filenames)))
+            if len(image_filenames) != len(label_filenames):
+                msg = 'Number of image files ({}) and label files ({}) differ!'
+                logger.critical(msg.format(len(image_filenames), len(label_filenames)))
 
-        self.filenames = find_best_matching_pairs(image_filenames, label_filenames)    
-            #self.filenames = list(zip(image_filenames, label_filenames))
-        #else:
-        #    raise NotImplemented
+            self.filenames = list(zip(image_filenames, label_filenames))
+        else:
+            raise NotImplemented
 
 
-    # def check_filename_similarity(self):
-    #     distances = list(itertools.starmap(lev_distance, self.filenames))
-    #     dist_min = np.amin(distances)
-    #     dist_argmax = np.argmax(distances)
-    #     dist_max = distances[dist_argmax]
+    def check_filename_similarity(self):
+        distances = list(itertools.starmap(lev_distance, self.filenames))
+        dist_min = np.amin(distances)
+        dist_argmax = np.argmax(distances)
+        dist_max = distances[dist_argmax]
 
-    #     if dist_max - dist_min > 0:
-    #         logger.warn('Odd filename pair detected {}'.format(self.filenames[dist_argmax]))
-    #         return False
-    #     return True
+        if dist_max - dist_min > 0:
+            logger.warn('Odd filename pair detected {}'.format(self.filenames[dist_argmax]))
+            return False
+        return True
 
 
     def load_img_filenames(self):

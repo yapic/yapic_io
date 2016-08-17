@@ -104,8 +104,8 @@ class TestPredictiondata(TestCase):
         self.assertEqual(p[2].get_pixels().shape, (3,1,6,4))
 
     def test_put_probmap_data(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*')
         savepath = os.path.join(base_path, '../test_data/tmp/')
         c = TiffConnector(img_path,label_path, savepath=savepath)
         
@@ -125,8 +125,8 @@ class TestPredictiondata(TestCase):
 
 
     def test_put_probmap_data_multichannel_label(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/')
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/*')
         savepath = os.path.join(base_path, '../test_data/tmp/')
         c = TiffConnector(img_path,label_path, savepath=savepath)
         
@@ -155,8 +155,8 @@ class TestPredictiondata(TestCase):
 
         
     def test_put_probmap_data_multichannel_label_2(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/')
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/*')
         savepath = os.path.join(base_path, '../test_data/tmp/')
         c = TiffConnector(img_path,label_path, savepath=savepath)
         
