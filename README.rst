@@ -34,7 +34,9 @@ Following problems occuring with training/classification are handeled by yapic_i
   regions. As a result, output classification images have identical dimensions as source images and can be overlayed easily.    
 
 
+Detailed API description in the Documentation_. 
 
+.. _Documentation: http://animate-x3.dzne.ds:8000/yapic/io/build/html/yapic_io.html
 
 
 Code example
