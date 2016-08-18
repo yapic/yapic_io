@@ -11,6 +11,8 @@ scikit-image==0.12.3
 matplotlib==1.5.1
 Sphinx==1.4.1
 sphinx-rtd-theme==0.1.9
+munkres==1.0.8
+tifffile==0.9.2
 https://github.com/Theano/Theano/archive/1bd371ce6edbe27260a7c38d8b75c2dcb9f6b53d.zip#egg=theano
 https://github.com/Lasagne/Lasagne/archive/25b1b700d150884d31679af69c3b9307142ffcf4.zip#egg=lasagne
 
