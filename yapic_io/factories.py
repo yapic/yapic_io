@@ -35,7 +35,7 @@ def make_tiff_interface(img_filepath, label_filepath, savepath,\
 	d = Dataset(c)
 
 	mb = TrainingBatch(d, training_batch_size, tpl_size_zxy, padding_zxy=padding_zxy)
-	pd = PredictionBatch(d, tpl_size_zxy, padding_zxy=padding_zxy)
+	pd = PredictionBatch(d, training_batch_size, tpl_size_zxy, padding_zxy=padding_zxy)
 
 	return mb, pd
 

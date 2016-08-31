@@ -1,6 +1,9 @@
 import random
 import numpy as np
-class TrainingBatch(object):
+from yapic_io.minibatch import Minibatch
+
+
+class TrainingBatch(Minibatch):
     '''
     Infinite iterator providing pixel and label data for classifier training.
 
@@ -14,7 +17,7 @@ class TrainingBatch(object):
 
     >>> from yapic_io.factories import make_tiff_interface
     >>>
-    >>> #define data loacations
+    >>> #define data locations
     >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/*.tif'
     >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/*.tif'
     >>> savepath = 'yapic_io/test_data/tmp/'
@@ -66,14 +69,17 @@ class TrainingBatch(object):
         :param equalized: if True, less frequent labels are favored in randomized template selection
         :type equalized: bool
         '''
-        self.dataset = dataset
+        # self._dataset = dataset
 
-        self.padding_zxy = padding_zxy
-        self.size_zxy = size_zxy
-        self.channels = self.dataset.get_channels()
-        self.labels = self.dataset.get_label_values()
+        # self._padding_zxy = padding_zxy
+        # self._size_zxy = size_zxy
+        # self._channels = self._dataset.get_channels()
+        # self._labels = self._dataset.get_label_values()
         
-        self.batch_size = batch_size
+        # self._batch_size = batch_size
+        
+        super().__init__(dataset, batch_size, size_zxy, padding_zxy=padding_zxy)
+
         self.equalized = equalized
 
         self.augment = augment
@@ -84,7 +90,7 @@ class TrainingBatch(object):
         self.weights = None
 
         self._fetch_training_batch_data() 
-        #self._template_data = [self._pick_random_tpl() for _ in list(range(self.batch_size))]
+        #self._template_data = [self._pick_random_tpl() for _ in list(range(self._batch_size))]
         
         
 
@@ -95,7 +101,7 @@ class TrainingBatch(object):
             'batch_size: %s \n' \
             'template size (size_zxy): %s \n' \
             'augment: %s \n' \
-             % (self.batch_size, self.size_zxy, self.augment)\
+             % (self._batch_size, self._size_zxy, self.augment)\
                
 
         return infostring
@@ -112,7 +118,7 @@ class TrainingBatch(object):
         pixels = []
         weights = []
         augmentations = []
-        for i in list(range(self.batch_size)):
+        for i in list(range(self._batch_size)):
             tpl_data = self._pick_random_tpl()
             pixels.append(tpl_data.pixels)
             weights.append(tpl_data.weights)
@@ -145,16 +151,16 @@ class TrainingBatch(object):
         '''
         
         if not self.augment:
-            return self.dataset.pick_random_training_template(self.size_zxy\
-            , self.channels, pixel_padding=self.padding_zxy,\
-                 equalized=self.equalized, labels=self.labels)       
+            return self._dataset.pick_random_training_template(self._size_zxy\
+            , self._channels, pixel_padding=self._padding_zxy,\
+                 equalized=self.equalized, labels=self._labels)       
 
         shear_angle = self._get_random_shear()
         rotation_angle = self._get_random_rotation()    
         
-        return self.dataset.pick_random_training_template(self.size_zxy\
-            , self.channels, pixel_padding=self.padding_zxy\
+        return self._dataset.pick_random_training_template(self._size_zxy\
+            , self._channels, pixel_padding=self._padding_zxy\
             , equalized=self.equalized, rotation_angle=rotation_angle\
-            , shear_angle=shear_angle, labels=self.labels)       
+            , shear_angle=shear_angle, labels=self._labels)       
         
                 
