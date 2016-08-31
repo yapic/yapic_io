@@ -70,18 +70,31 @@ class PredictionBatch(Minibatch):
         super().__init__(dataset, batch_size, size_zxy, padding_zxy=padding_zxy)
         
         self._pos_zxy = None 
-        self._image_nr = None 
+        self._batch_nr = None 
 
         #a list of all possible template positions 
         #[(image_nr, zpos, xpos, ypos), (image_nr, zpos, xpos, ypos), ...]
         self._tpl_pos_all = self._compute_pos_zxy()
+        
+        #indices for template positions, organized in batches of defined size
+        self._batch_index_list = self._get_batch_index_list() 
 
 
         
 
 
 
+    def _get_batch_index_list(self):
         
+
+        n = len(self._tpl_pos_all) #nr of single templates
+
+        return ut.nest_list(list(range(n)), self._batch_size)
+
+
+
+
+
         
         
     def __len__(self):
@@ -252,19 +265,7 @@ class PredictionBatch(Minibatch):
         return tpl_pos    
     
 
-    # def _is_tpl_size_valid(self, size_zxy):
-    #     '''
-    #     Checks if the size is not larger than the smallest image in the dataset
-    #     '''
-    #     for img_nr in list(range(self._dataset.n_images)):
-            
-    #         img_shape_czxy = self._dataset.get_img_dimensions(img_nr)
-    #         img_shape_zxy = img_shape_czxy[1:]
-    #         fits_in_image = (np.array(size_zxy) <= np.array(img_shape_zxy)).all()
-
-    #         if not fits_in_image:
-    #             return False
-    #     return True        
+    
 
 
 

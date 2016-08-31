@@ -356,6 +356,33 @@ def find_best_matching_pairs(s1,s2):
 
 
 
+def nest_list(ls, n):
+    '''
+
+        >>> import yapic_io.utils as ut
+        >>> t = [0,1,2,3,4,5,6,7,8,9]
+        >>>
+        >>> res = ut.nest_list(t, 3)
+        >>> print(res)
+        [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
+        >>>
+        >>> res2 = ut.nest_list(t,4)
+        >>> print(res2)
+        [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9]]
+        
+
+    '''
+    indices = list(range(len(ls)))
+    start_indices = indices[0::n]
+    stop_indices = indices[n::n]
+
+    if len(stop_indices) == len(start_indices)-1:
+        stop_indices.append(None)
+    
+    return [ls[start_ind:stop_ind] for start_ind, stop_ind in zip(start_indices, stop_indices)]    
+
+
+
 
 
 

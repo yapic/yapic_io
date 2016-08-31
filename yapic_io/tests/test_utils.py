@@ -8,6 +8,29 @@ import yapic_io.utils as ut
 
 
 class TestUtils(TestCase):
+    
+    def test_nest_list(self):
+        t = [0,1,2,3,4,5,6,7,8,9]
+
+        val = [[0,1,2], [3,4,5], [6,7,8], [9]]
+        res = ut.nest_list(t, 3)
+        self.assertEqual(res, val)
+
+    def test_nest_list_2(self):
+        t = [0,1,2,3,4,5,6,7,8,9,-23]
+
+        val = [[0,1,2], [3,4,5], [6,7,8], [9, -23]]
+        res = ut.nest_list(t, 3)
+        self.assertEqual(res, val)   
+
+    def test_nest_list_3(self):
+        t = [0,1,2,3,4,5,6,7,8,9,-23]
+
+        val = [[0,1,2,3,4,5,6,7,8,9,-23]]
+        res = ut.nest_list(t, 12)
+        self.assertEqual(res, val)        
+
+
     def test_flatten_label_coordinates(self):
 
         c = {100 : [(1,2,3), (4,5,6), (7,8,9)], 200 : [(10, 11, 12), (13, 14, 15)]}
