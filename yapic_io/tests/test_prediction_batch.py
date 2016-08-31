@@ -2,7 +2,7 @@ from unittest import TestCase
 import os
 from yapic_io.tiff_connector import TiffConnector
 from yapic_io.dataset import Dataset
-from yapic_io.prediction_data import PredictionData
+from yapic_io.prediction_batch import PredictionBatch
 import numpy as np
 import yapic_io.utils as ut
 base_path = os.path.dirname(__file__)
@@ -23,7 +23,7 @@ class TestPredictiondata(TestCase):
 
         size = (1,1,1)
 
-        p = PredictionData(d, size)
+        p = PredictionBatch(d, size)
 
         print(p._tpl_pos_all)
         print(len(p._tpl_pos_all))
@@ -47,7 +47,7 @@ class TestPredictiondata(TestCase):
 
         size = (3,6,4)
 
-        p = PredictionData(d, size)
+        p = PredictionBatch(d, size)
 
         print(p._tpl_pos_all)
         print(len(p._tpl_pos_all))
@@ -70,7 +70,7 @@ class TestPredictiondata(TestCase):
 
         size = (2,6,4)
 
-        p = PredictionData(d, size)
+        p = PredictionBatch(d, size)
 
         print(p._tpl_pos_all)
         print(len(p._tpl_pos_all))
@@ -93,7 +93,7 @@ class TestPredictiondata(TestCase):
 
         size = (1,6,4)
 
-        p = PredictionData(d, size)
+        p = PredictionBatch(d, size)
 
         print(p[0].get_pixels().shape)
         print(p[1].get_pixels().shape)
@@ -118,7 +118,7 @@ class TestPredictiondata(TestCase):
 
         size = (1,3,4)
 
-        p = PredictionData(d, size)
+        p = PredictionBatch(d, size)
 
         data = np.ones((2,1,3,4))
         p[0].put_probmap_data(data)
@@ -144,7 +144,7 @@ class TestPredictiondata(TestCase):
         print(d.label_coordinates.keys())
         size = (1,3,4)
 
-        p = PredictionData(d, size)
+        p = PredictionBatch(d, size)
         print('_labels')
         print(p._labels)
 
@@ -172,7 +172,7 @@ class TestPredictiondata(TestCase):
         print(d.label_coordinates.keys())
         size = (1,3,4)
 
-        p = PredictionData(d, size)
+        p = PredictionBatch(d, size)
         print('_labels')
         print(p._labels)
 
@@ -200,7 +200,7 @@ class TestPredictiondata(TestCase):
 
         size = (3,3,3)
 
-        p = PredictionData(d, size)
+        p = PredictionBatch(d, size)
 
         data = np.ones((3,3,3))
         
@@ -263,15 +263,15 @@ class TestPredictiondata(TestCase):
     #     d = Dataset(c)
 
     #     size = (3,3,3)
-    #     p = PredictionData(d, size)
+    #     p = PredictionBatch(d, size)
     #     self.assertTrue(p._is_tpl_size_valid(size))
 
     #     size = (3,6,4)
-    #     p = PredictionData(d, size)
+    #     p = PredictionBatch(d, size)
     #     self.assertTrue(p._is_tpl_size_valid(size))
 
     #     size = (3,6,5)
-    #     p = PredictionData(d, size)
+    #     p = PredictionBatch(d, size)
     #     self.assertFalse(p._is_tpl_size_valid(size))
 
 

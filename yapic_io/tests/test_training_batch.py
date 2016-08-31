@@ -3,11 +3,11 @@ import os
 from yapic_io.tiff_connector import TiffConnector
 from yapic_io.dataset import Dataset
 
-import yapic_io.minibatch as mb 
-from yapic_io.minibatch import Minibatch
+import yapic_io.training_batch as mb 
+from yapic_io.training_batch import TrainingBatch
 base_path = os.path.dirname(__file__)
 
-class TestMinibatch(TestCase):
+class TestTrainingBatch(TestCase):
     def test_pick_random_tpl(self):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
@@ -22,7 +22,7 @@ class TestMinibatch(TestCase):
         
         batch_size = 4
 
-        m = Minibatch(d, batch_size, size, padding_zxy=pad)
+        m = TrainingBatch(d, batch_size, size, padding_zxy=pad)
 
         tpl = m._pick_random_tpl()
         print(tpl)
@@ -43,9 +43,9 @@ class TestMinibatch(TestCase):
         
         tpl_size = (1,5,4) # size of network output layer in zxy
         padding = (0,2,2) # padding of network input layer in zxy, in respect to output layer
-        # make minibatch mb and prediction interface p with TiffConnector binding
+        # make training_batch mb and prediction interface p with TiffConnector binding
         m, p = make_tiff_interface(pixel_image_dir, label_image_dir\
-            , savepath, tpl_size, padding_zxy=padding, minibatch_size=6) 
+            , savepath, tpl_size, padding_zxy=padding, training_batch_size=6) 
         counter=0
         for mini in m:
             weights = mini.weights #shape is (6,3,1,5,4) : batchsize 6 , 3 label-classes, 1 z, 5 x, 4 y
@@ -68,9 +68,9 @@ class TestMinibatch(TestCase):
         
         tpl_size = (1,5,4) # size of network output layer in zxy
         padding = (0,2,2) # padding of network input layer in zxy, in respect to output layer
-        # make minibatch mb and prediction interface p with TiffConnector binding
+        # make training_batch mb and prediction interface p with TiffConnector binding
         m, p = make_tiff_interface(pixel_image_dir, label_image_dir\
-            , savepath, tpl_size, padding_zxy=padding, minibatch_size=6) 
+            , savepath, tpl_size, padding_zxy=padding, training_batch_size=6) 
         counter=0
         for mini in m:
             weights = mini.weights #shape is (6,6,1,5,4) : batchsize 6 , 6 label-classes, 1 z, 5 x, 4 y

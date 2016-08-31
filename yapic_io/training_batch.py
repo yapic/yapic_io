@@ -1,16 +1,16 @@
 import random
 import numpy as np
-class Minibatch(object):
+class TrainingBatch(object):
     '''
     Infinite iterator providing pixel and label data for classifier training.
 
     - Provides template data for classifier training.
 
-    - All data is loaded to memory on initialization of a minibatch.
+    - All data is loaded to memory on initialization of a training_batch.
     
     - Data is loaded from the dataset object.
 
-    Code example for initializing a Minibatch:
+    Code example for initializing a TrainingBatch:
 
     >>> from yapic_io.factories import make_tiff_interface
     >>>
@@ -22,7 +22,7 @@ class Minibatch(object):
     >>> tpl_size = (1,5,4) # size of network output layer in zxy
     >>> padding = (0,2,2) # padding of network input layer in zxy, in respect to output layer
     >>>
-    >>> # make minibatch mb and prediction interface p with TiffConnector binding
+    >>> # make training_batch mb and prediction interface p with TiffConnector binding
     >>> m, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size, padding_zxy=padding) 
     >>>
     >>> counter=0
@@ -83,7 +83,7 @@ class Minibatch(object):
         self.pixels = None
         self.weights = None
 
-        self._fetch_minibatch_data() 
+        self._fetch_training_batch_data() 
         #self._template_data = [self._pick_random_tpl() for _ in list(range(self.batch_size))]
         
         
@@ -91,7 +91,7 @@ class Minibatch(object):
     def __repr__(self):
 
         infostring = \
-            'Minibatch \n' \
+            'TrainingBatch \n' \
             'batch_size: %s \n' \
             'template size (size_zxy): %s \n' \
             'augment: %s \n' \
@@ -104,11 +104,11 @@ class Minibatch(object):
         return self
 
     def __next__(self):
-        self._fetch_minibatch_data()
+        self._fetch_training_batch_data()
         return self
         
  
-    def _fetch_minibatch_data(self):
+    def _fetch_training_batch_data(self):
         pixels = []
         weights = []
         augmentations = []

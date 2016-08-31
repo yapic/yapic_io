@@ -5,7 +5,7 @@ import os
 import logging
 logger = logging.getLogger(os.path.basename(__file__))
 
-class PredictionData(object):
+class PredictionBatch(object):
     '''
     List-like data interface for classification with neural networks.
 
@@ -31,7 +31,7 @@ class PredictionData(object):
         >>> tpl_size = (1,5,4) # size of network output layer in zxy
         >>> padding = (0,2,2) # padding of network input layer in zxy, in respect to output layer
         >>>
-        >>> # make minibatch mb and prediction interface p with TiffConnector binding
+        >>> # make training_batch mb and prediction interface p with TiffConnector binding
         >>> _, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size, padding_zxy=padding) 
         >>> len(p) #give total the number of templates that cover the whole bound tiff files 
         510
@@ -214,7 +214,7 @@ class PredictionData(object):
         >>> savepath = 'yapic_io/test_data/tmp/'
         >>> 
         >>> tpl_size = (1,5,4)
-        >>> # make minibatch mb and prediction interface p: upon object initialization all available image channels are set
+        >>> # make training_batch mb and prediction interface p: upon object initialization all available image channels are set
         >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size) #upon object initialization all available image channels are set
         >>>
         >>>
@@ -397,7 +397,7 @@ class PredictionData(object):
         >>> 
         >>> #define size of network output layer
         >>> tpl_size = (1,5,4)
-        >>> # make minibatch mb and prediction interface p
+        >>> # make training_batch mb and prediction interface p
         >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size)
         >>> #upon object initialization all available classes are set
         >>> p.get_labels()
