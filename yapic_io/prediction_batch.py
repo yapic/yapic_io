@@ -25,31 +25,35 @@ class PredictionBatch(Minibatch):
 
         >>> from yapic_io.factories import make_tiff_interface
         >>>
+        >>> #mock classification function
+        >>> def classify(pixels, value):
+        ...     return np.ones(pixels.shape) * value
+        >>>
+        >>>
         >>> #define data loacations
         >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/*.tif'
         >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/*.tif'
         >>> savepath = 'yapic_io/test_data/tmp/'
         >>> 
         >>> tpl_size = (1,5,4) # size of network output layer in zxy
-        >>> padding = (0,2,2) # padding of network input layer in zxy, in respect to output layer
+        >>> padding = (0,0,0) # padding of network input layer in zxy, in respect to output layer
         >>>
         >>> # make training_batch mb and prediction interface p with TiffConnector binding
-        >>> _, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size, padding_zxy=padding) 
-        >>> len(p) #give total the number of templates that cover the whole bound tiff files 
-        510
-        >>>
+        >>> _, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size, padding_zxy=padding, training_batch_size=2) 
+        >>> len(p)
+        255
+        >>> p.get_labels()
+        [1, 2, 3]
         >>> #classify the whole bound dataset
         >>> counter = 0 #needed for mock data
         >>> for item in p:
-        ...     pixels_for_classifier = item.get_pixels() #input for classifier
-        ...     mock_classifier_result = np.ones(tpl_size) * counter #classifier output
+        ...     pixels = item.pixels() #input for classifier
+        ...     mock_classifier_result = classify(pixels, counter) #classifier output
         ...     #pass classifier results for each class to data source
-        ...     item.put_probmap_data_for_label(mock_classifier_result, label=1)
-        ...     item.put_probmap_data_for_label(mock_classifier_result, label=2)
-        ...     item.put_probmap_data_for_label(mock_classifier_result, label=3)
+        ...     item.put_probmap_data(mock_classifier_result)     
         ...     counter += 1
         >>>
-
+        
     
     '''
     
@@ -177,55 +181,13 @@ class PredictionBatch(Minibatch):
         :type probmap_data: numpy.array.
         :returns: bool (True if successful).
 
-        >>> from yapic_io.factories import make_tiff_interface
-        >>> from pprint import pprint
-        >>>
-        >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/'
-        >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
-        >>> savepath = 'yapic_io/test_data/tmp/'
-        >>> 
-        >>> #define size of network output layer
-        >>> tpl_size = (1,5,4)
-        >>> # make training_batch mb and prediction interface p
-        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size)
-        >>> #upon object initialization all available classes are set
-        >>> p.get_labels()
-        [1, 2, 3]
-        >>>
-        >>> dummy_predictions_class_91 = np.ones(tpl_size)*0.1 #mocking some prediction data
-        >>> dummy_predictions_class_109 = np.ones(tpl_size)*0.2
-        >>> dummy_predictions_class_150 = np.ones(tpl_size)*0.3
-        >>> pprint(dummy_predictions_class_91)
-        array([[[ 0.1,  0.1,  0.1,  0.1],
-                [ 0.1,  0.1,  0.1,  0.1],
-                [ 0.1,  0.1,  0.1,  0.1],
-                [ 0.1,  0.1,  0.1,  0.1],
-                [ 0.1,  0.1,  0.1,  0.1]]])
-        >>> pprint(dummy_predictions_class_109)
-        array([[[ 0.2,  0.2,  0.2,  0.2],
-                [ 0.2,  0.2,  0.2,  0.2],
-                [ 0.2,  0.2,  0.2,  0.2],
-                [ 0.2,  0.2,  0.2,  0.2],
-                [ 0.2,  0.2,  0.2,  0.2]]])
-        >>> pprint(dummy_predictions_class_150)
-        array([[[ 0.3,  0.3,  0.3,  0.3],
-                [ 0.3,  0.3,  0.3,  0.3],
-                [ 0.3,  0.3,  0.3,  0.3],
-                [ 0.3,  0.3,  0.3,  0.3],
-                [ 0.3,  0.3,  0.3,  0.3]]])
-        >>> 
-        >>> p.get_labels()
-        [1, 2, 3]
-        >>> probmap_4d = np.array([dummy_predictions_class_91, dummy_predictions_class_109, dummy_predictions_class_150])
-        >>> probmap_4d.shape #has to match 3 classes, 1 z slice, 5 x, 4 y 
-        (3, 1, 5, 4)
-        >>> p[0].put_probmap_data(probmap_4d) # dimensions are correct, put works
+        
         '''
 
         if len(probmap_data.shape) != 5: 
             raise ValueError(\
                 '''no valid dimension for probmap template: 
-                   shape is %s, should have 5 dimensions: (n,c,z,x,y)'''\
+                   shape is %s, but nr of dimesnions must be 5: (n,c,z,x,y)'''\
                                 % str(probmap_data.shape))
 
         n_b, n_c, n_z, n_x, n_y = probmap_data.shape
@@ -249,7 +211,7 @@ class PredictionBatch(Minibatch):
                    % ((str((n_z, n_x, n_y)), str(self._size_zxy))))
 
         #iterate through batch
-        print(self.get_curr_tpl_indices())
+        
         for probmap_data_sel, tpl_pos_index in zip(probmap_data, self.get_curr_tpl_indices()):
             #iterate through label channels
             for data_layer, label in zip(probmap_data_sel, self.get_labels()):
