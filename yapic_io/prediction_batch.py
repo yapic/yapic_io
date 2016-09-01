@@ -69,8 +69,8 @@ class PredictionBatch(Minibatch):
 
         super().__init__(dataset, batch_size, size_zxy, padding_zxy=padding_zxy)
         
-        self._pos_zxy = None 
-        self._batch_nr = None 
+        #self._pos_zxy = None 
+        self.curr_batch_pos = 0 #current bach position 
 
         #a list of all possible template positions 
         #[(image_nr, zpos, xpos, ypos), (image_nr, zpos, xpos, ypos), ...]
@@ -93,7 +93,29 @@ class PredictionBatch(Minibatch):
 
 
 
+    def pixels(self):
+        
+        
+        pixfunc = self._dataset.get_multichannel_pixel_template
 
+        pixels = [pixfunc(im_nr,\
+                  pos_zxy,\
+                  self._size_zxy,\
+                  self._channels,\
+                  self._padding_zxy)\
+                        for im_nr, pos_zxy in self.get_curr_tpl_positions()]
+
+        return np.array(pixels)                
+
+
+
+        # pixels = []
+        # for tpl_position in tpl_positions:
+        #     self._ge
+        
+        # return self._dataset.get_multichannel_pixel_template(\
+        #     self._image_nr, self._pos_zxy, self._size_zxy, self._channels,\
+        #     pixel_padding=self._padding_zxy)       
 
         
         
@@ -101,7 +123,7 @@ class PredictionBatch(Minibatch):
         '''
         Implements list-like operations.
         '''
-        return len(self._tpl_pos_all)
+        return len(self._batch_index_list)
         
 
 
@@ -109,11 +131,12 @@ class PredictionBatch(Minibatch):
         '''
         Implements list-like operations of element selection and slicing.
         '''
+        self.curr_batch_pos = position
 
-        image_nr, pos_zxy = self._tpl_pos_all[position]
+        #image_nr, pos_zxy = self._tpl_pos_all[position]
         
-        self._image_nr = image_nr
-        self._pos_zxy = pos_zxy
+        #self._image_nr = image_nr
+        #self._pos_zxy = pos_zxy
         
         return self
        
@@ -132,8 +155,14 @@ class PredictionBatch(Minibatch):
         #[(image_nr, zpos, xpos, ypos), (image_nr, zpos, xpos, ypos), ...]
         self._tpl_pos_all = self._compute_pos_zxy()   
 
-
-
+    def get_actual_batch_size(self):
+        return len(self._batch_index_list[self.curr_batch_pos])
+            
+    def get_curr_tpl_positions(self):
+        return [self._tpl_pos_all[x] for x in self.get_curr_tpl_indices()]
+    
+    def get_curr_tpl_indices(self):
+        return self._batch_index_list[self.curr_batch_pos]      
         
     def put_probmap_data(self, probmap_data):
         '''
@@ -193,13 +222,19 @@ class PredictionBatch(Minibatch):
         >>> p[0].put_probmap_data(probmap_4d) # dimensions are correct, put works
         '''
 
-        if len(probmap_data.shape) != 4: 
+        if len(probmap_data.shape) != 5: 
             raise ValueError(\
                 '''no valid dimension for probmap template: 
-                   shape is %s, len of shape should be 4: (c,z,x,y)'''\
+                   shape is %s, should have 5 dimensions: (n,c,z,x,y)'''\
                                 % str(probmap_data.shape))
 
-        n_c, n_z, n_x, n_y = probmap_data.shape
+        n_b, n_c, n_z, n_x, n_y = probmap_data.shape
+
+        
+        if n_b != self.get_actual_batch_size():
+            raise ValueError(\
+                '''batch size is %s, but must be %s'''\
+                                % (str(n_b), str(self.get_actual_batch_size())))
 
         if n_c != len(self._labels):
             raise ValueError(\
@@ -213,12 +248,23 @@ class PredictionBatch(Minibatch):
                    is %s, should be %s''' \
                    % ((str((n_z, n_x, n_y)), str(self._size_zxy))))
 
-        for data_layer, label in zip(probmap_data, self.get_labels()):
-            worked = self.put_probmap_data_for_label(data_layer, label)            
-            if not worked:
-                logger.warning('could not write predictions for label %s', str(label))
+        #iterate through batch
+        print(self.get_curr_tpl_indices())
+        for probmap_data_sel, tpl_pos_index in zip(probmap_data, self.get_curr_tpl_indices()):
+            #iterate through label channels
+            for data_layer, label in zip(probmap_data_sel, self.get_labels()):
+                self._put_probmap_data_for_label(data_layer, label, tpl_pos_index)            
+            
 
-    def put_probmap_data_for_label(self, probmap_data, label):
+    def _put_probmap_data_for_label(self, probmap_data, label, tpl_pos_index):
+        
+        if len(self._tpl_pos_all) < tpl_pos_index: 
+            raise ValueError(\
+                '''tpl_pos_index too large: 
+                   is %s, only %s tpl positions available in dataset'''\
+                                % (str(tpl_pos_index),str(len(self._tpl_pos_all))))
+
+
         if len(probmap_data.shape) != 3: 
             raise ValueError(\
                 '''no valid dimension for probmap template: 
@@ -236,12 +282,11 @@ class PredictionBatch(Minibatch):
         if label not in self._labels:
             raise ValueError('label %s not found in labels %s' % (str(label), str(self._labels)))
 
-        return self._dataset.put_prediction_template(probmap_data, self._pos_zxy, self._image_nr, label)    
+        image_nr, pos_zxy = self._tpl_pos_all[tpl_pos_index]
+
+        return self._dataset.put_prediction_template(probmap_data, pos_zxy, image_nr, label)    
             
-    def get_pixels(self):
-        return self._dataset.get_multichannel_pixel_template(\
-            self._image_nr, self._pos_zxy, self._size_zxy, self._channels,\
-            pixel_padding=self._padding_zxy)   
+    
         
     def _compute_pos_zxy(self):
         '''

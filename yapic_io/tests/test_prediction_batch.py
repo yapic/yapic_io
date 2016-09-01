@@ -117,18 +117,110 @@ class TestPredictiondata(TestCase):
         d = Dataset(c)
 
         size = (1,6,4)
-        batch_size = 1
+        batch_size = 2
 
         p = PredictionBatch(d, batch_size, size)
 
-        print(p[0].get_pixels().shape)
-        print(p[1].get_pixels().shape)
-        print(len(p))
-        self.assertEqual(len(p), 3)
-        self.assertEqual(p[0].get_pixels().shape, (3,1,6,4))
-        self.assertEqual(p[1].get_pixels().shape, (3,1,6,4))
-        self.assertEqual(p[2].get_pixels().shape, (3,1,6,4))
+        #batch size is 2, so the first 2 templates go with the first batch
+        #(size two), the third template in in the second batch. the second
+        #batch has only size 1 (is smaller than the specified batch size),
+        #because it contains the rest. 
 
+        print(p[0].pixels().shape)
+        print(p[1].pixels().shape)
+        print(len(p))
+        self.assertEqual(len(p), 2)
+        self.assertEqual(p[0].pixels().shape, (2,3,1,6,4))
+        self.assertEqual(p[1].pixels().shape, (1,3,1,6,4))
+       
+
+
+    def test_getitem(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path,label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', None]\
+                ]
+        #c.load_label_filenames()    
+
+        d = Dataset(c)
+
+        size = (1,6,4)
+        batch_size = 3
+
+        p = PredictionBatch(d, batch_size, size)
+        #batch size is 3, this means all3 tempplates fit in one batch
+
+        print(p[0].pixels().shape)
+        print(len(p))
+        self.assertEqual(len(p), 1)
+        self.assertEqual(p[0].pixels().shape, (3,3,1,6,4))
+        
+
+    def test_get_actual_batch_size(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path,label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', None]\
+                ]
+        #c.load_label_filenames()    
+
+        d = Dataset(c)
+
+        size = (1,6,4)
+        batch_size = 2
+        p = PredictionBatch(d, batch_size, size)
+
+
+        self.assertEqual(p[0].get_actual_batch_size(), 2)
+        self.assertEqual(p[1].get_actual_batch_size(), 1)
+
+    def test_get_curr_tpl_indices(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path,label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', None]\
+                ]
+        #c.load_label_filenames()    
+
+        d = Dataset(c)
+
+        size = (1,6,4)
+        batch_size = 2
+        p = PredictionBatch(d, batch_size, size)
+
+
+        self.assertEqual(p[0].get_curr_tpl_indices(), [0,1])
+        self.assertEqual(p[1].get_curr_tpl_indices(), [2])    
+
+
+    def test_get_curr_tpl_positions(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path,label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', None]\
+                ]
+        #c.load_label_filenames()    
+
+        d = Dataset(c)
+
+        size = (1,6,4)
+        batch_size = 2
+        p = PredictionBatch(d, batch_size, size)
+
+
+        self.assertEqual(p[0].get_curr_tpl_positions(), [(0,(0,0,0)), (0,(1,0,0))])
+        self.assertEqual(p[1].get_curr_tpl_positions(), [(0,(2,0,0))])        
+        
     def test_put_probmap_data(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*')
@@ -142,13 +234,68 @@ class TestPredictiondata(TestCase):
 
         d = Dataset(c)
 
-        size = (1,3,4)
+        size = (1,6,4)
         batch_size = 1
 
         p = PredictionBatch(d, batch_size, size)
 
-        data = np.ones((2,1,3,4))
+        data = np.ones((1,2,1,6,4))
         p[0].put_probmap_data(data)
+        p[1].put_probmap_data(data)
+        p[2].put_probmap_data(data)
+
+    def test_put_probmap_data_2(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*')
+        savepath = os.path.join(base_path, '../test_data/tmp/')
+        c = TiffConnector(img_path,label_path, savepath=savepath)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', None]\
+                ]
+        c.load_label_filenames()    
+
+        d = Dataset(c)
+
+        size = (1,6,4)
+        batch_size = 2
+
+        p = PredictionBatch(d, batch_size, size)
+
+        data = np.ones((2,2,1,6,4))
+        p[0].put_probmap_data(data)
+
+        data = np.ones((1,2,1,6,4))
+        p[1].put_probmap_data(data)
+
+
+    def test_put_probmap_data_3(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*')
+        savepath = os.path.join(base_path, '../test_data/tmp/')
+        c = TiffConnector(img_path,label_path, savepath=savepath)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', None]\
+                ]
+        c.load_label_filenames()    
+
+        d = Dataset(c)
+
+        size = (1,3,4)
+        batch_size = 2
+
+        p = PredictionBatch(d, batch_size, size)
+
+        data = np.ones((2,2,1,3,4))
+        p[0].put_probmap_data(data)
+
+        data = np.ones((2,2,1,3,4))
+        p[1].put_probmap_data(data)  
+
+        data = np.ones((2,2,1,3,4))
+        p[2].put_probmap_data(data)       
+    
 
 
     def test_put_probmap_data_multichannel_label(self):
@@ -176,37 +323,37 @@ class TestPredictiondata(TestCase):
         print('_labels')
         print(p._labels)
 
-        data = np.ones((4,1,3,4))
+        data = np.ones((1,4,1,3,4))
         p[0].put_probmap_data(data)
 
-        #self.assertTrue(False)
+    #     #self.assertTrue(False)
 
         
-    def test_put_probmap_data_multichannel_label_2(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/*')
-        savepath = os.path.join(base_path, '../test_data/tmp/')
-        c = TiffConnector(img_path,label_path, savepath=savepath)
+    # def test_put_probmap_data_multichannel_label_2(self):
+    #     img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
+    #     label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/*')
+    #     savepath = os.path.join(base_path, '../test_data/tmp/')
+    #     c = TiffConnector(img_path,label_path, savepath=savepath)
         
         
-        print('labels')
-        print(c.labelvalue_mapping)
-        c.load_label_filenames()    
-        c.map_labelvalues()
-        print('labels')
-        print(c.labelvalue_mapping)
-        d = Dataset(c)
-        print('label coors in dataset')
-        print(d.label_coordinates.keys())
-        size = (1,3,4)
-        batch_size = 1
-        p = PredictionBatch(d, batch_size, size)
+    #     print('labels')
+    #     print(c.labelvalue_mapping)
+    #     c.load_label_filenames()    
+    #     c.map_labelvalues()
+    #     print('labels')
+    #     print(c.labelvalue_mapping)
+    #     d = Dataset(c)
+    #     print('label coors in dataset')
+    #     print(d.label_coordinates.keys())
+    #     size = (1,3,4)
+    #     batch_size = 1
+    #     p = PredictionBatch(d, batch_size, size)
 
-        print('_labels')
-        print(p._labels)
+    #     print('_labels')
+    #     print(p._labels)
 
-        data = np.ones((6,1,3,4))
-        p[0].put_probmap_data(data)    
+    #     data = np.ones((6,1,3,4))
+    #     p[0].put_probmap_data(data)    
 
 
     def test_put_probmap_data_for_label(self):
@@ -253,12 +400,14 @@ class TestPredictiondata(TestCase):
 
 
 
+        
+        
+        print(len(p))
+        print(p._tpl_pos_all)
+        p._put_probmap_data_for_label(data, label=1, tpl_pos_index=0) #first
+        p._put_probmap_data_for_label(data, label=1, tpl_pos_index=381) #last
 
-        for t in p:
-            data = data+1
-            t.put_probmap_data_for_label(data, label=1)
-    
-
+        
 
         try:
             os.remove(path1)
@@ -274,36 +423,7 @@ class TestPredictiondata(TestCase):
             pass             
 
             
-    # def test_is_tpl_size_valid(self):
-    #     img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-    #     label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-    #     savepath = os.path.join(base_path, '../test_data/tmp/')
-
-
-
-    #     c = TiffConnector(img_path,label_path, savepath = savepath)
-        
-    #     c.filenames = [\
-    #             ['6width4height3slices_rgb.tif', None]\
-    #             , ['40width26height3slices_rgb.tif', None]\
-    #             , ['40width26height6slices_rgb.tif', None]\
-    #             ]
-    #     c.load_label_filenames()    
-
-    #     d = Dataset(c)
-
-    #     size = (3,3,3)
-    #     p = PredictionBatch(d, batch_size, size)
-    #     self.assertTrue(p._is_tpl_size_valid(size))
-
-    #     size = (3,6,4)
-    #     p = PredictionBatch(d, batch_size, size)
-    #     self.assertTrue(p._is_tpl_size_valid(size))
-
-    #     size = (3,6,5)
-    #     p = PredictionBatch(d, batch_size, size)
-    #     self.assertFalse(p._is_tpl_size_valid(size))
-
+    
 
 
 
