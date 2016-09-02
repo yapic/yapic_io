@@ -109,7 +109,7 @@ class PredictionBatch(Minibatch):
                   self._padding_zxy)\
                         for im_nr, pos_zxy in self.get_curr_tpl_positions()]
 
-        return np.array(pixels)                
+        return np.array(pixels).astype(self.float_data_type)               
 
 
 
@@ -135,8 +135,13 @@ class PredictionBatch(Minibatch):
         '''
         Implements list-like operations of element selection and slicing.
         '''
+        
+        if position >= len(self._batch_index_list):
+            raise StopIteration('index out of bounds')
+
         self.curr_batch_pos = position
 
+        
         #image_nr, pos_zxy = self._tpl_pos_all[position]
         
         #self._image_nr = image_nr

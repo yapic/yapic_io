@@ -30,11 +30,11 @@ class TrainingBatch(Minibatch):
     >>>
     >>> counter=0
     >>> for mini in m:
-    ...     weights = mini.weights #shape is (3,1,5,4) : 3 label-classes, 1 z, 5 x, 4 y
+    ...     weights = mini.weights() #shape is (6,3,1,5,4) : 3 label-classes, 1 z, 5 x, 4 y
     ...     #shape of weights is (6,3,1,5,4) : batchsize 6 , 3 label-classes, 1 z, 5 x, 4 y
     ...        
-    ...     pixels = mini.pixels 
-    ...     # shape of pixels is (3,1,9,8) : 3 channels, 1 z, 9 x, 4 y (more xy due to padding)
+    ...     pixels = mini.pixels()
+    ...     # shape of pixels is (6,3,1,9,8) : 3 channels, 1 z, 9 x, 4 y (more xy due to padding)
     ...     #here: apply training on mini.pixels and mini.weights
     ...     counter += 1
     ...     if counter > 10: #m is infinite
@@ -69,14 +69,7 @@ class TrainingBatch(Minibatch):
         :param equalized: if True, less frequent labels are favored in randomized template selection
         :type equalized: bool
         '''
-        # self._dataset = dataset
-
-        # self._padding_zxy = padding_zxy
-        # self._size_zxy = size_zxy
-        # self._channels = self._dataset.get_channels()
-        # self._labels = self._dataset.get_label_values()
         
-        # self._batch_size = batch_size
         
         super().__init__(dataset, batch_size, size_zxy, padding_zxy=padding_zxy)
 
@@ -86,8 +79,8 @@ class TrainingBatch(Minibatch):
         self.rotation_range = rotation_range
         self.shear_range = shear_range
         
-        self.pixels = None
-        self.weights = None
+        self._pixels = None
+        self._weights = None
 
         self._fetch_training_batch_data() 
         #self._template_data = [self._pick_random_tpl() for _ in list(range(self._batch_size))]
@@ -113,7 +106,15 @@ class TrainingBatch(Minibatch):
         self._fetch_training_batch_data()
         return self
         
- 
+    
+    def pixels(self):
+        return self._pixels.astype(self.float_data_type)
+
+    def weights(self):
+        return self._weights.astype(self.float_data_type)        
+    
+
+
     def _fetch_training_batch_data(self):
         pixels = []
         weights = []
@@ -124,8 +125,8 @@ class TrainingBatch(Minibatch):
             weights.append(tpl_data.weights)
             augmentations.append(tpl_data.augmentation)
 
-        self.pixels = np.array(pixels)
-        self.weights = np.array(weights)    
+        self._pixels = np.array(pixels)
+        self._weights = np.array(weights)    
         self.augmentations = augmentations    
 
 

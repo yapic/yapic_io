@@ -56,17 +56,20 @@ Classifier training:
     >>> padding = (0,2,2) # padding of network input layer in zxy, in respect to output layer
     >>>
     >>> # make minibatch mb and prediction interface p with TiffConnector binding
-    >>> m, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size, padding_zxy=padding, multichannel_pixel_image=True, zstack=True,
+    >>> train_data, _ = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size, padding_zxy=padding, multichannel_pixel_image=True, zstack=True,
     multichannel_label_image=False) 
     >>>
     >>> counter=0
-    >>> for mini in m:
+    >>> for mini in train_data:
     ...     weights = mini.weights
     ...     #shape of weights is (6,3,1,5,4) : batchsize 6 , 3 label-classes, 1 z, 5 x, 4 y
     ...        
-    ...     pixels = mini.pixels 
-    ...     # shape of pixels is (3,1,9,8) : 3 channels, 1 z, 9 x, 4 y (more xy due to padding)
-    ...     #here: apply training on mini.pixels and mini.weights
+    ...     pixels = mini.pixels()
+    ...     # shape of pixels is (6,3,1,9,8) : 3 channels, 1 z, 9 x, 4 y (more xy due to padding)
+    ...     
+    ...     #here: apply training on mini.pixels and mini.weights (use theano, tensorflow...)
+    ...     my_train_function(pixels, weights)
+    ...
     ...     counter += 1
     ...     if counter > 10: #m is infinite
     ...         break
@@ -74,6 +77,10 @@ Classifier training:
 Prediction:
 
     >>> from yapic_io.factories import make_tiff_interface
+    >>>
+    >>> #mock classification function
+    >>> def classify(pixels, value):
+    ...     return np.ones(pixels.shape) * value
     >>>
     >>> #define data loacations
     >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/*.tif'
@@ -84,20 +91,20 @@ Prediction:
     >>> padding = (0,2,2) # padding of network input layer in zxy, in respect to output layer
     >>>
     >>> # make minibatch mb and prediction interface p with TiffConnector binding
-    >>> _, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size, padding_zxy=padding) 
-    >>> len(p) #give total the number of templates that cover the whole bound tiff files 
+    >>> _, prediction_data = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size, padding_zxy=padding) 
+    >>> len(prediction_data) #give the total number of templates that cover the whole bound tiff files 
     510
     >>>
     >>> #classify the whole bound dataset
     >>> counter = 0 #needed for mock data
-    >>> for item in p:
-    ...     pixels_for_classifier = item.get_pixels() #input for classifier
-    ...     mock_classifier_result = np.ones(tpl_size) * counter #classifier output
+    >>> for item in prediction_data:
+    ...     pixels_for_classifier = item.pixels() #input for classifier
+    ...     mock_classifier_result = classify(pixels, counter) #classifier output
+    ...
     ...     #pass classifier results for each class to data source
-    ...     item.put_probmap_data_for_label(mock_classifier_result, label=91)
-    ...     item.put_probmap_data_for_label(mock_classifier_result, label=109)
-    ...     item.put_probmap_data_for_label(mock_classifier_result, label=150)
-    ...     counter += 1
+    ...     item.put_probmap_data(mock_classifier_result)     
+    ...     
+    ...     counter += 1 #counter for generation of mockdata
     >>>
 
 

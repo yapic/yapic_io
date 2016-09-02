@@ -6,6 +6,7 @@ from yapic_io.prediction_batch import PredictionBatch
 import numpy as np
 import yapic_io.utils as ut
 base_path = os.path.dirname(__file__)
+from yapic_io.factories import make_tiff_interface
 
 class TestPredictiondata(TestCase):
     def test_computepos_1(self):
@@ -326,34 +327,46 @@ class TestPredictiondata(TestCase):
         data = np.ones((1,4,1,3,4))
         p[0].put_probmap_data(data)
 
-    #     #self.assertTrue(False)
-
-        
-    # def test_put_probmap_data_multichannel_label_2(self):
-    #     img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
-    #     label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/*')
-    #     savepath = os.path.join(base_path, '../test_data/tmp/')
-    #     c = TiffConnector(img_path,label_path, savepath=savepath)
+    
+    def test_prediction_loop(self):
+        #mock classification function
+        def classify(pixels, value):
+            return np.ones(pixels.shape) * value
         
         
-    #     print('labels')
-    #     print(c.labelvalue_mapping)
-    #     c.load_label_filenames()    
-    #     c.map_labelvalues()
-    #     print('labels')
-    #     print(c.labelvalue_mapping)
-    #     d = Dataset(c)
-    #     print('label coors in dataset')
-    #     print(d.label_coordinates.keys())
-    #     size = (1,3,4)
-    #     batch_size = 1
-    #     p = PredictionBatch(d, batch_size, size)
+        #define data loacations
+        pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/*.tif'
+        label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/*.tif'
+        savepath = 'yapic_io/test_data/tmp/'
+         
+        tpl_size = (1,5,4) # size of network output layer in zxy
+        padding = (0,0,0) # padding of network input layer in zxy, in respect to output layer
+        
+         # make training_batch mb and prediction interface p with TiffConnector binding
+        _, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size, padding_zxy=padding, training_batch_size=2) 
+        
+        self.assertEqual(len(p), 255)
+        self.assertEqual(p.get_labels(), [1,2,3])
+        
+        #classify the whole bound dataset
+        counter = 0 #needed for mock data
+        
+        for item in p:
+        
+            print(counter)
+            print(item.curr_batch_pos)
+            print(len(item._batch_index_list))
+            #print(item.curr_batch_pos)
+            #print(item._batch_index_list)
+            pixels = item.pixels() #input for classifier
+            mock_classifier_result = classify(pixels, counter) #classifier output
+            #pass classifier results for each class to data source
+            item.put_probmap_data(mock_classifier_result)     
+            counter += 1
+        
+            
 
-    #     print('_labels')
-    #     print(p._labels)
-
-    #     data = np.ones((6,1,3,4))
-    #     p[0].put_probmap_data(data)    
+    
 
 
     def test_put_probmap_data_for_label(self):

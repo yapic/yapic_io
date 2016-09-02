@@ -1,6 +1,7 @@
 from bisect import insort_left
 import os
 import logging
+import numpy as np
 logger = logging.getLogger(os.path.basename(__file__))
 
 
@@ -39,6 +40,8 @@ class Minibatch(object):
         self._dataset = dataset
         self._batch_size = batch_size
 
+
+        self.float_data_type = np.float32 #type of pixel and weight data
         self._size_zxy = None
         self.set_tpl_size_zxy(size_zxy)
         self._padding_zxy = None
@@ -159,8 +162,8 @@ class Minibatch(object):
         >>> p.get_channels() #we have 3 channels in the prediction interface
         [0, 1, 2]
         >>> 
-        >>> p[0].get_pixels().shape #accordingly, we have 3 channels in the 4D pixels template (c,z,x,y)
-        (3, 1, 5, 4)
+        >>> p[0].pixels().shape #accordingly, we have 3 channels in the 5D pixels template (n,c,z,x,y)
+        (10, 3, 1, 5, 4)
         >>> 
         '''
         return self._channels    
@@ -184,15 +187,15 @@ class Minibatch(object):
         >>>
         >>> p.get_channels() #we have 3 channels
         [0, 1, 2]
-        >>> p[0].get_pixels().shape #accordingly, we have 3 channels in the 4D pixels template (c,z,x,y)
-        (3, 1, 5, 4)
+        >>> p[0].pixels().shape #accordingly, we have 3 channels in the 5D pixels template (n,c,z,x,y)
+        (10, 3, 1, 5, 4)
         >>>
         >>> p.remove_channel(1) #remove channel 1
         True
         >>> p.get_channels() #only 2 channels selected
         [0, 2]
-        >>> p[0].get_pixels().shape #only 2 channels left in the pixel template
-        (2, 1, 5, 4)
+        >>> p[0].pixels().shape #only 2 channels left in the pixel template
+        (10, 2, 1, 5, 4)
 
         '''    
         if channel not in self._channels:

@@ -48,8 +48,8 @@ class TestTrainingBatch(TestCase):
             , savepath, tpl_size, padding_zxy=padding, training_batch_size=6) 
         counter=0
         for mini in m:
-            weights = mini.weights #shape is (6,3,1,5,4) : batchsize 6 , 3 label-classes, 1 z, 5 x, 4 y
-            pixels = mini.pixels # shape is (6,3,1,9,8) : batchsize 6, 3 channels, 1 z, 9 x, 4 y (more xy due to padding)
+            weights = mini.weights() #shape is (6,3,1,5,4) : batchsize 6 , 3 label-classes, 1 z, 5 x, 4 y
+            pixels = mini.pixels() # shape is (6,3,1,9,8) : batchsize 6, 3 channels, 1 z, 9 x, 4 y (more xy due to padding)
             self.assertEqual(weights.shape, (6,3,1,5,4))
             self.assertEqual(pixels.shape, (6,3,1,9,8))
             #here: apply training on mini.pixels and mini.weights
@@ -73,8 +73,8 @@ class TestTrainingBatch(TestCase):
             , savepath, tpl_size, padding_zxy=padding, training_batch_size=6) 
         counter=0
         for mini in m:
-            weights = mini.weights #shape is (6,6,1,5,4) : batchsize 6 , 6 label-classes, 1 z, 5 x, 4 y
-            pixels = mini.pixels # shape is (6,3,1,9,8) : batchsize 6, 6 channels, 1 z, 9 x, 4 y (more xy due to padding)
+            weights = mini.weights() #shape is (6,6,1,5,4) : batchsize 6 , 6 label-classes, 1 z, 5 x, 4 y
+            pixels = mini.pixels() # shape is (6,3,1,9,8) : batchsize 6, 6 channels, 1 z, 9 x, 4 y (more xy due to padding)
             self.assertEqual(weights.shape, (6,6,1,5,4))
             self.assertEqual(pixels.shape, (6,3,1,9,8))
             #here: apply training on mini.pixels and mini.weights
