@@ -82,6 +82,25 @@ class TestTrainingBatch(TestCase):
             if counter > 10: #m is infinite
                 break        
 
+    def test_multichannel_labels_milt(self):
+
+        image_path = 'yapic_io/test_data/milt/*pixels.tif'
+        label_path = 'yapic_io/test_data/milt/*labels.tif'
+
+        conn = TiffConnector(image_path, label_path\
+            , multichannel_label_image=True, zstack=False)
+
+    
+        print(conn.labelvalue_mapping)
+
+        dataset = Dataset(conn)
+
+        print(dataset.label_coordinates)
+
+
+        self.assertTrue(False)
+
+
 
         
         #self.assertTrue(False)    
