@@ -82,26 +82,35 @@ class TestTrainingBatch(TestCase):
             if counter > 10: #m is infinite
                 break        
 
-    def test_multichannel_labels_milt(self):
+    # def test_multichannel_labels_milt(self):
 
-        image_path = 'yapic_io/test_data/milt/*pixels.tif'
-        label_path = 'yapic_io/test_data/milt/*labels.tif'
+    #     image_path = 'yapic_io/test_data/milt/*pixels.tif'
+    #     label_path = 'yapic_io/test_data/milt/*labels.tif'
 
-        conn = TiffConnector(image_path, label_path\
-            , multichannel_label_image=True, zstack=False)
+    #     conn = TiffConnector(image_path, label_path\
+    #         , multichannel_label_image=True, zstack=False)
 
     
-        print(conn.labelvalue_mapping)
+    #     print(conn.labelvalue_mapping)
 
-        dataset = Dataset(conn)
+    #     dataset = Dataset(conn)
 
-        print(dataset.label_coordinates)
-
-
-        self.assertTrue(False)
+    #     print(len(dataset.label_coordinates[4]))
+    #     print(len(dataset.label_coordinates[3]))
+    #     print(len(dataset.label_coordinates[2]))
+    #     print(len(dataset.label_coordinates[1]))
+    #     batchsize=1
+    #     minibatch = TrainingBatch(dataset, batchsize, (1,234,234), (0, 3, 3))
+    #     next(minibatch)
+    #     print('pix')
+    #     print(minibatch.pixels())
+    #     print('num wigths')
+    #     for cl in range(4):
+    #         print(sum(minibatch.weights()[:,cl,:,:,:].flatten()))
+            
 
 
 
         
-        #self.assertTrue(False)    
+    #     self.assertTrue(False)    
 
