@@ -391,7 +391,7 @@ class Dataset(object):
         '''
         
         labels = {}
-        
+        logger.info('start loading label coodinates...')
         for image_nr in list(range(self.n_images)):
             label_coor = self.pixel_connector.get_label_coordinates(image_nr)
             
@@ -412,6 +412,19 @@ class Dataset(object):
                         labels[key] = labels[key] + label_coor_5d[key]
 
         self.label_coordinates = labels                 
+        logger.info('finished loading of label coodinates')
+        logger.info('detected %s different label values', str(self.get_label_values()))
+
+        n_total = 0
+        for item in self.label_coordinates:
+            n_total += len(self.label_coordinates[item])
+
+        for label in self.get_label_values():
+            n_labels = len(self.label_coordinates[label])
+            percent = n_labels/n_total*100
+            logger.info('detected %s label pixels for label value %s (%s percent)'\
+                , n_labels, label, round(percent,2)) 
+
         return True
 
     def label_value_is_valid(self, label_value):
@@ -755,8 +768,8 @@ def get_template_with_reflection(shape, pos, \
     
     if is_padding(pad_size) and reflect:
         #if image has to be padded to get the template and reflection mode is on
-        logger.info('requested template out of bounds')
-        logger.info('image will be extended with reflection')
+        logger.debug('requested template out of bounds')
+        logger.debug('image will be extended with reflection')
 
     
     #get transient template

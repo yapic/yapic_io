@@ -214,7 +214,7 @@ class TiffConnector(Connector):
         check if label mat dimensions fit to image dimensions, i.e.
         everything identical except nr of channels (label mat always 1)
         '''
-        logger.debug('labelmat dimensions check')
+        logger.info('checking labelmatrix dimensions...')
         nr_channels = []
         for image_nr in list(range(self.get_image_count())):
             im_dim = self.load_img_dimensions(image_nr)
@@ -233,7 +233,9 @@ class TiffConnector(Connector):
                         , image_nr, self.filenames[image_nr], im_dim, label_dim)
                     raise ValueError('check image nr %s: dims do not match ' % str(image_nr))   
         if len(set(nr_channels))>1:
-            raise ValueError('nr of channels not consitent in input data, found following nr of labelmask channels: %s' % str(set(nr_channels)))            
+            raise ValueError('nr of channels not consitent in input data, found following nr of labelmask channels: %s' % str(set(nr_channels))) 
+
+        logger.info('labelmatrix dimensions ok')               
 
     @lru_cache(maxsize = 20)
     def load_image(self, image_nr):
@@ -294,6 +296,8 @@ class TiffConnector(Connector):
         Keys are the original labels, values are the assigned labels that
         will be seen by the Dataset object.
         '''
+        logger.info('mapping labelvalues...')
+
         label_mappings = []
         o_labelvals = self.get_original_labelvalues()
         new_label = 1
@@ -306,6 +310,9 @@ class TiffConnector(Connector):
             label_mappings.append(label_mapping)
         
         self.labelvalue_mapping = label_mappings
+
+        logger.info('label values are mapped to ascending values:')
+        logger.info(label_mappings)
         return label_mappings           
 
 
@@ -439,7 +446,11 @@ class TiffConnector(Connector):
             msg = 'Number of image files ({}) and label files ({}) differ!'
             logger.info(msg.format(len(image_filenames), len(label_filenames)))
 
-        self.filenames = find_best_matching_pairs(image_filenames, label_filenames)    
+        self.filenames = find_best_matching_pairs(image_filenames, label_filenames)
+
+        logger.info('pixel and label files are assigned as follows:')
+        logger.info(self.filenames)
+
             #self.filenames = list(zip(image_filenames, label_filenames))
         #else:
         #    raise NotImplemented
@@ -468,5 +479,8 @@ class TiffConnector(Connector):
             self.filenames = None
             return
         self.filenames = filenames
+        
+        logger.info('following pixel image files detected:')
+        logger.info(img_filenames)
         return True 
 

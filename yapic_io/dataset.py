@@ -544,7 +544,7 @@ class Dataset(object):
         :param equalized: If true, less frequent label_values are picked with same probability as frequent label_values
         :type equalized: bool 
         '''
-        labels = self.label_coordinates.keys()
+        labels = list(self.label_coordinates.keys())
         if equalized:
             label_sel = random.choice(labels)
             label_coordinate_sel = \
