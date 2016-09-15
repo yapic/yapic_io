@@ -48,8 +48,9 @@ class TrainingBatch(Minibatch):
     '''
     
 
-    def __init__(self, dataset, batch_size, size_zxy, padding_zxy=(0,0,0),
-        augment=True, rotation_range=(-45,45), shear_range=(-5,5), equalized=False):
+    def __init__(self, dataset, size_zxy, padding_zxy=(0,0,0),
+        augment=True, rotation_range=(-45,45), shear_range=(-5,5), equalized=False,\
+        ):
         
         '''
         :param dataset: dataset object, to connect to pixels and labels weights 
@@ -70,7 +71,8 @@ class TrainingBatch(Minibatch):
         :type equalized: bool
         '''
         
-        
+        batch_size = len(dataset.get_label_values())
+
         super().__init__(dataset, batch_size, size_zxy, padding_zxy=padding_zxy)
 
         self.equalized = equalized
@@ -145,7 +147,7 @@ class TrainingBatch(Minibatch):
 
 
 
-    def _pick_random_tpl(self):
+    def _pick_random_tpl(self, for_label=None):
         '''
         pick random template in image regions where label data is present
 
@@ -154,7 +156,7 @@ class TrainingBatch(Minibatch):
         if not self.augment:
             return self._dataset.pick_random_training_template(self._size_zxy\
             , self._channels, pixel_padding=self._padding_zxy,\
-                 equalized=self.equalized, labels=self._labels)       
+                 equalized=self.equalized, labels=self._labels, label_region=for_label)       
 
         shear_angle = self._get_random_shear()
         rotation_angle = self._get_random_rotation()    
@@ -162,6 +164,6 @@ class TrainingBatch(Minibatch):
         return self._dataset.pick_random_training_template(self._size_zxy\
             , self._channels, pixel_padding=self._padding_zxy\
             , equalized=self.equalized, rotation_angle=rotation_angle\
-            , shear_angle=shear_angle, labels=self._labels)       
+            , shear_angle=shear_angle, labels=self._labels, label_region=for_label)       
         
                 
