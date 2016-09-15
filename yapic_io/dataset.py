@@ -114,13 +114,17 @@ class Dataset(object):
         return self.pixel_connector.put_template(probmap_tpl, pos_zxy, image_nr, label_value)  
 
     def pick_random_training_template(self, size_zxy, channels, pixel_padding=(0,0,0),\
-             equalized=False, rotation_angle=0, shear_angle=0, labels='all'):
+             equalized=False, rotation_angle=0, shear_angle=0, labels='all', label_region=None):
 
         if labels == 'all':
             labels = self.get_label_values()
             
-
-        _, coor = self.pick_random_label_coordinate(equalized=equalized)
+        if label_region is None:
+        #pick training template wehre it is assured that weights for a specified label
+        #are within the template. the specified label is label_region    
+            _, coor = self.pick_random_label_coordinate(equalized=equalized)
+        else:
+            _, coor = self.pick_random_label_coordinate_for_label(label_region)    
         
         img_nr = coor[0]
         coor_zxy = list(coor)[2:]
@@ -555,8 +559,24 @@ class Dataset(object):
             return random.choice(ut.flatten_label_coordinates(self.label_coordinates))
            
 
+    def pick_random_label_coordinate_for_label(self, label_value):
+        '''
+        returns a rondomly chosen label coordinate and the label value for a givel label value:
+        
+        (label_value, (img_nr,channel,z,x,y))
 
+        channel is always zero!!
 
+        :param equalized: If true, less frequent label_values are picked with same probability as frequent label_values
+        :type equalized: bool 
+        '''
+        
+        
+        label_coordinate_sel = \
+                random.choice(self.label_coordinates[label_value])
+        return label_value, label_coordinate_sel
+
+        
 
 def label_coordinates_to_5d(label_dict, image_nr):
     '''

@@ -22,7 +22,7 @@ class TestTrainingBatch(TestCase):
         
         batch_size = 4
 
-        m = TrainingBatch(d, batch_size, size, padding_zxy=pad)
+        m = TrainingBatch(d, size, padding_zxy=pad)
 
         tpl = m._pick_random_tpl()
         print(tpl)
@@ -45,13 +45,13 @@ class TestTrainingBatch(TestCase):
         padding = (0,2,2) # padding of network input layer in zxy, in respect to output layer
         # make training_batch mb and prediction interface p with TiffConnector binding
         m, p = make_tiff_interface(pixel_image_dir, label_image_dir\
-            , savepath, tpl_size, padding_zxy=padding, training_batch_size=6) 
+            , savepath, tpl_size, padding_zxy=padding, training_batch_size=3) 
         counter=0
         for mini in m:
             weights = mini.weights() #shape is (6,3,1,5,4) : batchsize 6 , 3 label-classes, 1 z, 5 x, 4 y
             pixels = mini.pixels() # shape is (6,3,1,9,8) : batchsize 6, 3 channels, 1 z, 9 x, 4 y (more xy due to padding)
-            self.assertEqual(weights.shape, (6,3,1,5,4))
-            self.assertEqual(pixels.shape, (6,3,1,9,8))
+            self.assertEqual(weights.shape, (3,3,1,5,4))
+            self.assertEqual(pixels.shape, (3,3,1,9,8))
             #here: apply training on mini.pixels and mini.weights
             counter += 1
             if counter > 10: #m is infinite
@@ -70,9 +70,10 @@ class TestTrainingBatch(TestCase):
         padding = (0,2,2) # padding of network input layer in zxy, in respect to output layer
         # make training_batch mb and prediction interface p with TiffConnector binding
         m, p = make_tiff_interface(pixel_image_dir, label_image_dir\
-            , savepath, tpl_size, padding_zxy=padding, training_batch_size=6) 
+            , savepath, tpl_size, padding_zxy=padding, training_batch_size=3) 
         counter=0
         for mini in m:
+            print()
             weights = mini.weights() #shape is (6,6,1,5,4) : batchsize 6 , 6 label-classes, 1 z, 5 x, 4 y
             pixels = mini.pixels() # shape is (6,3,1,9,8) : batchsize 6, 6 channels, 1 z, 9 x, 4 y (more xy due to padding)
             self.assertEqual(weights.shape, (6,6,1,5,4))

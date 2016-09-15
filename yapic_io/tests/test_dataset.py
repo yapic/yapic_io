@@ -1146,6 +1146,28 @@ class TestDataset(TestCase):
         print(res_2)
         #self.assertTrue(False) 
 
+    def test_pick_random_label_coordinate_for_label(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path,label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
+                , ['40width26height6slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', '40width26height3slices_rgb.tif']\
+                ]
+        c.load_label_filenames()    
+
+        d = Dataset(c)
+
+
+        res_1 = d.pick_random_label_coordinate_for_label(3)
+        #res_2 = d.pick_random_label_coordinate_for_label(equalized=False)
+        #print(res_1)
+        print(res_1)
+        self.assertEqual(3, res_1[0]) 
+
     
     def test_pick_random_training_template(self):
 
@@ -1180,6 +1202,46 @@ class TestDataset(TestCase):
         self.assertEqual(tpl.channels,channels)
         self.assertEqual(tpl.weights.shape,weight_shape_val)
         self.assertEqual(tpl.labels,labels_val)
+
+
+    def test_pick_random_training_template_spec_label(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path,label_path)
+        
+        
+
+        d = Dataset(c)
+
+        size = (1,1,1)
+        pad = (0,2,2)
+        channels = [0,1,2]
+
+        
+        labels_val = [1, 2, 3]
+        
+        tpl_1 = d.pick_random_training_template(\
+            size, channels, pixel_padding=pad, rotation_angle=45, label_region=1)
+
+
+        tpl_2 = d.pick_random_training_template(\
+            size, channels, pixel_padding=pad, rotation_angle=45, label_region=2)
+
+        tpl_3 = d.pick_random_training_template(\
+            size, channels, pixel_padding=pad, rotation_angle=45, label_region=3)
+
+        print(tpl_1[2])
+        self.assertEqual(tpl_1[2][0][0][0][0],1)
+        self.assertEqual(tpl_2[2][1][0][0][0],1)
+        self.assertEqual(tpl_3[2][2][0][0][0],1)
+        #self.assertEqual(tpl_1['weights'][0][0][0][0],1)
+
+        # self.assertEqual(tpl.pixels.shape,pixel_shape_val)
+        # self.assertEqual(tpl.channels,channels)
+        # self.assertEqual(tpl.weights.shape,weight_shape_val)
+        # self.assertEqual(tpl.labels,labels_val)
+    
 
     
     def test_put_prediction_template_1(self):
