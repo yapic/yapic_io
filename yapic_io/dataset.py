@@ -619,14 +619,22 @@ def label2mask(image_shape, pos, size, label_coors, weights):
     msk = np.zeros(size)
     #label_coors_corr = np.array(label_coors) - np.array(pos) + 1
 
+    label_coors = np.array(label_coors)
+    pos = np.array(pos)
+    size = np.array(size)
+    weights = np.array(weights)
 
+    if label_coors.size == 0:
+        return msk
 
-    for coor, weight in zip(label_coors, weights):
-        coor_shifted = np.array(coor) - np.array(pos)
-        
-        if (coor_shifted >= 0).all() and (coor_shifted < np.array(size)).all():
-            msk[tuple(coor_shifted)] = weight
+    coor_shifted = label_coors - pos
+    coor_mask = np.logical_and((coor_shifted > -1).all(axis=1),
+                               (size - coor_shifted > 0).all(axis=1))
+    indices1d = np.ravel_multi_index(coor_shifted[coor_mask].T, size)
+    msk.flat[indices1d] = weights[coor_mask]
+
     return msk    
+
 
 
 
