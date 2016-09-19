@@ -449,8 +449,67 @@ class TestDataset(TestCase):
 
         self.assertEqual(val, out)
       
-            
+    # def test_label_coordinates_is_valid_fast(self):
+    #     img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+    #     label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+    #     c = TiffConnector(img_path,label_path)
         
+    #     c.filenames = [\
+    #             ('6width4height3slices_rgb.tif', None)\
+    #             , ('40width26height3slices_rgb.tif', None)\
+    #             , ('40width26height6slices_rgb.tif', None)\
+    #             ]
+        
+    #     d = Dataset(c)
+
+    #     #duplicates within one label are not allowed
+    #     coor = \
+    #         {
+    #         2 : [(2, 0, 3, 0, 0), (2, 0, 5, 1, 2), (2, 0, 3, 0, 0)],
+    #         3 : [(2, 0, 3, 1, 2), (2, 0, 5, 3, 4), (2, 0,1,1,1), (2, 0, 3, 0, 0)],
+    #         }
+    #     self.assertFalse(d.label_coordinates_is_valid_fast(coor))    
+        
+
+        
+    #     #duplicates for different labels are allowed
+    #     #duplicate
+    #     coor = \
+    #         {
+    #         2 : [(2, 0, 3, 0, 0), (2, 0, 5, 1, 2)],
+    #         3 : [(2, 0, 3, 1, 2), (2, 0, 5, 3, 4), (2, 0,1,1,1), (2, 0, 3, 0, 0)],
+    #         }
+    #     self.assertTrue(d.label_coordinates_is_valid_fast(coor))
+
+    #     # image nr too high
+    #     coor = \
+    #         {
+    #         2 : [(2, 0, 3, 0, 0), (2, 0, 5, 1, 2)],
+    #         3 : [(2, 0, 3, 1, 2), (3, 0,1,1,1)],
+    #         }
+
+
+    #     self.assertFalse(d.label_coordinates_is_valid_fast(coor))
+
+
+    #     # out of image bounds
+    #     coor = \
+    #         {
+    #         2 : [(0, 0, 3, 7, 4), (0, 0, 3, 1, 2)]
+    #         }
+
+    #     self.assertFalse(d.label_coordinates_is_valid_fast(coor))        
+
+    #     # correct
+    #     coor = \
+    #         {
+    #         2 : [(0, 0, 0, 6, 4), (0, 0, 3, 1, 2),(1, 0, 0, 6, 4), (2, 0, 3, 1, 2)]
+    #         }
+
+    #     self.assertTrue(d.label_coordinates_is_valid_fast(coor))       
+  
+
+    #     #self.assertTrue(False)
 
     def test_label_coordinates_is_valid(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
@@ -790,8 +849,8 @@ class TestDataset(TestCase):
         shape = (5,4)
         pos = (2,1)
         size = (3,2)
-        label_coors = [(0,0), (2,1), (2,2)]
-        weights = [2, 2, 2]
+        label_coors = np.array([(0,0), (2,1), (2,2)])
+        weights = np.array([2, 2, 2])
         mat = ds.label2mask(shape, pos, size, label_coors, weights)    
         val = \
             [[2., 2.],\
@@ -809,8 +868,8 @@ class TestDataset(TestCase):
         shape = (5,4)
         pos = (2,1)
         size = (3,2)
-        label_coors = [(0,0), (2,1), (2,2)]
-        weights = [1, 2, 3]
+        label_coors = np.array([(0,0), (2,1), (2,2)])
+        weights = np.array([1, 2, 3])
         
         mat = ds.label2mask(shape, pos, size, label_coors, weights)    
         val = \

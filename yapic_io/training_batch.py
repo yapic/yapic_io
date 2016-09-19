@@ -111,7 +111,7 @@ class TrainingBatch(Minibatch):
     
     def pixels(self):
         return self._pixels.astype(self.float_data_type)
-
+    
     def weights(self):
         return self._weights.astype(self.float_data_type)        
     
@@ -151,7 +151,7 @@ class TrainingBatch(Minibatch):
         return random.uniform(*self.shear_range)  
 
 
-
+     
     def _pick_random_tpl(self, for_label=None):
         '''
         pick random template in image regions where label data is present

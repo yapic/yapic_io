@@ -5,16 +5,19 @@ import os
 import numpy as np
 import yapic_io.utils as ut
 from tifffile import imsave, imread
+from functools import lru_cache
+
+
 logger = logging.getLogger(os.path.basename(__file__))
 
-
+@lru_cache(maxsize = 5000)  
 def is_rgb_image(path):
     im = Image.open(path)
     if im.mode == 'RGB':
         return True
     return False    
 
-
+@lru_cache(maxsize = 5000)  
 def get_tiff_image_dimensions(path, multichannel=None, zstack=None):
     '''
     returns dimensions of a single image file:

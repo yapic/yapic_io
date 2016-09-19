@@ -30,6 +30,7 @@ class TiffConnector(Connector):
     label filepath: yapic_io/test_data/tiffconnector_1/labels/*.tif
     <BLANKLINE>
     '''
+    
     def __init__(self\
             , img_filepath, label_filepath, savepath=None\
             , multichannel_pixel_image=None\
@@ -208,7 +209,7 @@ class TiffConnector(Connector):
             return ip.get_tiff_image_dimensions(path,\
                 zstack=self.zstack, multichannel=self.multichannel_label_image)               
     
-
+         
     def check_labelmat_dimensions(self):
         '''
         check if label mat dimensions fit to image dimensions, i.e.
@@ -317,7 +318,7 @@ class TiffConnector(Connector):
 
 
 
-
+      
     def get_original_labelvalues(self):
         '''
         returns a list of sets. each set corresponds to 1 label channel.
@@ -339,7 +340,7 @@ class TiffConnector(Connector):
         return out        
 
 
-
+    @lru_cache(maxsize = 5000)  
     def get_original_labelvalues_for_im(self, image_nr):
         mat = self.load_label_matrix(image_nr, original_labelvalues=True)
         if mat is None:

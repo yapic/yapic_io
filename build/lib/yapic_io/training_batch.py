@@ -121,11 +121,16 @@ class TrainingBatch(Minibatch):
         pixels = []
         weights = []
         augmentations = []
-        for i in list(range(self._batch_size)):
-            tpl_data = self._pick_random_tpl()
+        # for i in list(range(self._batch_size)):
+        #     tpl_data = self._pick_random_tpl()
+        #     pixels.append(tpl_data.pixels)
+        #     weights.append(tpl_data.weights)
+        #     augmentations.append(tpl_data.augmentation)
+        for label in self._labels:
+            tpl_data = self._pick_random_tpl(for_label=label)
             pixels.append(tpl_data.pixels)
             weights.append(tpl_data.weights)
-            augmentations.append(tpl_data.augmentation)
+            augmentations.append(tpl_data.augmentation)    
 
         self._pixels = np.array(pixels)
         self._weights = np.array(weights)    
