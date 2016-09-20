@@ -21,8 +21,6 @@ class Dataset(object):
     pixel data is cached in memory for repeated requests
     
     '''
-    
-
     def __init__(self, pixel_connector):
         
         self.pixel_connector = pixel_connector
@@ -65,7 +63,6 @@ class Dataset(object):
         for label in labels:
             self.set_weight_for_label(eq_weights[label], label)
         return True    
-
 
 
     @lru_cache(maxsize = 1000)
@@ -369,7 +366,6 @@ class Dataset(object):
         return True    
 
     
-       
     def load_label_coordinates(self):
         '''
         imports labale coodinates with the connector objects and stores them in 
@@ -459,7 +455,6 @@ class Dataset(object):
     
 
     
-    
     def label_coordinates_is_valid(self, label_coordinates):
         '''
         check if label coordinate data meets following requirements:
@@ -522,13 +517,9 @@ class Dataset(object):
             
             return False    
 
-        # @profile    
-        # def imsize_per_row(inrow):          
-        #     return self.get_img_dimensions(inrow[0])
-
-        imsizes = np.apply_along_axis(lambda inrow: self.get_img_dimensions(inrow[0]), 1, coor_mat)
+        imsizes = np.vectorize(self.get_img_dimensions)(coor_mat[:,:1])
         
-        dims_zxy = imsizes[:,1:]
+        dims_zxy = np.squeeze(imsizes).T[:,1:]
         coors_zxy = coor_mat[:,2:]
 
         
