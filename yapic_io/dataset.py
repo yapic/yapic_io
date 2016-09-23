@@ -292,8 +292,9 @@ class Dataset(object):
         return tpl 
 
 
-
-            
+    @lru_cache(maxsize = 1000)
+    def label_coordinates_as_array(self, label_value):
+        return np.array(self.label_coordinates[label_value])
 
    
     def _get_template_for_label_inner(self, image_nr=None\
@@ -309,8 +310,7 @@ class Dataset(object):
 
         shape_zxy = self.get_img_dimensions(image_nr)[1:]
         
-
-        label_coors = np.array(self.label_coordinates[label_value])
+        label_coors = self.label_coordinates_as_array(label_value)
         label_weights = np.array(self.label_weights[label_value])
         
         
