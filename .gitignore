@@ -10,7 +10,7 @@
 
 # Setuptools distribution folder.
 /dist/
-
+/build/lib/yapic_io/
 #output data from tests
 yapic_io/test_data/tmp/
 
