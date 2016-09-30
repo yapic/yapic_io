@@ -9,6 +9,23 @@ import yapic_io.utils as ut
 
 class TestUtils(TestCase):
     
+    
+    def test_get_template_meshgrid(self):
+
+        shape = (10000,30000)
+        pos = (3,3)
+        size = (7000,9000)
+
+        res = ut.get_template_meshgrid(shape, pos, size)
+
+        #pprint(res)
+
+        #self.assertTrue(False)
+
+    
+    
+
+
     def test_nest_list(self):
         t = [0,1,2,3,4,5,6,7,8,9]
 
@@ -51,9 +68,9 @@ class TestUtils(TestCase):
         size = (3,3)
         shape = (10,10)
 
-        maxpos = (7,7) 
-
-        self.assertEqual(maxpos, ut.get_max_pos_for_tpl(size, shape))    
+        maxpos = np.array((7,7)) 
+        print(ut.get_max_pos_for_tpl(size, shape))
+        self.assertTrue((maxpos==ut.get_max_pos_for_tpl(size, shape)).all())    
 
     def test_get_random_pos_for_coordinate(self):
         coor = (5,4)

@@ -124,10 +124,12 @@ class Dataset(object):
             _, coor = self.pick_random_label_coordinate_for_label(label_region)    
         
         img_nr = coor[0]
-        coor_zxy = list(coor)[2:]
+        #coor_zxy = list(coor)[2:]
+        coor_zxy = coor[2:]
         shape_zxy = self.get_img_dimensions(img_nr)[1:]
-        pos_zxy = ut.get_random_pos_for_coordinate(coor_zxy, size_zxy, shape_zxy)
+        pos_zxy = np.array(ut.get_random_pos_for_coordinate(coor_zxy, size_zxy, shape_zxy))
 
+        
         tpl_data = self.get_training_template(img_nr, pos_zxy, size_zxy,\
                 channels, labels, pixel_padding=pixel_padding,\
                 rotation_angle=rotation_angle, shear_angle=shear_angle)
@@ -179,8 +181,8 @@ class Dataset(object):
         if not ut.is_valid_image_subset(image_shape_zxy, pos_zxy, size_zxy):
             raise ValueError('image subset not correct')
 
-        pos_zxy = np.array(pos_zxy)
-        size_zxy = np.array(size_zxy)
+        #pos_zxy = np.array(pos_zxy)
+        #size_zxy = np.array(size_zxy)
         pixel_padding = np.array(pixel_padding)
 
         size_padded = size_zxy + 2 * pixel_padding
@@ -202,7 +204,7 @@ class Dataset(object):
 
 
 
-    @lru_cache(maxsize = 1000)
+    #@lru_cache(maxsize = 1000)
     def get_template_singlechannel(self, image_nr\
            , pos_zxy, size_zxy, channel, reflect=True,\
             rotation_angle=0, shear_angle=0):
@@ -292,10 +294,7 @@ class Dataset(object):
         return tpl 
 
 
-    @lru_cache(maxsize = 1000)
-    def label_coordinates_as_array(self, label_value):
-        return np.array(self.label_coordinates[label_value])
-
+    
    
     def _get_template_for_label_inner(self, image_nr=None\
             , pos=None, size=None, label_value=None):
@@ -310,7 +309,7 @@ class Dataset(object):
 
         shape_zxy = self.get_img_dimensions(image_nr)[1:]
         
-        label_coors = self.label_coordinates_as_array(label_value)
+        label_coors = self.label_coordinates[label_value]
         label_weights = np.array(self.label_weights[label_value])
         
         
@@ -371,17 +370,20 @@ class Dataset(object):
         imports labale coodinates with the connector objects and stores them in 
         self.label_coordinates in following dictionary format:
 
-        { 
-            label_nr1 : [
-                            (img_nr, channel, z, x, y),
-                            (img_nr, channel, z, x, y),
-                            (img_nr, channel, z, x, y),
-                             ...],
-            label_nr2 : [
-                            (img_nr, channel, z, x, y),
-                            (img_nr, channel, z, x, y),
-                            (img_nr, channel, z, x, y),
-                             ...],                 
+        
+
+        {
+            label_nr1 : numpy.array([[img_nr,c,z,x,y],
+                                     [img_nr,c,z,x,y],
+                                     [img_nr,c,z,x,y],
+                                     [img_nr,c,z,x,y],
+                                     ...]),
+            label_nr2 : numpy.array([[img_nr,c,z,x,y],
+                                     [img_nr,c,z,x,y],
+                                     [img_nr,c,z,x,y],
+                                     [img_nr,c,z,x,y],
+                                     ...]),
+            ...
         }
 
         channel has always value 0!! This value is just kept for consitency in 
@@ -393,6 +395,9 @@ class Dataset(object):
         logger.info('start loading label coodinates...')
         for image_nr in list(range(self.n_images)):
             label_coor = self.pixel_connector.get_label_coordinates(image_nr)
+
+            #logger.debug('label coodinates for image %s: ', image_nr)
+            #logger.debug(label_coor)
             
            
 
@@ -408,7 +413,9 @@ class Dataset(object):
                     if key not in labels.keys():
                         labels[key] = label_coor_5d[key]
                     else:
-                        labels[key] = labels[key] + label_coor_5d[key]
+                        labels[key] = np.concatenate(\
+                            (labels[key],label_coor_5d[key]),\
+                             axis=0)
 
         self.label_coordinates = labels                 
         logger.info('finished loading of label coodinates')
@@ -454,7 +461,8 @@ class Dataset(object):
     
     
 
-    
+
+
     def label_coordinates_is_valid(self, label_coordinates):
         '''
         check if label coordinate data meets following requirements:
@@ -478,38 +486,38 @@ class Dataset(object):
         
         for key in label_coordinates.keys():
             coor = label_coordinates[key]
-            if len(set(coor)) != len(coor):
+            
+            diff = np.diff(coor[np.lexsort(coor.T)],axis=0)
+            
+            is_duplicate = (np.abs(diff).sum(axis=1)==0).any()
+            if is_duplicate:
                 logger.warning(\
                     'duplicates detected in coordinates,' +\
                     ' for label value %s',\
                      str(key))
+                
                 return False
 
-
-        coor_flat = []
-        for key in label_coordinates.keys():
-            coor_flat = coor_flat + label_coordinates[key]
-        
+             
+        coor_flat = np.concatenate([item[1] for item in label_coordinates.items()]\
+                       , axis=0)
 
 
-        for coor in coor_flat:
-            #check for correct nr of dimensions    
-            if len(coor) != 5:
-                logger.warning(\
-                    'number of coordinate dimensions must be 5,' +\
-                    ' but is at least one time %s, coordinate: %s',\
-                     str(len(coor)), str(coor))
-                return False
+               
 
-           
-           
-        
-        coor_mat = np.array(coor_flat, dtype=int)
+
+        if coor_flat.shape[1] != 5:    
+            logger.warning(\
+                'number of coordinate dimensions must be 5,' +\
+                ' but is : %s',\
+                 str(coor_flat.shape[0]))
+            return False
+
 
         
         
         
-        if (coor_mat[:,0] < 0).any() or (coor_mat[:,0] >= self.n_images).any():
+        if (coor_flat[:,0] < 0).any() or (coor_flat[:,0] >= self.n_images).any():
             logger.warning(\
                     'image number in label coordinates not valid:' +\
                     ' is %s, but must be between 0 and %s',\
@@ -517,10 +525,10 @@ class Dataset(object):
             
             return False    
 
-        imsizes = np.vectorize(self.get_img_dimensions)(coor_mat[:,:1])
+        imsizes = np.vectorize(self.get_img_dimensions)(coor_flat[:,:1])
         
         dims_zxy = np.squeeze(imsizes).T[:,1:]
-        coors_zxy = coor_mat[:,2:]
+        coors_zxy = coor_flat[:,2:]
 
         
         #check if coordinates are within image zxy range
@@ -536,7 +544,7 @@ class Dataset(object):
             return False
 
         #check if channel is 0
-        if (coor_mat[:,1] != 0).any():
+        if (coor_flat[:,1] != 0).any():
             logger.warning(\
                     'nr of channels MUST be 0 for label coordinates, but is not' +\
                     'for at least one coordinate.')
@@ -679,8 +687,15 @@ def label_coordinates_to_5d(label_dict, image_nr):
     
     label_dict = dict(label_dict) #copy
     for key in label_dict.keys():
-        label_dict[key] =\
-             [(image_nr, coor[0], coor[1], coor[2], coor[3]) for coor in label_dict[key]]
+       
+        coor4d = label_dict[key]
+        
+        coor5d = np.ones((coor4d.shape[0], 5), dtype=int) * image_nr
+        coor5d[:,1:] = coor4d
+        label_dict[key] = coor5d
+
+        # label_dict[key] =\
+        #      [(image_nr, coor[0], coor[1], coor[2], coor[3]) for coor in label_dict[key]]
 
     return label_dict         
         
@@ -713,10 +728,10 @@ def label2mask(image_shape, pos, size, label_coors, weights):
     msk = np.zeros(size)
     #label_coors_corr = np.array(label_coors) - np.array(pos) + 1
 
-    #label_coors = np.array(label_coors)
-    pos = np.array(pos)
-    size = np.array(size)
-    #weights = np.array(weights)
+    
+    #pos = np.array(pos)
+    #size = np.array(size)
+    
 
     if label_coors.size == 0:
         return msk
@@ -896,7 +911,7 @@ def get_template_with_reflection(shape, pos, \
     
     #get transient template
     transient_tpl = get_template_func( \
-        pos=pos_transient, size=size_transient, **kwargs)
+        pos=tuple(pos_transient), size=tuple(size_transient), **kwargs)
 
 
     

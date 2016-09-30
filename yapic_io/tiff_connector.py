@@ -165,7 +165,7 @@ class TiffConnector(Connector):
 
 
             
-
+    @lru_cache(maxsize=5000)    
     def get_template(self, image_nr=None, pos=None, size=None):
 
         im = self.load_image(image_nr)
@@ -371,7 +371,7 @@ class TiffConnector(Connector):
         return list(values)
 
 
-    @lru_cache(maxsize = 500)
+    #@lru_cache(maxsize = 500)
     def get_label_coordinates(self, image_nr):
         ''''
         returns label coordinates as dict in following format:
@@ -379,10 +379,21 @@ class TiffConnector(Connector):
         dimensions with corresponding pixel data 
 
         {
-            label_nr1 : [(channel, z, x, y), (channel, z, x, y) ...],
-            label_nr2 : [(channel, z, x, y), (channel, z, x, y) ...],
+            label_nr1 : numpy.array([[c,z,x,y],
+                                     [c,z,x,y],
+                                     [c,z,x,y],
+                                     [c,z,x,y],
+                                     ...]),
+            label_nr2 : numpy.array([[c,z,x,y],
+                                     [c,z,x,y],
+                                     [c,z,x,y],
+                                     [c,z,x,y],
+                                     ...]),
             ...
         }
+
+        
+
 
 
         :param image_nr: index of image
@@ -399,11 +410,12 @@ class TiffConnector(Connector):
         label_coor = {}
         for label in labels:
             coors = np.array(np.where(mat==label))
+            coors = np.swapaxes(coors,0,1)
+            coors[:,0] = 0 #set channel to 0
+
             
-            
-            coor_list = [tuple(coors[:,i]) for i in list(range(coors.shape[1]))]
-            coor_list = [(0,) + c[1:] for c in coor_list] #set channel always to 1
-            label_coor[label] = coor_list#np.array(np.where(mat==label))
+            label_coor[label] = coors
+
         
         return label_coor    
 
@@ -425,20 +437,7 @@ class TiffConnector(Connector):
         if self.filenames is None:
             return
 
-        # if mode is None:
-        #     if os.path.isdir(self.label_path) and os.path.samefile(self.label_path, self.img_path):
-        #         mode = 'order'
-        #     else:
-        #         mode = 'identical'
-
-        # if mode == 'identical':
-        #     #if label filenames should match exactly with img filenames
-        #     for name_tuple in self.filenames:
-        #         img_filename = name_tuple[0]   
-        #         label_path = os.path.join(self.label_path, img_filename)
-        #         if os.path.isfile(label_path): #if label file exists for image file
-        #             name_tuple[1] = img_filename
-        #elif mode == 'order':
+        
         image_filenames = [pair[0] for pair in self.filenames]
         label_filenames = sorted(glob.glob(os.path.join(self.label_path, self.label_filemask)))
         label_filenames = [os.path.split(fname)[1] for fname in label_filenames]
@@ -452,21 +451,6 @@ class TiffConnector(Connector):
         logger.info('pixel and label files are assigned as follows:')
         logger.info(self.filenames)
 
-            #self.filenames = list(zip(image_filenames, label_filenames))
-        #else:
-        #    raise NotImplemented
-
-
-    # def check_filename_similarity(self):
-    #     distances = list(itertools.starmap(lev_distance, self.filenames))
-    #     dist_min = np.amin(distances)
-    #     dist_argmax = np.argmax(distances)
-    #     dist_max = distances[dist_argmax]
-
-    #     if dist_max - dist_min > 0:
-    #         logger.warn('Odd filename pair detected {}'.format(self.filenames[dist_argmax]))
-    #         return False
-    #     return True
 
 
     def load_img_filenames(self):

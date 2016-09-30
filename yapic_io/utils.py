@@ -84,6 +84,30 @@ def get_indices(pos, size):
 
     return [list(range(p, p+s)) for p,s in zip(pos,size)]
 
+
+def get_indices_fast(pos, size):
+    '''
+    returns all indices for a sub matrix, given a certain n-dimensional position (upper left)
+    and n-dimensional size. 
+
+
+    :param pos: tuple defining the upper left position of the template in n dimensions
+    :param size: tuple defining size of template in all dimensions
+    :returns: list of indices for all dimensions
+    '''
+    # if len(pos) != len(size):
+    #     error_str = '''nr of dimensions does not fit: pos(%s), 
+    #         size (%s)''' % (pos, size)
+    #     raise ValueError(error_str)
+
+
+    
+    return [list(np.arange(p, p+s)) for p,s in zip(pos,size)]
+
+
+
+
+
 def get_template_meshgrid(image_shape, pos, size):
     '''
     returns coordinates for selection of a sub matrix
@@ -100,28 +124,12 @@ def get_template_meshgrid(image_shape, pos, size):
     pos = np.array(pos)
     size = np.array(size)
 
-    # if len(image_shape) != len(size):        
-    #     error_str = '''nr of image dimensions (%s) 
-    #         and size vector length (%s) do not match'''\
-    #         % (len(image_shape), len(size))
-    #     raise ValueError(error_str)
-
-    # if len(image_shape) != len(pos):        
-    #     error_str = '''nr of image dimensions (%s) 
-    #         and pos vector length (%s) do not match'''\
-    #         % (len(image_shape), len(pos))
-    #     raise ValueError(error_str)    
-
     
-    # if (image_shape < (pos + size)).any():
-    #     error_str = '''template out of image bounds: image shape: %s,  
-    #         pos: %s, template size: %s''' % (image_shape, pos, size)
-    #     raise ValueError(error_str)
     if not is_valid_image_subset(image_shape, pos, size):
         raise ValueError('image subset not valid')
 
 
-    indices = get_indices(pos, size)
+    indices = get_indices_fast(pos, size)
     return np.meshgrid(*indices, indexing='ij') 
 
 
@@ -171,7 +179,10 @@ def flatten_label_coordinates(label_coordinates):
 
 
 def get_max_pos_for_tpl(size, shape):
-    return tuple(np.array(shape) - np.array(size))
+    '''
+    returns maxpos as np array
+    '''
+    return np.array(shape) - np.array(size)
 
 
 def get_random_pos_for_coordinate(coor, size, shape):
@@ -184,7 +195,7 @@ def get_random_pos_for_coordinate(coor, size, shape):
     size = np.array(size)
 
     
-    maxpos = np.array(get_max_pos_for_tpl(size, shape))
+    maxpos = get_max_pos_for_tpl(size, shape)
     maxpos[maxpos>coor] = coor[maxpos>coor]
 
     minpos = coor - size + 1
@@ -279,31 +290,7 @@ def add_to_filename(path, insert_str, suffix=True):
     return os.path.join(dirname, out_filename)   
 
 
-# def lev_distance(s1, s2):
-#     '''
-#     Levenshtein distance of two strings
 
-#     >>> lev_distance('kitten', 'sitting')
-#     3
-#     '''
-#     if len(s1) < len(s2):
-#         return lev_distance(s2, s1)
-
-#     # len(s1) >= len(s2)
-#     if len(s2) == 0:
-#         return len(s1)
-
-#     previous_row = range(len(s2) + 1)
-#     for i, c1 in enumerate(s1):
-#         current_row = [i + 1]
-#         for j, c2 in enumerate(s2):
-#             insertions = previous_row[j + 1] + 1 # j+1 instead of j since previous_row and current_row are one character longer
-#             deletions = current_row[j] + 1       # than s2
-#             substitutions = previous_row[j] + (c1 != c2)
-#             current_row.append(min(insertions, deletions, substitutions))
-#         previous_row = current_row
-
-#     return previous_row[-1]
 
 
 def string_distance(a, b):

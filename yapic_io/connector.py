@@ -86,8 +86,16 @@ class Connector(metaclass=ABCMeta):
         dimensions with corresponding pixel data 
 
         {
-            label_nr1 : [(channel, z, x, y), (channel, z, x, y) ...],
-            label_nr2 : [(channel, z, x, y), (channel, z, x, y) ...],
+            label_nr1 : numpy.array([[c,z,x,y],
+                                     [c,z,x,y],
+                                     [c,z,x,y],
+                                     [c,z,x,y],
+                                     ...]),
+            label_nr2 : numpy.array([[c,z,x,y],
+                                     [c,z,x,y],
+                                     [c,z,x,y],
+                                     [c,z,x,y],
+                                     ...]),
             ...
         }
 

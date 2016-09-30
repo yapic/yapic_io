@@ -81,37 +81,26 @@ class TestTrainingBatch(TestCase):
             #here: apply training on mini.pixels and mini.weights
             counter += 1
             if counter > 10: #m is infinite
-                break        
+                break
 
-    # def test_multichannel_labels_milt(self):
 
-    #     image_path = 'yapic_io/test_data/milt/*pixels.tif'
-    #     label_path = 'yapic_io/test_data/milt/*labels.tif'
-
-    #     conn = TiffConnector(image_path, label_path\
-    #         , multichannel_label_image=True, zstack=False)
+    def test_init_trainingbatch(self):
+        pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/*.tif'
+        label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels_multichannel/*.tif'
+        savepath = 'yapic_io/test_data/tmp/'
+        
+        tpl_size = (1,5,4) # size of network output layer in zxy
+        padding = (0,2,2) # padding of network input layer in zxy, in respect to output layer
+        
+        c = TiffConnector(pixel_image_dir,label_image_dir, savepath=savepath\
+        , multichannel_pixel_image=None\
+        , multichannel_label_image=None\
+        , zstack=True)
+        
+        d = Dataset(c)
+        print(d.label_coordinates)
+        #self.assertTrue(False)
+                        
 
     
-    #     print(conn.labelvalue_mapping)
-
-    #     dataset = Dataset(conn)
-
-    #     print(len(dataset.label_coordinates[4]))
-    #     print(len(dataset.label_coordinates[3]))
-    #     print(len(dataset.label_coordinates[2]))
-    #     print(len(dataset.label_coordinates[1]))
-    #     batchsize=1
-    #     minibatch = TrainingBatch(dataset, batchsize, (1,234,234), (0, 3, 3))
-    #     next(minibatch)
-    #     print('pix')
-    #     print(minibatch.pixels())
-    #     print('num wigths')
-    #     for cl in range(4):
-    #         print(sum(minibatch.weights()[:,cl,:,:,:].flatten()))
-            
-
-
-
-        
-    #     self.assertTrue(False)    
 

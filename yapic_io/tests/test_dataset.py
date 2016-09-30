@@ -21,18 +21,12 @@ class TestDataset(TestCase):
         d = Dataset(c)
 
         self.assertEqual(d.n_images, 3)
-        # img_filenames = [\
-        #         ('6width4height3slices_rgb.tif',)\
-        #         , ('40width26height3slices_rgb.tif',)\
-        #         , ('40width26height6slices_rgb.tif',)\
-        #         ]
+        
 
         
         
 
         
-
-
     def test_get_padding_size_1(self):
 
         shape = (7, 11)
@@ -242,9 +236,9 @@ class TestDataset(TestCase):
         print(pos_out)
         print(size_out)
 
-        self.assertEqual(pos_out, pos_val)
-        self.assertEqual(size_out, size_val)        
-        self.assertEqual(pos_tpl, (1,2))
+        self.assertEqual(tuple(pos_out), pos_val)
+        self.assertEqual(tuple(size_out), size_val)        
+        self.assertEqual(tuple(pos_tpl), (1,2))
         self.assertEqual(pd, [(0,3),(0,4)]) 
 
 
@@ -263,9 +257,9 @@ class TestDataset(TestCase):
         print(pos_out)
         print(size_out)
 
-        self.assertEqual(pos_out, pos_val)
-        self.assertEqual(size_out, size_val)        
-        self.assertEqual(pos_tpl, (0,0))
+        self.assertEqual(tuple(pos_out), pos_val)
+        self.assertEqual(tuple(size_out), size_val)        
+        self.assertEqual(tuple(pos_tpl), (0,0))
         self.assertEqual(pd, [(4,0),(1,0)]) 
 
     def test_calc_inner_template_size_10(self):
@@ -433,83 +427,25 @@ class TestDataset(TestCase):
 
         label_dict = \
             {
-            2 : [(1, 3, 0, 0), (1, 5, 1, 2)],
-            3 : [(1, 3, 1, 2), (1, 5, 3, 4), (1,1,1,1)],
+            2 : np.array([(1, 3, 0, 0), (1, 5, 1, 2)]),
+            3 : np.array([(1, 3, 1, 2), (1, 5, 3, 4), (1,1,1,1)]),
             }
 
         image_nr = 2
 
         val = \
             {
-            2 : [(2, 1, 3, 0, 0), (2, 1, 5, 1, 2)],
-            3 : [(2, 1, 3, 1, 2), (2, 1, 5, 3, 4), (2, 1,1,1,1)],
+            2 : np.array([(2, 1, 3, 0, 0), (2, 1, 5, 1, 2)]),
+            3 : np.array([(2, 1, 3, 1, 2), (2, 1, 5, 3, 4), (2, 1,1,1,1)]),
             }
         
         out = ds.label_coordinates_to_5d(label_dict, image_nr)
-
-        self.assertEqual(val, out)
+        print(val)
+        print(out)
+        self.assertTrue((val[2]==out[2]).all())
+        self.assertTrue((val[3]==out[3]).all())
       
-    # def test_label_coordinates_is_valid_fast(self):
-    #     img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-    #     label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-    #     c = TiffConnector(img_path,label_path)
-        
-    #     c.filenames = [\
-    #             ('6width4height3slices_rgb.tif', None)\
-    #             , ('40width26height3slices_rgb.tif', None)\
-    #             , ('40width26height6slices_rgb.tif', None)\
-    #             ]
-        
-    #     d = Dataset(c)
-
-    #     #duplicates within one label are not allowed
-    #     coor = \
-    #         {
-    #         2 : [(2, 0, 3, 0, 0), (2, 0, 5, 1, 2), (2, 0, 3, 0, 0)],
-    #         3 : [(2, 0, 3, 1, 2), (2, 0, 5, 3, 4), (2, 0,1,1,1), (2, 0, 3, 0, 0)],
-    #         }
-    #     self.assertFalse(d.label_coordinates_is_valid_fast(coor))    
-        
-
-        
-    #     #duplicates for different labels are allowed
-    #     #duplicate
-    #     coor = \
-    #         {
-    #         2 : [(2, 0, 3, 0, 0), (2, 0, 5, 1, 2)],
-    #         3 : [(2, 0, 3, 1, 2), (2, 0, 5, 3, 4), (2, 0,1,1,1), (2, 0, 3, 0, 0)],
-    #         }
-    #     self.assertTrue(d.label_coordinates_is_valid_fast(coor))
-
-    #     # image nr too high
-    #     coor = \
-    #         {
-    #         2 : [(2, 0, 3, 0, 0), (2, 0, 5, 1, 2)],
-    #         3 : [(2, 0, 3, 1, 2), (3, 0,1,1,1)],
-    #         }
-
-
-    #     self.assertFalse(d.label_coordinates_is_valid_fast(coor))
-
-
-    #     # out of image bounds
-    #     coor = \
-    #         {
-    #         2 : [(0, 0, 3, 7, 4), (0, 0, 3, 1, 2)]
-    #         }
-
-    #     self.assertFalse(d.label_coordinates_is_valid_fast(coor))        
-
-    #     # correct
-    #     coor = \
-    #         {
-    #         2 : [(0, 0, 0, 6, 4), (0, 0, 3, 1, 2),(1, 0, 0, 6, 4), (2, 0, 3, 1, 2)]
-    #         }
-
-    #     self.assertTrue(d.label_coordinates_is_valid_fast(coor))       
-  
-
-    #     #self.assertTrue(False)
+    
 
     def test_label_coordinates_is_valid(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
@@ -527,8 +463,8 @@ class TestDataset(TestCase):
         #duplicates within one label are not allowed
         coor = \
             {
-            2 : [(2, 0, 3, 0, 0), (2, 0, 5, 1, 2), (2, 0, 3, 0, 0)],
-            3 : [(2, 0, 3, 1, 2), (2, 0, 5, 3, 4), (2, 0,1,1,1), (2, 0, 3, 0, 0)],
+            2 : np.array([(2, 0, 3, 0, 0), (2, 0, 5, 1, 2), (2, 0, 3, 0, 0)]),
+            3 : np.array([(2, 0, 3, 1, 2), (2, 0, 5, 3, 4), (2, 0,1,1,1), (2, 0, 3, 0, 0)]),
             }
         self.assertFalse(d.label_coordinates_is_valid(coor))    
         
@@ -538,9 +474,11 @@ class TestDataset(TestCase):
         #duplicate
         coor = \
             {
-            2 : [(2, 0, 3, 0, 0), (2, 0, 5, 1, 2)],
-            3 : [(2, 0, 3, 1, 2), (2, 0, 5, 3, 4), (2, 0,1,1,1), (2, 0, 3, 0, 0)],
+            2 : np.array([(2, 0, 3, 0, 0), (2, 0, 5, 1, 2)]),
+            3 : np.array([(2, 0, 3, 1, 2), (2, 0, 5, 3, 4), (2, 0,1,1,1), (2, 0, 3, 0, 0)]),
             }
+        
+        print(coor)
         self.assertTrue(d.label_coordinates_is_valid(coor))       
 
 
@@ -550,8 +488,8 @@ class TestDataset(TestCase):
         # one tuple with 4 instead 5 coordinate dimensions
         coor = \
             {
-            2 : [(2, 0, 3, 0, 0), (2, 0, 5, 1, 2)],
-            3 : [(2, 0, 3, 1, 2), (2, 0, 5, 3), (2, 0,1,1,1)],
+            2 : np.array([(2, 0, 3, 0), (2, 0, 5, 1)]),
+            3 : np.array([(2, 0, 3, 1), (2, 0, 5, 3), (2, 0,1,1)]),
             }
 
 
@@ -560,8 +498,8 @@ class TestDataset(TestCase):
         # image nr too high
         coor = \
             {
-            2 : [(2, 0, 3, 0, 0), (2, 0, 5, 1, 2)],
-            3 : [(2, 0, 3, 1, 2), (3, 0,1,1,1)],
+            2 : np.array([(2, 0, 3, 0, 0), (2, 0, 5, 1, 2)]),
+            3 : np.array([(2, 0, 3, 1, 2), (3, 0,1,1,1)]),
             }
 
 
@@ -571,7 +509,7 @@ class TestDataset(TestCase):
         # out of image bounds
         coor = \
             {
-            2 : [(0, 0, 3, 7, 4), (0, 0, 3, 1, 2)]
+            2 : np.array([(0, 0, 3, 7, 4), (0, 0, 3, 1, 2)])
             }
 
         self.assertFalse(d.label_coordinates_is_valid(coor))
@@ -579,7 +517,7 @@ class TestDataset(TestCase):
         # out of image bounds
         coor = \
             {
-            2 : [(0, 0, -1, 6, 4), (0, 0, 3, 1, 2)]
+            2 : np.array([(0, 0, -1, 6, 4), (0, 0, 3, 1, 2)])
             }
 
         self.assertFalse(d.label_coordinates_is_valid(coor))
@@ -587,7 +525,7 @@ class TestDataset(TestCase):
         # out of image bounds
         coor = \
             {
-            2 : [(0, 2, 0, 6, 4), (0, 1, 3, 1, 2)]
+            2 : np.array([(0, 2, 0, 6, 4), (0, 1, 3, 1, 2)])
             }
 
         self.assertFalse(d.label_coordinates_is_valid(coor))
@@ -595,37 +533,14 @@ class TestDataset(TestCase):
         # correct
         coor = \
             {
-            2 : [(0, 0, 0, 6, 4), (0, 0, 3, 1, 2)]
+            2 : np.array([(0, 0, 0, 6, 4), (0, 0, 3, 1, 2)])
             }
 
         self.assertTrue(d.label_coordinates_is_valid(coor))         
   
 
 
-    def test_load_label_coordinates(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = TiffConnector(img_path,label_path)
-        
-        c.filenames = [\
-                ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
-                , ['40width26height6slices_rgb.tif', None]\
-                , ['40width26height3slices_rgb.tif', '40width26height3slices_rgb.tif']\
-                ]
-        c.load_label_filenames()        
-
-        val = \
-            {
-                91: [(2, 0, 0, 0, 0), (2, 0, 0, 3, 1), (2, 0, 0, 3, 2), (2, 0, 0, 4, 1)],
-                109: [(0, 0, 0, 2, 1), (0, 0, 0, 2, 2), (0, 0, 0, 2, 3), (0, 0, 0, 3, 1), (0, 0, 0, 3, 2), (0, 0, 0, 3, 3), (0, 0, 1, 5, 0), (0, 0, 1, 5, 1), (0, 0, 2, 0, 0), (0, 0, 2, 1, 0), (0, 0, 2, 1, 2), (2, 0, 2, 9, 7), (2, 0, 2, 9, 8), (2, 0, 2, 12, 7)],
-                150: [(0, 0, 0, 0, 1), (0, 0, 0, 4, 1), (0, 0, 0, 5, 1), (2, 0, 0, 2, 2), (2, 0, 1, 0, 2), (2, 0, 1, 39, 25)]
-            }
-        
-        d = Dataset(c)
-        d.load_label_coordinates()
-        print(d.label_coordinates)
-
-        self.assertEqual(val, d.label_coordinates)
+    
     
     def test_get_weight_template_for_label(self):
 
@@ -675,8 +590,8 @@ class TestDataset(TestCase):
         d.load_label_coordinates()
 
         img_nr = 0
-        pos_czxy = (0,0,0)
-        size_czxy = (1,6,4)
+        pos_czxy = np.array((0,0,0))
+        size_czxy = np.array((1,6,4))
         label_value = 3
         mat = d.get_template_for_label(img_nr,\
          pos_czxy, size_czxy, label_value)
@@ -706,8 +621,8 @@ class TestDataset(TestCase):
         d.load_label_coordinates()
 
         img_nr = 0
-        pos_czxy = (0,2,1)
-        size_czxy = (1,7,2)
+        pos_czxy = np.array((0,2,1))
+        size_czxy = np.array((1,7,2))
         label_value = 3
         mat = d.get_template_for_label(img_nr,\
          pos_czxy, size_czxy, label_value)
@@ -750,8 +665,8 @@ class TestDataset(TestCase):
         d.load_label_coordinates()
         d.set_weight_for_label(1.2, 3)
         img_nr = 0
-        pos_czxy = (0,0,0)
-        size_czxy = (1,6,4)
+        pos_czxy = np.array((0,0,0))
+        size_czxy = np.array((1,6,4))
         label_value = 3
         pprint(d.label_coordinates)
         mat = d._get_template_for_label_inner(img_nr,\
@@ -780,9 +695,37 @@ class TestDataset(TestCase):
                 , ['40width26height6slices_rgb.tif', None]\
                 , ['40width26height3slices_rgb.tif', '40width26height3slices_rgb.tif']\
                 ]
+        c.load_label_filenames()        
+
+        val = \
+            {
+                1: np.array([(2, 0, 0, 0, 0), (2, 0, 0, 3, 1), (2, 0, 0, 3, 2), (2, 0, 0, 4, 1)]),
+                2: np.array([(0, 0, 0, 2, 1), (0, 0, 0, 2, 2), (0, 0, 0, 2, 3), (0, 0, 0, 3, 1), (0, 0, 0, 3, 2), (0, 0, 0, 3, 3), (0, 0, 1, 5, 0), (0, 0, 1, 5, 1), (0, 0, 2, 0, 0), (0, 0, 2, 1, 0), (0, 0, 2, 1, 2), (2, 0, 2, 9, 7), (2, 0, 2, 9, 8), (2, 0, 2, 12, 7)]),
+                3: np.array([(0, 0, 0, 0, 1), (0, 0, 0, 4, 1), (0, 0, 0, 5, 1), (2, 0, 0, 2, 2), (2, 0, 1, 0, 2), (2, 0, 1, 39, 25)])
+            }
+        
+        d = Dataset(c)
+        d.load_label_coordinates()
+        print(d.label_coordinates)
+        #self.assertTrue(False)
+        self.assertTrue((val[1] == d.label_coordinates[1]).all())
+        self.assertTrue((val[2] == d.label_coordinates[2]).all())
+        self.assertTrue((val[3] == d.label_coordinates[3]).all())
+    
+    def test_load_label_coordinates_2(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path,label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
+                , ['40width26height6slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', '40width26height3slices_rgb.tif']\
+                ]
         c.load_label_filenames()    
 
         d = Dataset(c)
+
         d.load_label_coordinates()
         d.init_label_weights()
 
@@ -964,8 +907,8 @@ class TestDataset(TestCase):
         im[0,0, :, 7] = 2
         im[0,0, 7, 7] = 3
 
-        pos = (0,0,3,3)
-        size=(1,1,9,9)
+        pos = np.array((0,0,3,3))
+        size=np.array((1,1,9,9))
         tpl = get_tpl_func(pos=pos, size=size, img=im)
 
         tpl_rot = ds.get_augmented_template(im.shape, pos, size, \
@@ -1017,8 +960,8 @@ class TestDataset(TestCase):
         im[0, 0, :, 7] = 2
         im[0, 0, 7, 7] = 3
 
-        pos = (0,0,7,7)
-        size=(1,1,1,1)
+        pos =np.array((0,0,7,7))
+        size=np.array((1,1,1,1))
         tpl = get_tpl_func(pos=pos, size=size, img=im)
 
         tpl_rot = ds.get_augmented_template(im.shape, pos, size, \
@@ -1105,7 +1048,8 @@ class TestDataset(TestCase):
         print(val.shape)
         print(tpl)
         print(val)
-        self.assertTrue((tpl==val).all())    
+        self.assertTrue((tpl==val).all())
+
 
 
 
@@ -1234,12 +1178,7 @@ class TestDataset(TestCase):
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
         c = TiffConnector(img_path,label_path)
         
-        # c.filenames = [\
-        #         ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
-        #         , ['40width26height6slices_rgb.tif', None]\
-        #         , ['40width26height3slices_rgb.tif', '40width26height3slices_rgb.tif']\
-        #         ]
-        # c.load_label_filenames()    
+        
 
         d = Dataset(c)
 
