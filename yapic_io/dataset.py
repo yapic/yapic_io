@@ -310,7 +310,7 @@ class Dataset(object):
         shape_zxy = self.get_img_dimensions(image_nr)[1:]
         
         label_coors = self.label_coordinates[label_value]
-        label_weights = np.array(self.label_weights[label_value])
+        label_weights = self.label_weights[label_value]
         
         
         
@@ -333,8 +333,10 @@ class Dataset(object):
                 'could not set label weight for label value %s'\
                 , str(label_value))
             return False
-        self.label_weights[label_value] = \
-            [weight for e in self.label_weights[label_value]]    
+        
+        self.label_weights[label_value][:] = weight     
+        # self.label_weights[label_value] = \
+        #     [weight for e in self.label_weights[label_value]]    
         return True
             
     def init_label_weights(self):
@@ -360,7 +362,8 @@ class Dataset(object):
         weight_dict = {}
         label_values =  self.label_coordinates.keys()
         for label in label_values:
-            weight_dict[label] = [1 for el in self.label_coordinates[label]]
+            weight_dict[label] = np.ones(self.label_coordinates[label].shape[0])
+            #weight_dict[label] = [1 for el in self.label_coordinates[label]]
         self.label_weights = weight_dict
         return True    
 

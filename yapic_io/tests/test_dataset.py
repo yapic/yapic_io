@@ -728,8 +728,9 @@ class TestDataset(TestCase):
 
         d.load_label_coordinates()
         d.init_label_weights()
-
+        print('label_weights')
         print(d.label_weights)
+        print('label_coordinates')
         print(d.label_coordinates)
         #check if dimensions match
         self.assertEqual(d.label_weights.keys(), d.label_coordinates.keys())
@@ -758,8 +759,8 @@ class TestDataset(TestCase):
         
         d.set_weight_for_label(0.7, 3)
 
-        self.assertEqual(d.label_weights[3], [0.7, 0.7, 0.7, 0.7, 0.7, 0.7])
-        self.assertEqual(d.label_weights[1], [1, 1, 1, 1])
+        self.assertTrue((d.label_weights[3] == np.array([0.7, 0.7, 0.7, 0.7, 0.7, 0.7])).all())
+        self.assertTrue((d.label_weights[1] == np.array([1, 1, 1, 1])).all())
 
     def test_equalize_label_weights(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
