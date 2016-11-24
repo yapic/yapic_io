@@ -321,6 +321,7 @@ class Dataset(object):
         
         
         
+        
         weights = label_weights[label_coors[:,0]==image_nr]
         label_coors_zxy = label_coors[label_coors[:,0]==image_nr,2:]
         

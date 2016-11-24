@@ -164,7 +164,13 @@ class TiffConnector(Connector):
         return os.path.join(self.savepath, probmap_filename)
 
 
-            
+    @lru_cache(maxsize=5000)    
+    def get_label_template(self, image_nr=None, pos=None, size=None):        
+        labelmat = self.load_label_matrix(self, image_nr)
+        mesh = get_template_meshgrid(labelmat.shape, pos, size)
+
+        return labelmat[mesh]
+
     @lru_cache(maxsize=5000)    
     def get_template(self, image_nr=None, pos=None, size=None):
 
@@ -403,9 +409,9 @@ class TiffConnector(Connector):
     def get_label_coordinate(self, image_nr, label_value, label_index):
         '''
         returns a czxy coordinate of a specific label (specified by the
-        label index) with labelvalue label_value (mapped label values).
+        label index) with labelvalue label_value (mapped label value).
 
-        The total of labels for a specific labelvalue can be retrieved by
+        The count of labels for a specific labelvalue can be retrieved by
         
         count = get_labelcount_for_im()
 
