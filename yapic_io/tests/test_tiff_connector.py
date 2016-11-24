@@ -2,6 +2,7 @@ from unittest import TestCase
 import os
 from pprint import pprint
 import numpy as np
+from numpy.testing import assert_array_equal
 from yapic_io.tiff_connector import TiffConnector
 import yapic_io.image_importers as ip
 import logging
@@ -234,8 +235,52 @@ class TestTiffconnector(TestCase):
         print(labelmat)
         print(labelmat.shape)
         self.assertTrue((val_109 == labelc[2]).all())
-        self.assertTrue((val_150 == labelc[3]).all())    
+        self.assertTrue((val_150 == labelc[3]).all())
+
+
+    def test_get_label_coordinate(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path, label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', None]\
+                , ['40width26height6slices_rgb.tif', None]\
+                ]
+        c.load_label_filenames()            
+        
+
+        label_value = 2 #wrong labelvalue
+        label_index = 10
+        image_nr = 0
+        print(c.labelvalue_mapping)
+        print(c.get_label_coordinates(image_nr))
+        #self.assertTrue(c.get_label_coordinate(image_nr, label_value, 10)
+        assert_array_equal(c.get_label_coordinate(image_nr, label_value, 10), np.array([0,2,1,2]))
+        assert_array_equal(c.get_label_coordinate(image_nr, label_value, 9), np.array([0,2,1,0]))
+        assert_array_equal(c.get_label_coordinate(image_nr, label_value, 0), np.array([0,0,2,1]))    
+        #self.assertTrue(False)    
     
+
+    def test_get_labelcount_for_im(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path, label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', None]\
+                , ['40width26height6slices_rgb.tif', None]\
+                ]
+        c.load_label_filenames()            
+                    
+        count = c.get_labelcount_for_im(0)
+        print(c.labelvalue_mapping)
+
+        self.assertEqual(count, {2 : 11, 3: 3})
+
+
 
     def test_get_label_coordinates_2(self):
         pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/*.tif'
@@ -585,7 +630,10 @@ class TestTiffconnector(TestCase):
         self.assertEqual(c.labelvalue_mapping, [{109: 1, 150: 2}])
 
     
-    
+
+
+        
+
 
     
 

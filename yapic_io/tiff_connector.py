@@ -254,7 +254,7 @@ class TiffConnector(Connector):
         return True    
 
 
-    
+    @lru_cache(maxsize = 20)
     def load_label_matrix(self, image_nr, original_labelvalues=False):
         
         if not self.is_valid_image_nr(image_nr):
@@ -360,7 +360,7 @@ class TiffConnector(Connector):
 
 
 
-
+    @lru_cache(maxsize = 500)    
     def get_labelvalues_for_im(self, image_nr):
         mat = self.load_label_matrix(image_nr)
         if mat is None:
@@ -369,6 +369,71 @@ class TiffConnector(Connector):
         values = values[values!=0]
         values.sort()
         return list(values)
+
+    @lru_cache(maxsize = 500)    
+    def get_labelcount_for_im(self, image_nr):
+        '''
+        returns for each label value the number of labels for this image
+        ''' 
+
+        mat = self.load_label_matrix(image_nr)
+        labels = self.get_labelvalues_for_im(image_nr)
+        if labels is None:
+            #if no labelmatrix available
+            return None
+        
+        label_count = {}
+        for label in labels:
+            label_count[label] = np.count_nonzero(mat==label)
+
+        
+        return label_count
+
+    
+    def labelvalue_is_valid(self,label_value):
+        labelvalues = []
+        for d in self.labelvalue_mapping:
+            labelvalues += d.values()
+
+        if label_value in set(labelvalues):
+            return True
+        return False    
+            
+
+    def get_label_coordinate(self, image_nr, label_value, label_index):
+        '''
+        returns a czxy coordinate of a specific label (specified by the
+        label index) with labelvalue label_value (mapped label values).
+
+        The total of labels for a specific labelvalue can be retrieved by
+        
+        count = get_labelcount_for_im()
+
+        The label_index must be a value between 0 and count[label_value].
+        '''      
+        mat = self.load_label_matrix(image_nr)
+        
+        #check for correct label_value
+        if not self.labelvalue_is_valid(label_value):
+            raise ValueError('Labelvalue %s does not exist. Labelvalue mapping: %s' %\
+                (str(label_value), str(self.labelvalue_mapping)))
+
+        #label matrix
+        mat = self.load_label_matrix(image_nr)
+
+        coors = np.array(np.where(mat==label_value))
+        
+        n_coors = coors.shape[1]
+        if (label_index < 0)  or (label_index >= n_coors):
+            raise ValueError('''Label index %s for labelvalue %s in image %s 
+                not correct. Only %s labels of that value for this image''' %\
+                (str(label_index), str(label_value), str(image_nr), str(n_coors)))
+
+        coor = coors[:,label_index]    
+        coor[0] = 0 #set channel to zero
+        
+        return coor
+
 
 
     #@lru_cache(maxsize = 500)

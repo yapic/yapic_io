@@ -9,6 +9,7 @@ import yapic_io.dataset as ds
 import yapic_io.image_importers as ip
 from pprint import pprint
 import logging
+from numpy.testing import assert_array_equal
 logger = logging.getLogger(os.path.basename(__file__))
 
 base_path = os.path.dirname(__file__)
@@ -683,7 +684,30 @@ class TestDataset(TestCase):
         pprint(val)
         self.assertTrue((val==mat).all())    
 
+    def test_load_label_counts(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path,label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
+                , ['40width26height6slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', '40width26height3slices_rgb.tif']\
+                ]
+        c.load_label_filenames()
+        d = Dataset(c)
+        t = d.load_label_counts()
+        print(t)
+        
+        val_1 = np.array([0, 0, 4]) # labelcounts for each image fopr labelvalue 1
+        val_2 = np.array([11, 0, 3]) # labelcounts for each image fopr labelvalue 2
+        val_3 = np.array([3, 0, 3]) # labelcounts for each image fopr labelvalue 3
 
+        assert_array_equal(val_1, t[1])
+        assert_array_equal(val_2, t[2])
+        assert_array_equal(val_3, t[3])
+        self.assertTrue(sorted(list(t.keys())), [1,2,3])
+        
 
     def test_load_label_coordinates(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')

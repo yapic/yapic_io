@@ -27,6 +27,7 @@ class Dataset(object):
         
         self.n_images = pixel_connector.get_image_count()
         
+        self.label_counts = self.load_label_counts()
         self.load_label_coordinates()
         self.init_label_weights()
 
@@ -43,6 +44,11 @@ class Dataset(object):
         return infostring
 
     
+
+
+
+
+
     def equalize_label_weights(self):
         '''
         equalizes labels according to their amount.
@@ -110,6 +116,7 @@ class Dataset(object):
         
         return self.pixel_connector.put_template(probmap_tpl, pos_zxy, image_nr, label_value)  
 
+
     def pick_random_training_template(self, size_zxy, channels, pixel_padding=(0,0,0),\
              equalized=False, rotation_angle=0, shear_angle=0, labels='all', label_region=None):
 
@@ -167,7 +174,7 @@ class Dataset(object):
         #         'labels' : labels}
 
 
-
+       
     def get_multichannel_pixel_template(self, image_nr, pos_zxy, size_zxy, channels,\
             pixel_padding=(0, 0, 0), rotation_angle=0, shear_angle=0):
 
@@ -204,7 +211,7 @@ class Dataset(object):
 
 
 
-    #@lru_cache(maxsize = 1000)
+    
     def get_template_singlechannel(self, image_nr\
            , pos_zxy, size_zxy, channel, reflect=True,\
             rotation_angle=0, shear_angle=0):
@@ -368,6 +375,46 @@ class Dataset(object):
         return True    
 
     
+    def load_label_counts(self):
+        '''
+        returns the cout of each labelvalue for each image as dict
+
+
+        label_counts = {
+             label_value_1 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...],
+             label_value_2 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...],
+             label_value_2 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...],
+             ...
+        }
+
+        '''
+        logger.info('start loading label counts...')
+        label_counts_raw = [self.pixel_connector.get_labelcount_for_im(im) \
+                           for im in range(self.n_images)]
+        
+        #identify all label_values in dataset
+        label_values = []
+        for label_count in label_counts_raw:
+            if label_count is not None:
+                label_values += label_count.keys()
+        label_values = set(label_values)
+        
+        #init empty label_counts dict
+        label_counts = {key: np.zeros(self.n_images, dtype='int16') for key in label_values}
+
+        
+
+        for i in range(self.n_images):
+            if label_counts_raw[i] is not None:
+                for label_value in label_counts_raw[i].keys():
+                    label_counts[label_value][i]= label_counts_raw[i][label_value] 
+        
+
+        
+        return label_counts    
+
+
+
     def load_label_coordinates(self):
         '''
         imports labale coodinates with the connector objects and stores them in 

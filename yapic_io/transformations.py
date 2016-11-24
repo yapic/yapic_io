@@ -77,6 +77,7 @@ def warp_image_2d(image, rotation_angle, shear_angle):
     
     return map_coordinates(image, coords, order=0, mode='reflect')    
 
+
 def warp_image_2d_stack(image, rotation_angle, shear_angle):
     '''
     Warps a 3d or 4d matrix (stack by stack) and slice by slice with affine transform (rotation and shear
@@ -98,10 +99,7 @@ def warp_image_2d_stack(image, rotation_angle, shear_angle):
         raise ValueError('image has %s dimensions instead of 3 or 4'\
                                 % len(image.shape))
 
-    # warped = image_zxy.copy()    
-    # for z_slice, z_slice_warped in zip(image_zxy,warped):
-    #     z_slice_warped =  warp_image_2d(z_slice, rotation_angle, shear_angle)
-    #     print(z_slice_warped)
+    
 
     if (len(image.shape) == 3):
         logger.debug('warp 3d image slice by slice...')
