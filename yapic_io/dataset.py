@@ -28,8 +28,8 @@ class Dataset(object):
         self.n_images = pixel_connector.get_image_count()
         
         self.label_counts = self.load_label_counts()
-        self.load_label_coordinates()
-        self.init_label_weights()
+        self.load_label_coordinates() #to be removed
+        self.init_label_weights() #to be removed
 
         self.training_template = collections.namedtuple(\
             'TrainingTemplate',['pixels', 'channels', 'weights', 'labels', 'augmentation'])
@@ -605,111 +605,55 @@ class Dataset(object):
 
 
      
-    # def label_coordinates_is_valid(self, label_coordinates):
-    #     '''
-    #     check if label coordinate data meets following requirements:
-        
-    #     z,x,y within image size
-    #     channel = 0 (for label data, always only one channel)
-    #     image_nr between 0 and n_images-1
-    #     no duplicate positions within labels
-    #     duplicate positions across labels is allowed
-
-
-    #     label_cooridnates = 
-    #     {
-    #             label_nr1 : [(image_nr, channel, z, x, y), (image_nr, channel, z, x, y) ...],
-    #             label_nr2 : [(image_nr, channel, z, x, y), (image_nr, channel, z, x, y) ...],
-    #             ...
-    #         }
-
-        
-    #     '''
-        
-    #     for key in label_coordinates.keys():
-    #         coor = label_coordinates[key]
-    #         if len(set(coor)) != len(coor):
-    #             logger.warning(\
-    #                 'duplicates detected in coordinates,' +\
-    #                 ' for label value %s',\
-    #                  str(key))
-    #             return False
-
-
-    #     coor_flat = []
-    #     for key in label_coordinates.keys():
-    #         coor_flat = coor_flat + label_coordinates[key]
-        
-
-
-    #     for coor in coor_flat:
-    #         #check for correct nr of dimensions    
-    #         if len(coor) != 5:
-    #             logger.warning(\
-    #                 'number of coordinate dimensions must be 5,' +\
-    #                 ' but is at least one time %s, coordinate: %s',\
-    #                  str(len(coor)), str(coor))
-    #             return False
-    #         if (coor[0] < 0) or (coor[0] >= self.n_images):
-
-    #             logger.warning(\
-    #                 'image number in label coordinates not valid:' +\
-    #                 ' is %s, but must be between 0 and %s',\
-    #                  str(coor[0]), str(self.n_images-1))
-    #             return False
-            
-    #         #image dimensions in z,x and y
-    #         dim_zxy = self.get_img_dimensions(coor[0])[1:]
-    #         coor_zxy = coor[2:]
-
-    #         #check if coordinates are within image zxy range
-    #         if (np.array(coor_zxy) > np.array(dim_zxy)).any():
-    #             logger.warning(\
-    #                 'label coordinate out of image bounds:' +\
-    #                 ' coordinate: %s, image bounds: %s',\
-    #                  str(coor_zxy), str(dim_zxy))
-    #             return False
-
-    #         if  (np.array(coor_zxy) < 0).any():
-    #             logger.warning(\
-    #                 'label coordinate below zero:' +\
-    #                 ' coordinate: %s, image bounds: %s',\
-    #                  str(coor_zxy), str(dim_zxy))
-    #             return False 
-            
-    #         if coor[1] != 0:
-    #             logger.warning(\
-    #                 'nr of channels MUST be 0 for label coordinates, but is %s' +\
-    #                 ' coordinate: %s',\
-    #                  str(coor[1]), str(coor))
-    #             return False
-
-    #     return True    
+    
 
     
     
 
-    def pick_random_label_coordinate(self, equalized=False):
-        '''
-        returns a rondomly chosen label coordinate and the label value:
-        
-        (label_value, (img_nr,channel,z,x,y))
-
-        channel is always zero!!
-
-        :param equalized: If true, less frequent label_values are picked with same probability as frequent label_values
-        :type equalized: bool 
-        '''
-        labels = list(self.label_coordinates.keys())
-        if equalized:
-            label_sel = random.choice(labels)
-            label_coordinate_sel = \
-                    random.choice(self.label_coordinates[label_sel])
-            return label_sel, label_coordinate_sel
-
-        else:
-            return random.choice(ut.flatten_label_coordinates(self.label_coordinates))
+    
            
+
+    def get_nth_label_coordinate_for_label(self, label_value, n):
+        '''
+        for each labelvalue there exist n labels in the dataset.
+
+        returns the coordinate (image_nr,channel,z,x,y) of the nth label.
+
+        '''
+        if not self.label_value_is_valid(label_value):
+            raise ValueError('label value %s not valid, possible label values are %s'\
+                % (str(label_value),str(self.get_label_values())))
+
+        
+        choice = n + 1
+
+        counts = self.label_counts[label_value]
+        counts_cs = counts.cumsum()
+        total_count = counts_cs[-1]
+        if (choice > total_count) or choice < 1:
+            raise ValueError(''''choice %s is not valid, only %s labels available
+                in the dataset for labelvalue %s''' % (str(choice-1), str(total_count), str(label_value)))
+        
+
+        #choice = random.randint(0,total_count-1)
+
+        
+        image_nr = (counts_cs >= choice).nonzero()[0][0]
+        counts_cs_shifted = np.insert(counts_cs,0,[0])[:-1] #shift cumulated counts by 1
+        
+        label_index = choice - counts_cs_shifted[image_nr] - 1
+        print('image_nr %s' % str(image_nr))
+        print(counts)
+        print(counts_cs)
+        print(counts_cs_shifted)
+        print(label_index)
+        coor_czxy = self.pixel_connector.get_label_coordinate(image_nr\
+                                                       , label_value\
+                                                       , label_index)
+        coor_iczxy = np.insert(coor_czxy,0,image_nr)
+        return coor_iczxy
+
+
 
     def pick_random_label_coordinate_for_label(self, label_value):
         '''
@@ -723,12 +667,57 @@ class Dataset(object):
         :type equalized: bool 
         '''
         
-        
-        label_coordinate_sel = \
-                random.choice(self.label_coordinates[label_value])
-        return label_value, label_coordinate_sel
+        if not self.label_value_is_valid(label_value):
+            raise ValueError('label value %s not valid, possible label values are %s'\
+                % (str(label_value),str(self.get_label_values())))
 
+        counts = self.label_counts[label_value]
+        total_count = counts.sum()
+
+        choice = random.randint(0,total_count-1)
+
+        return (label_value, self.get_nth_label_coordinate_for_label(label_value, choice))
+
+    def pick_random_label_coordinate(self, equalized=False):
+        '''
+        returns a randomly chosen label coordinate and the label value:
         
+        (label_value, (img_nr,channel,z,x,y))
+
+        channel is always zero!!
+
+        :param equalized: If true, less frequent label_values are picked with same probability as frequent label_values
+        :type equalized: bool 
+        '''
+        labels = self.get_label_values()
+        if equalized:
+            label_sel = random.choice(labels)    
+            return self.pick_random_label_coordinate_for_label(label_sel)
+
+        else:
+            label_values = []
+            total_counts = []
+            for label_value in self.label_counts.keys():
+                label_values.append(label_value)
+                total_counts.append(self.label_counts[label_value].sum())
+
+            #probabilities for each labelvalue
+            total_counts_norm = np.array(total_counts)/sum(total_counts)
+            total_counts_norm_cs = total_counts_norm.cumsum()
+            label_values = np.array(label_values)
+            
+            #pick a labelvalue according to the labelvalue probability
+            random_nr = random.uniform(0,1)
+            chosen_label = label_values[(random_nr <= total_counts_norm_cs).nonzero()[0][0]]
+            
+            return self.pick_random_label_coordinate_for_label(chosen_label)
+
+            
+
+
+def get_label_values(self):
+    return set(self.label_counts.keys())
+
 
 def label_coordinates_to_5d(label_dict, image_nr):
     '''

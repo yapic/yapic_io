@@ -706,8 +706,43 @@ class TestDataset(TestCase):
         assert_array_equal(val_1, t[1])
         assert_array_equal(val_2, t[2])
         assert_array_equal(val_3, t[3])
-        self.assertTrue(sorted(list(t.keys())), [1,2,3])
+        self.assertTrue(sorted(list(t.keys())), [1,2,3]) 
         
+
+    
+    def test_get_nth_label_coordinate_for_label(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path,label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
+                , ['40width26height6slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', '40width26height3slices_rgb.tif']\
+                ]
+        c.load_label_filenames()    
+
+        d = Dataset(c)
+        print(d.label_counts)
+
+        #label coordinates
+        # val = \
+        #     {
+        #         1: np.array([(2, 0, 0, 0, 0), (2, 0, 0, 3, 1), (2, 0, 0, 3, 2), (2, 0, 0, 4, 1)]),
+        #         2: np.array([(0, 0, 0, 2, 1), (0, 0, 0, 2, 2), (0, 0, 0, 2, 3), (0, 0, 0, 3, 1), (0, 0, 0, 3, 2), (0, 0, 0, 3, 3), (0, 0, 1, 5, 0), (0, 0, 1, 5, 1), (0, 0, 2, 0, 0), (0, 0, 2, 1, 0), (0, 0, 2, 1, 2), (2, 0, 2, 9, 7), (2, 0, 2, 9, 8), (2, 0, 2, 12, 7)]),
+        #         3: np.array([(0, 0, 0, 0, 1), (0, 0, 0, 4, 1), (0, 0, 0, 5, 1), (2, 0, 0, 2, 2), (2, 0, 1, 0, 2), (2, 0, 1, 39, 25)])
+        #     }
+
+        label_value = 3
+        choice = 5
+        res = d.get_nth_label_coordinate_for_label(label_value,choice)
+        assert_array_equal(res, np.array((2, 0, 1, 39, 25)))
+
+        label_value = 1
+        choice = 0
+        res = d.get_nth_label_coordinate_for_label(label_value,choice)
+        assert_array_equal(res, np.array((2, 0, 0, 0, 0)))
 
     def test_load_label_coordinates(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
@@ -1174,27 +1209,8 @@ class TestDataset(TestCase):
         print(res_2)
         #self.assertTrue(False) 
 
-    def test_pick_random_label_coordinate_for_label(self):
-
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = TiffConnector(img_path,label_path)
+    
         
-        c.filenames = [\
-                ['6width4height3slices_rgb.tif', '6width4height3slices_rgb.tif']\
-                , ['40width26height6slices_rgb.tif', None]\
-                , ['40width26height3slices_rgb.tif', '40width26height3slices_rgb.tif']\
-                ]
-        c.load_label_filenames()    
-
-        d = Dataset(c)
-
-
-        res_1 = d.pick_random_label_coordinate_for_label(3)
-        #res_2 = d.pick_random_label_coordinate_for_label(equalized=False)
-        #print(res_1)
-        print(res_1)
-        self.assertEqual(3, res_1[0]) 
 
     
     def test_pick_random_training_template(self):
