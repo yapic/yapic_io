@@ -98,8 +98,7 @@ class TestTrainingBatch(TestCase):
         , zstack=True)
         
         d = Dataset(c)
-        print(d.label_coordinates)
-        #self.assertTrue(False)
+       
                         
 
     

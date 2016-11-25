@@ -263,7 +263,7 @@ class TiffConnector(Connector):
     
     def get_template_for_label(self, image_nr, pos_zxy, size_zxy, label_value):
         '''
-        returns a 3d zxy boolean matrix where positinos of the reuqested label
+        returns a 3d zxy boolean matrix where positions of the reuqested label
         are indicated with True. only mapped labelvalues can be requested.
         '''    
 
@@ -426,6 +426,7 @@ class TiffConnector(Connector):
         label_count = {}
         for label in labels:
             label_count[label] = np.count_nonzero(mat==label)
+            
 
         
         return label_count
@@ -477,53 +478,7 @@ class TiffConnector(Connector):
 
 
 
-    #@lru_cache(maxsize = 500)
-    def get_label_coordinates(self, image_nr):
-        ''''
-        returns label coordinates as dict in following format:
-        channel has always value 0!! This value is just kept for consitency in 
-        dimensions with corresponding pixel data 
-
-        {
-            label_nr1 : numpy.array([[c,z,x,y],
-                                     [c,z,x,y],
-                                     [c,z,x,y],
-                                     [c,z,x,y],
-                                     ...]),
-            label_nr2 : numpy.array([[c,z,x,y],
-                                     [c,z,x,y],
-                                     [c,z,x,y],
-                                     [c,z,x,y],
-                                     ...]),
-            ...
-        }
-
-        
-
-
-
-        :param image_nr: index of image
-        :returns: dict of label coordinates
     
-        '''
-
-        mat = self.load_label_matrix(image_nr)
-        labels = self.get_labelvalues_for_im(image_nr)
-        if labels is None:
-            #if no labelmatrix available
-            return None
-        
-        label_coor = {}
-        for label in labels:
-            coors = np.array(np.where(mat==label))
-            coors = np.swapaxes(coors,0,1)
-            coors[:,0] = 0 #set channel to 0
-
-            
-            label_coor[label] = coors
-
-        
-        return label_coor    
 
 
     def is_valid_image_nr(self, image_nr):

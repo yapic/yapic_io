@@ -315,8 +315,7 @@ class TestPredictiondata(TestCase):
         print('labels')
         print(c.labelvalue_mapping)
         d = Dataset(c)
-        print('label coors in dataset')
-        print(d.label_coordinates.keys())
+        
         size = (1,3,4)
         batch_size = 1
 

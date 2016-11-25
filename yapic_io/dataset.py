@@ -28,8 +28,8 @@ class Dataset(object):
         self.n_images = pixel_connector.get_image_count()
         
         self.label_counts = self.load_label_counts()
-        self.load_label_coordinates() #to be removed
-        self.init_label_weights() #to be removed
+        #self.load_label_coordinates() #to be removed
+        self.init_label_weights() 
 
         self.training_template = collections.namedtuple(\
             'TrainingTemplate',['pixels', 'channels', 'weights', 'labels', 'augmentation'])
@@ -44,31 +44,6 @@ class Dataset(object):
         return infostring
 
     
-
-
-
-
-
-    def equalize_label_weights(self):
-        '''
-        equalizes labels according to their amount.
-        less frequent labels are weighted higher than more frequent labels
-        '''
-
-        label_n = {}
-        labels = self.label_weights.keys()
-        nn = 0# total nr of labels
-        for label in labels:
-            n = len(self.label_weights[label])
-            label_n[label] = n #nr of labels for that label value
-            
-
-       
-        eq_weights = calc_equalized_label_weights(label_n)
-
-        for label in labels:
-            self.set_weight_for_label(eq_weights[label], label)
-        return True    
 
 
     @lru_cache(maxsize = 1000)
@@ -90,7 +65,7 @@ class Dataset(object):
         return list(range(nr_channels))
 
     def get_label_values(self):
-        labels = list(self.label_coordinates.keys())
+        labels = list(self.label_counts.keys())
         labels.sort()  
         return labels    
 
@@ -207,8 +182,6 @@ class Dataset(object):
         return pixel_tpl
 
 
-                        
-
 
 
     
@@ -314,19 +287,22 @@ class Dataset(object):
         pos_zxy = pos
         size_zxy = size
 
-        shape_zxy = self.get_img_dimensions(image_nr)[1:]
+        #shape_zxy = self.get_img_dimensions(image_nr)[1:]
         
-        label_coors = self.label_coordinates[label_value]
-        label_weights = self.label_weights[label_value]
-        
-        
-        
-        
-        weights = label_weights[label_coors[:,0]==image_nr]
-        label_coors_zxy = label_coors[label_coors[:,0]==image_nr,2:]
+        #label_coors = self.label_coordinates[label_value]
+        label_weight = self.label_weights[label_value]
         
 
-        return label2mask(shape_zxy, pos_zxy, size_zxy, label_coors_zxy, weights)
+        boolmat = self.pixel_connector.get_template_for_label(image_nr\
+                          , pos_zxy, size_zxy, label_value)
+        
+        
+        weight_mat = np.zeros(boolmat.shape)
+        weight_mat[boolmat] = label_weight
+        #label_coors_zxy = label_coors[label_coors[:,0]==image_nr,2:]
+        
+
+        return weight_mat
 
     def set_weight_for_label(self, weight, label_value):
         '''
@@ -342,7 +318,7 @@ class Dataset(object):
                 , str(label_value))
             return False
         
-        self.label_weights[label_value][:] = weight     
+        self.label_weights[label_value] = weight     
         # self.label_weights[label_value] = \
         #     [weight for e in self.label_weights[label_value]]    
         return True
@@ -350,32 +326,45 @@ class Dataset(object):
     def init_label_weights(self):
         '''
         Inits a dictionary with label weights. All weights are set to 1.
-        the self.label_weights dict is complementary to self.label_coordinates. It defines
-        a weight for each coordinate.
+        the self.label_weights dict is complementary to self.label_counts. It defines
+        a weight for each label.
 
         { 
-            label_nr1 : [
-                            weight,
-                            weight,
-                            weight,
-                             ...],
-            label_nr2 : [
-                            weight,,
-                            weight,
-                            weight,
-                             ...],                 
+            label_nr1 : weight
+            label_nr2 : weight            
         }
 
         '''
         weight_dict = {}
-        label_values =  self.label_coordinates.keys()
+        label_values =  self.label_counts.keys()
         for label in label_values:
-            weight_dict[label] = np.ones(self.label_coordinates[label].shape[0])
+            weight_dict[label] = 1
             #weight_dict[label] = [1 for el in self.label_coordinates[label]]
         self.label_weights = weight_dict
         return True    
 
-    
+    def equalize_label_weights(self):
+        '''
+        equalizes labels according to their amount.
+        less frequent labels are weighted higher than more frequent labels
+        '''
+
+
+        
+        labels = self.label_weights.keys()
+        total_label_count = dict.fromkeys(labels)
+
+        
+        
+        for label in labels:
+            total_label_count[label] = self.label_counts[label].sum()  
+            
+
+        self.label_weights = calc_equalized_label_weights(total_label_count)
+
+            
+        return True    
+
     def load_label_counts(self):
         '''
         returns the cout of each labelvalue for each image as dict
@@ -401,7 +390,7 @@ class Dataset(object):
         label_values = set(label_values)
         
         #init empty label_counts dict
-        label_counts = {key: np.zeros(self.n_images, dtype='int16') for key in label_values}
+        label_counts = {key: np.zeros(self.n_images, dtype='int64') for key in label_values}
 
         
 
@@ -411,85 +400,18 @@ class Dataset(object):
                     label_counts[label_value][i]= label_counts_raw[i][label_value] 
         
 
-        
+        logger.info(label_counts)
         return label_counts    
 
 
 
-    def load_label_coordinates(self):
-        '''
-        imports labale coodinates with the connector objects and stores them in 
-        self.label_coordinates in following dictionary format:
-
-        
-
-        {
-            label_nr1 : numpy.array([[img_nr,c,z,x,y],
-                                     [img_nr,c,z,x,y],
-                                     [img_nr,c,z,x,y],
-                                     [img_nr,c,z,x,y],
-                                     ...]),
-            label_nr2 : numpy.array([[img_nr,c,z,x,y],
-                                     [img_nr,c,z,x,y],
-                                     [img_nr,c,z,x,y],
-                                     [img_nr,c,z,x,y],
-                                     ...]),
-            ...
-        }
-
-        channel has always value 0!! This value is just kept for consitency in 
-        dimensions with corresponding pixel data 
-
-        '''
-        
-        labels = {}
-        logger.info('start loading label coodinates...')
-        for image_nr in list(range(self.n_images)):
-            label_coor = self.pixel_connector.get_label_coordinates(image_nr)
-
-            #logger.debug('label coodinates for image %s: ', image_nr)
-            #logger.debug(label_coor)
-            
-           
-
-
-            if label_coor is not None:
-                
-                label_coor_5d = label_coordinates_to_5d(label_coor, image_nr)
-                if not self.label_coordinates_is_valid(label_coor_5d):
-                    logger.warning('failed to load label coordinates because of non valid data')
-                    return False
-
-                for key in label_coor_5d.keys():
-                    if key not in labels.keys():
-                        labels[key] = label_coor_5d[key]
-                    else:
-                        labels[key] = np.concatenate(\
-                            (labels[key],label_coor_5d[key]),\
-                             axis=0)
-
-        self.label_coordinates = labels                 
-        logger.info('finished loading of label coodinates')
-        logger.info('detected %s different label values', str(self.get_label_values()))
-
-        n_total = 0
-        for item in self.label_coordinates:
-            n_total += len(self.label_coordinates[item])
-
-        for label in self.get_label_values():
-            n_labels = len(self.label_coordinates[label])
-            percent = n_labels/n_total*100
-            logger.info('detected %s label pixels for label value %s (%s percent)'\
-                , n_labels, label, round(percent,2)) 
-
-        return True
 
     def label_value_is_valid(self, label_value):
         '''
         check if label value is part of self.label_coordinates
         '''
 
-        if label_value not in self.label_coordinates.keys():
+        if label_value not in self.label_counts.keys():
             logger.warning(\
                 'Label value not found %s',\
                  str(label_value))
@@ -510,107 +432,6 @@ class Dataset(object):
         return True    
 
     
-    
-
-
-
-    def label_coordinates_is_valid(self, label_coordinates):
-        '''
-        check if label coordinate data meets following requirements:
-        
-        z,x,y within image size
-        channel = 0 (for label data, always only one channel)
-        image_nr between 0 and n_images-1
-        no duplicate positions within labels
-        duplicate positions across labels is allowed
-
-
-        label_cooridnates = 
-        {
-                label_nr1 : [(image_nr, channel, z, x, y), (image_nr, channel, z, x, y) ...],
-                label_nr2 : [(image_nr, channel, z, x, y), (image_nr, channel, z, x, y) ...],
-                ...
-            }
-
-        
-        '''
-        
-        for key in label_coordinates.keys():
-            coor = label_coordinates[key]
-            
-            diff = np.diff(coor[np.lexsort(coor.T)],axis=0)
-            
-            is_duplicate = (np.abs(diff).sum(axis=1)==0).any()
-            if is_duplicate:
-                logger.warning(\
-                    'duplicates detected in coordinates,' +\
-                    ' for label value %s',\
-                     str(key))
-                
-                return False
-
-             
-        coor_flat = np.concatenate([item[1] for item in label_coordinates.items()]\
-                       , axis=0)
-
-
-               
-
-
-        if coor_flat.shape[1] != 5:    
-            logger.warning(\
-                'number of coordinate dimensions must be 5,' +\
-                ' but is : %s',\
-                 str(coor_flat.shape[0]))
-            return False
-
-
-        
-        
-        
-        if (coor_flat[:,0] < 0).any() or (coor_flat[:,0] >= self.n_images).any():
-            logger.warning(\
-                    'image number in label coordinates not valid:' +\
-                    ' is %s, but must be between 0 and %s',\
-                     str(coor[0]), str(self.n_images-1))
-            
-            return False    
-
-        imsizes = np.vectorize(self.get_img_dimensions)(coor_flat[:,:1])
-        
-        dims_zxy = np.squeeze(imsizes).T[:,1:]
-        coors_zxy = coor_flat[:,2:]
-
-        
-        #check if coordinates are within image zxy range
-        if (coors_zxy.flatten() > dims_zxy.flatten()).any():
-            logger.warning(\
-                'at least one label coordinate out of image bounds')
-            return False  
-
-        #check below zero
-        if (coors_zxy.flatten() < 0).any():
-            logger.warning(\
-                'at least one label coordinate out of image bounds (below zero)')
-            return False
-
-        #check if channel is 0
-        if (coor_flat[:,1] != 0).any():
-            logger.warning(\
-                    'nr of channels MUST be 0 for label coordinates, but is not' +\
-                    'for at least one coordinate.')
-            return False      
-        
-
-        return True    
-
-
-     
-    
-
-    
-    
-
     
            
 
@@ -643,11 +464,7 @@ class Dataset(object):
         counts_cs_shifted = np.insert(counts_cs,0,[0])[:-1] #shift cumulated counts by 1
         
         label_index = choice - counts_cs_shifted[image_nr] - 1
-        print('image_nr %s' % str(image_nr))
-        print(counts)
-        print(counts_cs)
-        print(counts_cs_shifted)
-        print(label_index)
+        
         coor_czxy = self.pixel_connector.get_label_coordinate(image_nr\
                                                        , label_value\
                                                        , label_index)
@@ -675,9 +492,15 @@ class Dataset(object):
         counts = self.label_counts[label_value]
         total_count = counts.sum()
 
+        if total_count < 1: #if no labels of that value
+            raise ValueError('no labels of value %s existing' % str(label_value))
         choice = random.randint(0,total_count-1)
 
         return (label_value, self.get_nth_label_coordinate_for_label(label_value, choice))
+
+    
+    
+            
 
     def pick_random_label_coordinate(self, equalized=False):
         '''
@@ -720,24 +543,7 @@ def get_label_values(self):
     return set(self.label_counts.keys())
 
 
-def label_coordinates_to_5d(label_dict, image_nr):
-    '''
-    add image_nr as first dimension to coordinates
-    '''
-    
-    label_dict = dict(label_dict) #copy
-    for key in label_dict.keys():
-       
-        coor4d = label_dict[key]
-        
-        coor5d = np.ones((coor4d.shape[0], 5), dtype=int) * image_nr
-        coor5d[:,1:] = coor4d
-        label_dict[key] = coor5d
 
-        # label_dict[key] =\
-        #      [(image_nr, coor[0], coor[1], coor[2], coor[3]) for coor in label_dict[key]]
-
-    return label_dict         
         
 def get_padding_size(shape, pos, size):
     '''
@@ -758,31 +564,31 @@ def get_padding_size(shape, pos, size):
 
 
 
-def label2mask(image_shape, pos, size, label_coors, weights):
-    '''
-    transform label coordinate to mask of given pos and size inside image
-    '''
+# def label2mask(image_shape, pos, size, label_coors, weights):
+#     '''
+#     transform label coordinate to mask of given pos and size inside image
+#     '''
 
-    if not ut.is_valid_image_subset(image_shape, pos, size):
-        raise ValueError('image subset (labels) not valid')
-    msk = np.zeros(size)
-    #label_coors_corr = np.array(label_coors) - np.array(pos) + 1
+#     if not ut.is_valid_image_subset(image_shape, pos, size):
+#         raise ValueError('image subset (labels) not valid')
+#     msk = np.zeros(size)
+#     #label_coors_corr = np.array(label_coors) - np.array(pos) + 1
 
     
-    #pos = np.array(pos)
-    #size = np.array(size)
+#     #pos = np.array(pos)
+#     #size = np.array(size)
     
 
-    if label_coors.size == 0:
-        return msk
+#     if label_coors.size == 0:
+#         return msk
 
-    coor_shifted = label_coors - pos
-    coor_mask = np.logical_and((coor_shifted > -1).all(axis=1),
-                               (size - coor_shifted > 0).all(axis=1))
-    indices1d = np.ravel_multi_index(coor_shifted[coor_mask].T, size)
-    msk.flat[indices1d] = weights[coor_mask]
+#     coor_shifted = label_coors - pos
+#     coor_mask = np.logical_and((coor_shifted > -1).all(axis=1),
+#                                (size - coor_shifted > 0).all(axis=1))
+#     indices1d = np.ravel_multi_index(coor_shifted[coor_mask].T, size)
+#     msk.flat[indices1d] = weights[coor_mask]
 
-    return msk    
+#     return msk    
 
 
 
@@ -867,7 +673,7 @@ def pos_shift_for_padding(shape, pos, size):
 def calc_equalized_label_weights(label_n):
     '''
     :param label_n: dict with label numbers where keys are label_values
-    :returns dict with equalized weights for eahc label value
+    :returns dict with equalized weights for each label value
     label_n = {
             label_value_1 : n_labels,
             label_value_2 : n_labels,

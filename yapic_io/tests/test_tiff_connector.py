@@ -276,39 +276,39 @@ class TestTiffconnector(TestCase):
         self.assertEqual(labelvals, [2, 3])
 
 
-    def test_get_label_coordinates(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = TiffConnector(img_path, label_path)
+    # def test_get_label_coordinates(self):
+    #     img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+    #     label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+    #     c = TiffConnector(img_path, label_path)
         
-        c.filenames = [\
-                ['6width4height3slices_rgb.tif', None]\
-                , ['40width26height3slices_rgb.tif', None]\
-                , ['40width26height6slices_rgb.tif', None]\
-                ]
-        c.load_label_filenames()            
-        labelc = c.get_label_coordinates(0)
-        labelmat = c.load_label_matrix(0)
+    #     c.filenames = [\
+    #             ['6width4height3slices_rgb.tif', None]\
+    #             , ['40width26height3slices_rgb.tif', None]\
+    #             , ['40width26height6slices_rgb.tif', None]\
+    #             ]
+    #     c.load_label_filenames()            
+    #     labelc = c.get_label_coordinates(0)
+    #     labelmat = c.load_label_matrix(0)
         
-        #label mapping [{91: 1, 109: 2, 150: 3}]               
-        val_109 =np.array(\
-           [(0, 0, 2, 1), (0, 0, 2, 2), (0, 0, 2, 3)\
-           , (0, 0, 3, 1), (0, 0, 3, 2), (0, 0, 3, 3)\
-           , (0, 1, 5, 0), (0, 1, 5, 1), (0, 2, 0, 0)\
-           , (0, 2, 1, 0), (0, 2, 1, 2)])
+    #     #label mapping [{91: 1, 109: 2, 150: 3}]               
+    #     val_109 =np.array(\
+    #        [(0, 0, 2, 1), (0, 0, 2, 2), (0, 0, 2, 3)\
+    #        , (0, 0, 3, 1), (0, 0, 3, 2), (0, 0, 3, 3)\
+    #        , (0, 1, 5, 0), (0, 1, 5, 1), (0, 2, 0, 0)\
+    #        , (0, 2, 1, 0), (0, 2, 1, 2)])
 
-        val_150 =np.array(\
-            [(0, 0, 0, 1), (0, 0, 4, 1), (0, 0, 5, 1)])   
+    #     val_150 =np.array(\
+    #         [(0, 0, 0, 1), (0, 0, 4, 1), (0, 0, 5, 1)])   
 
-        print('109')
-        print(labelc[2])
-        print('150')
-        print(labelc[3])
+    #     print('109')
+    #     print(labelc[2])
+    #     print('150')
+    #     print(labelc[3])
 
-        print(labelmat)
-        print(labelmat.shape)
-        self.assertTrue((val_109 == labelc[2]).all())
-        self.assertTrue((val_150 == labelc[3]).all())
+    #     print(labelmat)
+    #     print(labelmat.shape)
+    #     self.assertTrue((val_109 == labelc[2]).all())
+    #     self.assertTrue((val_150 == labelc[3]).all())
 
 
     def test_get_label_coordinate(self):
@@ -328,7 +328,7 @@ class TestTiffconnector(TestCase):
         label_index = 10
         image_nr = 0
         print(c.labelvalue_mapping)
-        print(c.get_label_coordinates(image_nr))
+        
         #self.assertTrue(c.get_label_coordinate(image_nr, label_value, 10)
         assert_array_equal(c.get_label_coordinate(image_nr, label_value, 10), np.array([0,2,1,2]))
         assert_array_equal(c.get_label_coordinate(image_nr, label_value, 9), np.array([0,2,1,0]))
@@ -355,36 +355,7 @@ class TestTiffconnector(TestCase):
 
 
 
-    def test_get_label_coordinates_2(self):
-        pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/*.tif'
-        label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels_multichannel/*.tif'
-        savepath = 'yapic_io/test_data/tmp/'
-        
-        tpl_size = (1,5,4) # size of network output layer in zxy
-        padding = (0,2,2) # padding of network input layer in zxy, in respect to output layer
-        
-        c = TiffConnector(pixel_image_dir,label_image_dir, savepath=savepath\
-        , multichannel_pixel_image=None\
-        , multichannel_label_image=None\
-        , zstack=True)
-
-        label_0 = c.get_label_coordinates(0)
-        label_1 = c.get_label_coordinates(1)
-        label_2 = c.get_label_coordinates(2)
-        
-        
-        
-
-        print('0')
-        print(label_0)
-
-        print('1')
-        print(label_1)
-
-        print('2')
-        print(label_2)
-
-        #self.assertTrue(False)
+    
         
         
 
@@ -690,9 +661,7 @@ class TestTiffconnector(TestCase):
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
         c = TiffConnector(img_path, label_path)
 
-        # c.filenames = [\
-        #         ['6width4height3slices_rgb.tif', None]\
-        #         ]
+        
         c.load_label_filenames()
         print(c.filenames)
         print(c.labelvalue_mapping)

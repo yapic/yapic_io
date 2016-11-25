@@ -39,6 +39,25 @@ class Connector(metaclass=ABCMeta):
         pass
 
     @abstractmethod
+    def get_labelcount_for_im(self, image_nr):
+        '''
+        returns for each label value the number of labels for this image
+        
+        label_counts = {
+             label_value_1 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...],
+             label_value_2 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...],
+             label_value_3 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...],
+             ...
+        }
+
+        :param image_nr: index of image
+        :returns label_counts: dict with counts per label and per image, see example above
+        ''' 
+        pass
+
+
+
+    @abstractmethod
     def get_template(self, image_nr=None, pos=None, size=None):
         '''
         returns 4D subsection of one image in following dimension order:
@@ -50,6 +69,25 @@ class Connector(metaclass=ABCMeta):
         :returns: 4D subsection of image as numpy array
         '''
         pass
+    
+    @abstractmethod
+    def get_template_for_label(self, image_nr, pos_zxy, size_zxy, label_value):
+        '''
+        returns a 3d zxy boolean matrix where positions of the reuqested label
+        are indicated with True. only mapped labelvalues can be requested.
+
+        dimension order: (z,x,y)
+
+        :param image_nr: index of image
+        :param pos_zxy: upper left position of subsection (zslice,x,y)
+        :type pos_zxy: 4 element tuple of integers (zslice, x, y)
+        :param label_value: the id of the label
+        :type label_value: integer
+        :returns: 3D subsection of labelmatrix as boolean numpy array
+        '''    
+
+        pass
+
 
     @abstractmethod    
     def put_template(self, pixels, pos_zxy, image_nr, label_value):
@@ -63,6 +101,8 @@ class Connector(metaclass=ABCMeta):
         :param pos_zxy: upper left position of pixels in source image_nr
         :type pos_zxy: tuple of length 3 (z,x,y) with integer values
         :param image_nr: index of image
+        :param label_value: the id of the label
+        :type label_value: integer
         :returns: bool (True if successful)
         '''
 
@@ -78,33 +118,46 @@ class Connector(metaclass=ABCMeta):
         '''
         pass
 
-    @abstractmethod 
-    def get_label_coordinates(self, image_nr):
-        ''''
-        returns label coordinates as dict in following format:
-        channel has always value 0!! This value is just kept for consitency in 
-        dimensions with corresponding pixel data 
-
-        {
-            label_nr1 : numpy.array([[c,z,x,y],
-                                     [c,z,x,y],
-                                     [c,z,x,y],
-                                     [c,z,x,y],
-                                     ...]),
-            label_nr2 : numpy.array([[c,z,x,y],
-                                     [c,z,x,y],
-                                     [c,z,x,y],
-                                     [c,z,x,y],
-                                     ...]),
-            ...
-        }
-
-
-        :param image_nr: index of image
-        :returns: dict of label coordinates
-    
+    @abstractmethod
+    def get_label_coordinate(self, image_nr, label_value, label_index):
         '''
-        pass
+        returns a czxy coordinate of a specific label (specified by the
+        label index) with labelvalue label_value (mapped label value).
+
+        The count of labels for a specific labelvalue can be retrieved by
+        
+        count = get_labelcount_for_im()
+
+        The label_index must be a value between 0 and count[label_value].
+        '''      
+    
+    # @abstractmethod 
+    # def get_label_coordinates(self, image_nr):
+    #     ''''
+    #     returns label coordinates as dict in following format:
+    #     channel has always value 0!! This value is just kept for consitency in 
+    #     dimensions with corresponding pixel data 
+
+    #     {
+    #         label_nr1 : numpy.array([[c,z,x,y],
+    #                                  [c,z,x,y],
+    #                                  [c,z,x,y],
+    #                                  [c,z,x,y],
+    #                                  ...]),
+    #         label_nr2 : numpy.array([[c,z,x,y],
+    #                                  [c,z,x,y],
+    #                                  [c,z,x,y],
+    #                                  [c,z,x,y],
+    #                                  ...]),
+    #         ...
+    #     }
+
+
+    #     :param image_nr: index of image
+    #     :returns: dict of label coordinates
+    
+    #     '''
+    #     pass
 
 
 
