@@ -161,6 +161,79 @@ class TestTiffconnector(TestCase):
         print(labelmat)
         self.assertEqual(labelmat.shape, (1, 3, 6, 4))
 
+    def test_load_label_matrix_multichannel(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/')
+        c = TiffConnector(img_path, label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', None]\
+                , ['40width26height6slices_rgb.tif', None]\
+                ]    
+        print(c.filenames)
+        c.load_label_filenames()
+        im = c.load_image(0)
+        labelmat = c.load_label_matrix(0)
+        print(labelmat)
+        print(c.labelvalue_mapping)
+        self.assertEqual(labelmat.shape, (2, 3, 6, 4)) 
+
+    def test_get_template_for_label(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/')
+        c = TiffConnector(img_path, label_path)
+        
+        c.filenames = [\
+                ['6width4height3slices_rgb.tif', None]\
+                , ['40width26height3slices_rgb.tif', None]\
+                , ['40width26height6slices_rgb.tif', None]\
+                ]    
+        print(c.filenames)
+        c.load_label_filenames()
+
+        label_value = 2
+
+        pos_zxy = (0,0,0)
+        size_zxy = (1,6,4)
+
+        tpl = c.get_template_for_label(0, pos_zxy, size_zxy, label_value)
+        print(tpl)
+        print(tpl.shape)
+
+
+        val_z0 = np.array(\
+        [[[False, False, False, False],
+          [False, False, False, False],
+          [False,  True,  True,  True],
+          [False,  True,  True,  True],
+          [False, False, False, False],
+          [False, False, False, False]]])
+
+        assert_array_equal(val_z0,tpl)
+
+
+        pos_zxy = (1,0,0)
+        size_zxy = (1,6,4)
+
+        tpl_z1 = c.get_template_for_label(0, pos_zxy, size_zxy, label_value)
+        print(tpl_z1)
+        print(tpl_z1.shape)
+
+
+        val_z1 = np.array(\
+        [[[False, False, False, False],
+          [False, False, False, False],
+          [False, False, False, False],
+          [False, False, False, False],
+          [False, False, False, False],
+          [ True,  True, False, False]]])
+
+        assert_array_equal(val_z1,tpl_z1)
+
+
+            
+
     def test_check_labelmat_dimensions(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
@@ -630,6 +703,8 @@ class TestTiffconnector(TestCase):
         self.assertEqual(c.labelvalue_mapping, [{109: 1, 150: 2}])
 
     
+
+
 
 
         

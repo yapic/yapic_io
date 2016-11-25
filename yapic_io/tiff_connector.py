@@ -260,8 +260,43 @@ class TiffConnector(Connector):
         return True    
 
 
+    
+    def get_template_for_label(self, image_nr, pos_zxy, size_zxy, label_value):
+        '''
+        returns a 3d zxy boolean matrix where positinos of the reuqested label
+        are indicated with True. only mapped labelvalues can be requested.
+        '''    
+
+        labelmat = self.load_label_matrix(image_nr) #matrix with labelvalues
+        boolmat_4d = (labelmat == label_value)
+
+        boolmat_3d = boolmat_4d.any(axis=0) #reduction to zxy dimension
+        #comment: mapped labelvalues are unique for a channel, as they
+        #are generated with map_labelvalues(). This means,
+        #a mapped labelvalue is only present in one specific channel.
+        #This means: there chould be not more than one truthy value along the
+        #channel dimension in boolmat_4d. this is not doublechecked here.
+
+        mesh = get_template_meshgrid(boolmat_3d.shape, pos_zxy, size_zxy)
+
+        return boolmat_3d[mesh]
+
+
+
+
+
+
     @lru_cache(maxsize = 20)
     def load_label_matrix(self, image_nr, original_labelvalues=False):
+
+        '''
+        returns a 4d labelmatrix with dimensions czxy.
+        the albelmatrix consists of zeros (no label) or the respective
+        label value.
+
+        if original_labelvalues is False, the mapped label values are returned,
+        otherwise the original labelvalues.
+        '''
         
         if not self.is_valid_image_nr(image_nr):
             return None      
