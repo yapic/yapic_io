@@ -157,9 +157,9 @@ class TestImage(TestCase):
         size = (3, 2)
         m = im.get_template_meshgrid(image_shape, pos, size)
         print(m)
-        vals_x = np.array([[1,1], [2,2], [3,3]])
-        vals_y = np.array([[2, 3], [2, 3], [2, 3]])
+        vals_x = slice(1,4)
+        vals_y = slice(2,4)
         
-        self.assertTrue((m[0] == vals_x).all())
-        self.assertTrue((m[1] == vals_y).all())
+        self.assertTrue(m[0], vals_x)
+        self.assertTrue(m[1], vals_y)
 

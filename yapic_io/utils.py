@@ -123,11 +123,11 @@ def get_template_meshgrid(image_shape, pos, size):
 
     pos = np.array(pos)
     size = np.array(size)
-
     
     if not is_valid_image_subset(image_shape, pos, size):
         raise ValueError('image subset not valid')
 
+    return [slice(p, p+s) for p, s in zip(pos, size)]
 
     indices = get_indices_fast(pos, size)
     return np.meshgrid(*indices, indexing='ij') 
