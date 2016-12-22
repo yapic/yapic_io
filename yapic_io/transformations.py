@@ -73,10 +73,7 @@ def warp_image_2d(image, rotation_angle, shear_angle):
                                 % len(image.shape))
 
     t = get_transform(image, rotation_angle, shear_angle)
-    coords = tf.warp_coords(t, image.shape) 
-    
-    return map_coordinates(image, coords, order=0, mode='reflect')    
-
+    return tf.warp(image, t, order=0, mode='symmetric', preserve_range=True) # 0.765s
 
 def warp_image_2d_stack(image, rotation_angle, shear_angle):
     '''
