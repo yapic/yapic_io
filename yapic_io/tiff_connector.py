@@ -117,14 +117,14 @@ class TiffConnector(Connector):
 
             if len(img_filenames) > 0:
                 self.img_path, _ = os.path.split(img_filenames[0])
-                img_filenames = [os.path.split(fname)[-1] for fname in img_filenames]
+                img_filenames = [os.path.split(fname)[-1] if fname is not None else None for fname in img_filenames]
             else:
                 self.img_path = None
 
             filtered_labels = [fname for fname in lbl_filenames if fname is not None]
             if len(filtered_labels) > 0:
                 self.label_path, _ = os.path.split(filtered_labels[0])
-                lbl_filenames = [os.path.split(fname)[-1] for fname in lbl_filenames]
+                lbl_filenames = [os.path.split(fname)[-1] if fname is not None else None for fname in lbl_filenames]
             else:
                 self.label_path = None
 
@@ -160,7 +160,8 @@ class TiffConnector(Connector):
         img_fnames = [os.path.join(self.img_path, img) for img, lbl in self.filenames
                       if lbl is not None]
 
-        lbl_fnames = [os.path.join(self.label_path, lbl) for img, lbl in self.filenames
+        lbl_fnames = [os.path.join(self.label_path, lbl) if lbl is not None else None
+                      for img, lbl in self.filenames
                       if lbl is not None]
 
         return TiffConnector(img_fnames, lbl_fnames,
@@ -168,6 +169,48 @@ class TiffConnector(Connector):
                              multichannel_pixel_image=self.multichannel_pixel_image,
                              multichannel_label_image=self.multichannel_label_image,
                              zstack=self.zstack)
+
+
+    def split(self, fraction, random_seed=42):
+        '''
+        Split the images pseudo-randomly into two subsets (both TiffConnectors).
+        The first of size `(1-fraction)*N_images`, the other of size `fraction*N_images`
+        '''
+        N = len(self.filenames)
+
+        state = np.random.get_state()
+        np.random.seed(random_seed)
+        mask = np.random.choice([True, False], size=5, p=[1-fraction, fraction])
+        np.random.set_state(state)
+
+        img_fnames1 = [os.path.join(self.img_path, img)
+                      for m, (img, lbl) in zip(mask, self.filenames) if m == True]
+        lbl_fnames1 = [os.path.join(self.label_path, lbl) if lbl is not None else None
+                       for m, (img, lbl) in zip(mask, self.filenames) if m == True]
+
+        img_fnames2 = [os.path.join(self.img_path, img)
+                      for m, (img, lbl) in zip(mask, self.filenames) if m == False]
+        lbl_fnames2 = [os.path.join(self.label_path, lbl) if lbl is not None else None
+                       for m, (img, lbl) in zip(mask, self.filenames) if m == False]
+
+        if len(img_fnames1) == 0:
+            warining.warn('TiffConnector.split({}): First connector is empty!'.format(fraction))
+        if len(img_fnames1) == N:
+            warining.warn('TiffConnector.split({}): Second connector is empty!'.format(fraction))
+
+        conn1 = TiffConnector(img_fnames1, lbl_fnames1,
+                              savepath=self.savepath,
+                              multichannel_pixel_image=self.multichannel_pixel_image,
+                              multichannel_label_image=self.multichannel_label_image,
+                              zstack=self.zstack)
+        conn2 = TiffConnector(img_fnames2, lbl_fnames2,
+                              savepath=self.savepath,
+                              multichannel_pixel_image=self.multichannel_pixel_image,
+                              multichannel_label_image=self.multichannel_label_image,
+                              zstack=self.zstack)
+
+        return conn1, conn2
+
 
 
     def get_image_count(self):
