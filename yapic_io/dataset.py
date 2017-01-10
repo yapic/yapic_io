@@ -83,10 +83,10 @@ class Dataset(object):
             raise ValueError('pos, size or shape have %s dimensions instead of 3'\
                                 % str(len(pos_zxy)))
 
-        if not self.label_value_is_valid(label_value):
+        #if not self.label_value_is_valid(label_value):
             
-            raise ValueError('label value not found: %s'\
-                                % str(label_value))    
+            #raise ValueError('label value not found: %s'\
+            #                    % str(label_value))    
 
         
         return self.pixel_connector.put_template(probmap_tpl, pos_zxy, image_nr, label_value)  

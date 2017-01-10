@@ -26,8 +26,8 @@ class TiffConnector(Connector):
     >>> t = TiffConnector(pixel_image_dir, label_image_dir)
     >>> print(t)
     Connector_tiff object
-    image filepath: yapic_io/test_data/tiffconnector_1/im/*.tif
-    label filepath: yapic_io/test_data/tiffconnector_1/labels/*.tif
+    image filepath: yapic_io/test_data/tiffconnector_1/im
+    label filepath: yapic_io/test_data/tiffconnector_1/labels
     <BLANKLINE>
     '''
     
@@ -38,8 +38,10 @@ class TiffConnector(Connector):
             , zstack=True):
         
         '''
-        :param img_filepath: path to source pixel images, use wildcards for filtering
-        :param label_filepath: path to label images, use wildcards for filtering
+        :param img_filepath: path to source pixel images (use wildcards for filtering)
+                             or a list of filenames
+        :param label_filepath: path to label images (use wildcards for filtering)
+                               or a list of filenames
         :param savepath: path for output probability images
         :param multichannel_pixel_image: set True if pixel images have multiple channels
         :type multichannel_pixel_image: bool
@@ -88,26 +90,55 @@ class TiffConnector(Connector):
         self.multichannel_pixel_image = multichannel_pixel_image
         self.multichannel_label_image = multichannel_label_image
 
+        if type(img_filepath) == str:
+            assert type(label_filepath) == str
 
+            img_filepath   = os.path.normpath(os.path.expanduser(img_filepath))
+            label_filepath = os.path.normpath(os.path.expanduser(label_filepath))
 
-        img_filepath   = os.path.normpath(os.path.expanduser(img_filepath))
-        label_filepath = os.path.normpath(os.path.expanduser(label_filepath))
+            if os.path.isdir(img_filepath):
+                img_filepath = os.path.join(img_filepath, '*.tif')
+            if os.path.isdir(label_filepath):
+                label_filepath = os.path.join(label_filepath, '*.tif')
 
-        
-        
+            self.img_path, img_filemask = os.path.split(img_filepath)
+            self.label_path, label_filemask = os.path.split(label_filepath)
 
-        if os.path.isdir(img_filepath):
-            img_filepath = os.path.join(img_filepath, '*.tif')
-        if os.path.isdir(label_filepath):
-            label_filepath = os.path.join(label_filepath, '*.tif')
+            img_filenames = self.load_img_filenames(img_filemask)
+            lbl_filenames = self.load_label_filenames(label_filemask)
 
-        self.img_path, self.img_filemask = os.path.split(img_filepath)
-        self.label_path, self.label_filemask = os.path.split(label_filepath)
+            self.filenames = find_best_matching_pairs(img_filenames, lbl_filenames)
+        else:
+            assert type(img_filepath)
+            assert type(label_filepath)
+
+            img_filenames = img_filepath
+            lbl_filenames = label_filepath
+
+            if len(img_filenames) > 0:
+                self.img_path, _ = os.path.split(img_filenames[0])
+            else:
+                self.img_path = None
+
+            filtered_labels = [fname for fname in lbl_filenames if fname is not None]
+            if len(filtered_labels) > 0:
+                self.label_path, _ = os.path.split(filtered_labels[0])
+            else:
+                self.label_path = None
+
+            self.filenames = list(zip(img_filenames, lbl_filenames))
+
+        assert img_filenames is not None
+        assert lbl_filenames is not None
+        if len(img_filenames) != len(lbl_filenames):
+            msg = 'Number of image files ({}) and label files ({}) differ!'
+            logger.warning(msg.format(len(img_filenames), len(lbl_filenames)))
+
+        logger.debug('Pixel and label files are assigned as follows:')
+        logger.debug('\n'.join('{} <-> {}'.format(img, lbl) for img, lbl in  self.filenames))
+
         self.savepath = savepath #path for probability maps
 
-        self.load_img_filenames()
-        self.load_label_filenames()
-        
         self.check_labelmat_dimensions()
         self.map_labelvalues()
         
@@ -115,12 +146,16 @@ class TiffConnector(Connector):
     def __repr__(self):
         infostring = \
             'Connector_tiff object\n' \
-            'image filepath: %s\n' \
-            'label filepath: %s\n' \
-             % (os.path.join(self.img_path, self.img_filemask)\
-                , os.path.join(self.label_path, self.label_filemask))
-
+            'image filepath: {}\n' \
+            'label filepath: {}\n'.format(self.img_path, self.label_path)
         return infostring
+
+
+    def filter_labeled(self):
+        '''
+        Returns a new TiffConnector containing only images that have labels
+        '''
+        raise
 
 
     def get_image_count(self):
@@ -191,7 +226,7 @@ class TiffConnector(Connector):
         '''        
 
         if not self.is_valid_image_nr(image_nr):
-            return False          
+            raise ValueError          
 
         path = os.path.join(self.img_path, self.filenames[image_nr][0])
         return ip.get_tiff_image_dimensions(path,\
@@ -359,26 +394,23 @@ class TiffConnector(Connector):
 
 
 
-      
     def get_original_labelvalues(self):
         '''
         returns a list of sets. each set corresponds to 1 label channel.
         each set contains the label values of that channel.
         '''
         
-        label_list_of_lists = []
+        labels_per_channel = []
         for image_nr in range(self.get_image_count()):
             labels_per_im = self.get_original_labelvalues_for_im(image_nr)
-            if labels_per_im is not None:
-                label_list_of_lists.append(labels_per_im)
-        if len(label_list_of_lists)==0:
-            return []
 
-        out = label_list_of_lists[0]
-        for labels_per_im in label_list_of_lists:
-            for channel, outchannel in zip(labels_per_im, out):
-                outchannel = outchannel.union(channel)
-        return out        
+            if labels_per_im is not None:
+                if len(labels_per_channel) == 0:
+                    labels_per_channel = labels_per_im
+                else:
+                    labels_per_channel = [l1.union(l2) for l1, l2
+                                          in zip(labels_per_channel, labels_per_im)]
+        return labels_per_channel
 
 
     @lru_cache(maxsize = 5000)  
@@ -426,8 +458,6 @@ class TiffConnector(Connector):
         label_count = {}
         for label in labels:
             label_count[label] = np.count_nonzero(mat==label)
-            
-
         
         return label_count
 
@@ -494,39 +524,20 @@ class TiffConnector(Connector):
         return True          
 
 
-    def load_label_filenames(self):
-        if self.filenames is None:
-            return
-
-        
-        image_filenames = [pair[0] for pair in self.filenames]
-        label_filenames = sorted(glob.glob(os.path.join(self.label_path, self.label_filemask)))
+    def load_label_filenames(self, filemask):
+        label_filenames = sorted(glob.glob(os.path.join(self.label_path, filemask)))
         label_filenames = [os.path.split(fname)[1] for fname in label_filenames]
-
-        if len(image_filenames) != len(label_filenames):
-            msg = 'Number of image files ({}) and label files ({}) differ!'
-            logger.info(msg.format(len(image_filenames), len(label_filenames)))
-
-        self.filenames = find_best_matching_pairs(image_filenames, label_filenames)
-
-        logger.info('pixel and label files are assigned as follows:')
-        logger.info(self.filenames)
+        return label_filenames
 
 
-
-    def load_img_filenames(self):
+    def load_img_filenames(self, filemask):
         '''
-        find all tiff images in specified folder (self.img_path, self.img_filemask)
+        find all tiff images in specified folder (self.img_path, filemask)
         '''
-        img_filenames = sorted(glob.glob(os.path.join(self.img_path, self.img_filemask)))
-        
-        filenames = [[os.path.split(filename)[1], None] for filename in img_filenames]
-        if len(filenames) == 0:
-            self.filenames = None
-            return
-        self.filenames = filenames
+        filenames = sorted(glob.glob(os.path.join(self.img_path, filemask)))
+        filenames = [os.path.split(fname)[1] for fname in filenames]
         
         logger.info('following pixel image files detected:')
-        logger.info(img_filenames)
-        return True 
+        logger.info(filenames)
+        return filenames
 
