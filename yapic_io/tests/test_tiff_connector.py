@@ -37,6 +37,20 @@ class TestTiffconnector(TestCase):
         self.assertEqual(c.filenames, expected_names)   
 
 
+    def test_filter_labeled(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/together/img*.tif')
+        lbl_path = os.path.join(base_path, '../test_data/tiffconnector_1/together/lbl*.tif')
+        c = TiffConnector(img_path, lbl_path).filter_labeled()
+
+        expected_names = \
+            [('img_40width26height3slices_rgb.tif', 'lbl_40width26height3slices_rgb.tif')\
+           , ('img_6width4height3slices_rgb.tif', 'lbl_6width4height3slices_rgb.tif')]
+
+        print(expected_names)
+        print(c.filenames)
+        self.assertEqual(set(c.filenames), set(expected_names))
+
+
     def test_load_filenames_emptyfolder(self):
         img_path = os.path.join(base_path, '../test_data/empty_folder/')
         c = TiffConnector(img_path,'path/to/nowhere/')

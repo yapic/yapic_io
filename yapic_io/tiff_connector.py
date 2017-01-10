@@ -117,12 +117,14 @@ class TiffConnector(Connector):
 
             if len(img_filenames) > 0:
                 self.img_path, _ = os.path.split(img_filenames[0])
+                img_filenames = [os.path.split(fname)[-1] for fname in img_filenames]
             else:
                 self.img_path = None
 
             filtered_labels = [fname for fname in lbl_filenames if fname is not None]
             if len(filtered_labels) > 0:
                 self.label_path, _ = os.path.split(filtered_labels[0])
+                lbl_filenames = [os.path.split(fname)[-1] for fname in lbl_filenames]
             else:
                 self.label_path = None
 
@@ -155,7 +157,17 @@ class TiffConnector(Connector):
         '''
         Returns a new TiffConnector containing only images that have labels
         '''
-        raise
+        img_fnames = [os.path.join(self.img_path, img) for img, lbl in self.filenames
+                      if lbl is not None]
+
+        lbl_fnames = [os.path.join(self.label_path, lbl) for img, lbl in self.filenames
+                      if lbl is not None]
+
+        return TiffConnector(img_fnames, lbl_fnames,
+                             savepath=self.savepath,
+                             multichannel_pixel_image=self.multichannel_pixel_image,
+                             multichannel_label_image=self.multichannel_label_image,
+                             zstack=self.zstack)
 
 
     def get_image_count(self):
