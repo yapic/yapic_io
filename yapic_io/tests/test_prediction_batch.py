@@ -8,18 +8,12 @@ import yapic_io.utils as ut
 base_path = os.path.dirname(__file__)
 from yapic_io.factories import make_tiff_interface
 
-class TestPredictiondata(TestCase):
+class TestPredictionBatch(TestCase):
     def test_computepos_1(self):
-
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
+        label_path = os.path.join(base_path, '/path/to/nowhere')
         c = TiffConnector(img_path,label_path)
         
-        c.filenames = [\
-                ['6width4height3slices_rgb.tif', None]\
-                ]
-        #c.load_label_filenames()    
-
         d = Dataset(c)
 
         size = (1,1,1)
@@ -35,15 +29,9 @@ class TestPredictiondata(TestCase):
         #self.assertTrue(False)
 
     def test_computepos_2(self):
-
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
+        label_path = os.path.join(base_path, '/path/to/nowhere')
         c = TiffConnector(img_path,label_path)
-        
-        c.filenames = [\
-                ['6width4height3slices_rgb.tif', None]\
-                ]
-        #c.load_label_filenames()    
 
         d = Dataset(c)
 
@@ -81,15 +69,9 @@ class TestPredictiondata(TestCase):
 
 
     def test_computepos_3(self):
-
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
+        label_path = os.path.join(base_path, '/path/to/nowhere')
         c = TiffConnector(img_path,label_path)
-        
-        c.filenames = [\
-                ['6width4height3slices_rgb.tif', None]\
-                ]
-        #c.load_label_filenames()    
 
         d = Dataset(c)
 
@@ -105,15 +87,9 @@ class TestPredictiondata(TestCase):
 
 
     def test_getitem(self):
-
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
+        label_path = os.path.join(base_path, '/path/to/nowhere')
         c = TiffConnector(img_path,label_path)
-        
-        c.filenames = [\
-                ['6width4height3slices_rgb.tif', None]\
-                ]
-        #c.load_label_filenames()    
 
         d = Dataset(c)
 
@@ -137,15 +113,9 @@ class TestPredictiondata(TestCase):
 
 
     def test_getitem(self):
-
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
+        label_path = os.path.join(base_path, '/path/to/nowhere')
         c = TiffConnector(img_path,label_path)
-        
-        c.filenames = [\
-                ['6width4height3slices_rgb.tif', None]\
-                ]
-        #c.load_label_filenames()    
 
         d = Dataset(c)
 
@@ -162,14 +132,9 @@ class TestPredictiondata(TestCase):
         
 
     def test_get_actual_batch_size(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
+        label_path = os.path.join(base_path, '/path/to/nowhere')
         c = TiffConnector(img_path,label_path)
-        
-        c.filenames = [\
-                ['6width4height3slices_rgb.tif', None]\
-                ]
-        #c.load_label_filenames()    
 
         d = Dataset(c)
 
@@ -182,14 +147,9 @@ class TestPredictiondata(TestCase):
         self.assertEqual(p[1].get_actual_batch_size(), 1)
 
     def test_get_curr_tpl_indices(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
+        label_path = os.path.join(base_path, '/path/to/nowhere')
         c = TiffConnector(img_path,label_path)
-        
-        c.filenames = [\
-                ['6width4height3slices_rgb.tif', None]\
-                ]
-        #c.load_label_filenames()    
 
         d = Dataset(c)
 
@@ -203,14 +163,9 @@ class TestPredictiondata(TestCase):
 
 
     def test_get_curr_tpl_positions(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
+        label_path = os.path.join(base_path, '/path/to/nowhere')
         c = TiffConnector(img_path,label_path)
-        
-        c.filenames = [\
-                ['6width4height3slices_rgb.tif', None]\
-                ]
-        #c.load_label_filenames()    
 
         d = Dataset(c)
 
@@ -223,16 +178,11 @@ class TestPredictiondata(TestCase):
         self.assertEqual(p[1].get_curr_tpl_positions(), [(0,(2,0,0))])        
         
     def test_put_probmap_data(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*')
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
+        label_path = os.path.join(base_path, '/path/to/nowhere')
         savepath = os.path.join(base_path, '../test_data/tmp/')
         c = TiffConnector(img_path,label_path, savepath=savepath)
         
-        c.filenames = [\
-                ['6width4height3slices_rgb.tif', None]\
-                ]
-        c.load_label_filenames()    
-
         d = Dataset(c)
 
         size = (1,6,4)
@@ -246,15 +196,10 @@ class TestPredictiondata(TestCase):
         p[2].put_probmap_data(data)
 
     def test_put_probmap_data_2(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*')
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
+        label_path = os.path.join(base_path, '/path/to/nowhere')
         savepath = os.path.join(base_path, '../test_data/tmp/')
         c = TiffConnector(img_path,label_path, savepath=savepath)
-        
-        c.filenames = [\
-                ['6width4height3slices_rgb.tif', None]\
-                ]
-        c.load_label_filenames()    
 
         d = Dataset(c)
 
@@ -275,12 +220,6 @@ class TestPredictiondata(TestCase):
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*')
         savepath = os.path.join(base_path, '../test_data/tmp/')
         c = TiffConnector(img_path,label_path, savepath=savepath)
-        
-        c.filenames = [\
-                ['6width4height3slices_rgb.tif', None]\
-                ]
-        c.load_label_filenames()    
-
         d = Dataset(c)
 
         size = (1,3,4)
@@ -288,13 +227,13 @@ class TestPredictiondata(TestCase):
 
         p = PredictionBatch(d, batch_size, size)
 
-        data = np.ones((2,2,1,3,4))
+        data = np.ones((2,3,1,3,4))
         p[0].put_probmap_data(data)
 
-        data = np.ones((2,2,1,3,4))
+        data = np.ones((2,3,1,3,4))
         p[1].put_probmap_data(data)  
 
-        data = np.ones((2,2,1,3,4))
+        data = np.ones((2,3,1,3,4))
         p[2].put_probmap_data(data)       
     
 
@@ -304,13 +243,11 @@ class TestPredictiondata(TestCase):
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/*')
         savepath = os.path.join(base_path, '../test_data/tmp/')
         c = TiffConnector(img_path,label_path, savepath=savepath)
-        
-        c.filenames = [\
-                ['6width4height3slices_rgb.tif', None]\
-                ]
+        d = Dataset(c)
+
         print('labels')
         print(c.labelvalue_mapping)
-        c.load_label_filenames()    
+        c.load_label_filenames('*')    
         c.map_labelvalues()
         print('labels')
         print(c.labelvalue_mapping)
@@ -323,7 +260,7 @@ class TestPredictiondata(TestCase):
         print('_labels')
         print(p._labels)
 
-        data = np.ones((1,4,1,3,4))
+        data = np.ones((1,6,1,3,4))
         p[0].put_probmap_data(data)
 
     
@@ -334,9 +271,9 @@ class TestPredictiondata(TestCase):
         
         
         #define data loacations
-        pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/*.tif'
-        label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/*.tif'
-        savepath = 'yapic_io/test_data/tmp/'
+        pixel_image_dir = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
+        label_image_dir = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
+        savepath = os.path.join(base_path, '../test_data/tmp/')
          
         tpl_size = (1,5,4) # size of network output layer in zxy
         padding = (0,0,0) # padding of network input layer in zxy, in respect to output layer
@@ -369,20 +306,11 @@ class TestPredictiondata(TestCase):
 
 
     def test_put_probmap_data_for_label(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*')
         savepath = os.path.join(base_path, '../test_data/tmp/')
-
-
-
-        c = TiffConnector(img_path,label_path, savepath = savepath)
-        
-        c.filenames = [\
-                ['6width4height3slices_rgb.tif', None]\
-                , ['40width26height3slices_rgb.tif', None]\
-                , ['40width26height6slices_rgb.tif', None]\
-                ]
-        c.load_label_filenames()    
+        c = TiffConnector(img_path,label_path, savepath=savepath)
+        d = Dataset(c)
 
         d = Dataset(c)
 
@@ -393,9 +321,9 @@ class TestPredictiondata(TestCase):
 
         data = np.ones((3,3,3))
         
-        path1 = savepath + '6width4height3slices_rgb_class_109.tif'
-        path2 = savepath + '40width26height3slices_rgb_class_109.tif'
-        path3 = savepath + '40width26height6slices_rgb_class_109.tif'
+        path1 = savepath + '40width26height3slices_rgb_class_109.tif'
+        path2 = savepath + '40width26height6slices_rgb_class_109.tif'
+        path3 = savepath + '6width4height3slices_rgb_class_109.tif'
         
         try:
             os.remove(path1)
@@ -410,16 +338,10 @@ class TestPredictiondata(TestCase):
         except:
             pass               
 
-
-
-        
-        
         print(len(p))
         print(p._tpl_pos_all)
         p._put_probmap_data_for_label(data, label=1, tpl_pos_index=0) #first
         p._put_probmap_data_for_label(data, label=1, tpl_pos_index=381) #last
-
-        
 
         try:
             os.remove(path1)
@@ -432,12 +354,5 @@ class TestPredictiondata(TestCase):
         try:
             os.remove(path3)
         except:
-            pass             
-
-            
-    
-
-
-
-
+            pass
 

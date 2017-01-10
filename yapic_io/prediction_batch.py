@@ -52,9 +52,6 @@ class PredictionBatch(Minibatch):
         ...     #pass classifier results for each class to data source
         ...     item.put_probmap_data(mock_classifier_result)     
         ...     counter += 1
-        >>>
-        
-    
     '''
     
 
@@ -202,6 +199,9 @@ class PredictionBatch(Minibatch):
             raise ValueError(\
                 '''batch size is %s, but must be %s'''\
                                 % (str(n_b), str(self.get_actual_batch_size())))
+
+        if len(self.get_labels()) == 0:
+            self._labels = np.arange(n_c)+1
 
         if n_c != len(self._labels):
             raise ValueError(\

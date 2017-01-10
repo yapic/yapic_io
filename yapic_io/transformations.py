@@ -96,8 +96,6 @@ def warp_image_2d_stack(image, rotation_angle, shear_angle):
         raise ValueError('image has %s dimensions instead of 3 or 4'\
                                 % len(image.shape))
 
-    
-
     if (len(image.shape) == 3):
         logger.debug('warp 3d image slice by slice...')
         return np.array([warp_image_2d(z_slice, rotation_angle, shear_angle) for z_slice in image])    

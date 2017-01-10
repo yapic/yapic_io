@@ -118,6 +118,7 @@ class TrainingBatch(Minibatch):
 
 
     def _fetch_training_batch_data(self):
+##        print('-------------------- _fetch_training_batch_data --------------------')
         pixels = []
         weights = []
         augmentations = []
@@ -127,6 +128,9 @@ class TrainingBatch(Minibatch):
         #     weights.append(tpl_data.weights)
         #     augmentations.append(tpl_data.augmentation)
         for label in self._labels:
+##        for label in self._labels):
+#        for label in [np.random.choice(self._labels)]:
+##            print('-------------------- _fetch_training_batch_data: {} --------------------'.format(label))
             tpl_data = self._pick_random_tpl(for_label=label)
             pixels.append(tpl_data.pixels)
             weights.append(tpl_data.weights)

@@ -12,7 +12,10 @@ logger = logging.getLogger(os.path.basename(__file__))
 
 @lru_cache(maxsize = 5000)  
 def is_rgb_image(path):
-    im = Image.open(path)
+    try:
+        im = Image.open(path)
+    except OSError:
+        return True
     if im.mode == 'RGB':
         return True
     return False    

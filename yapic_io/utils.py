@@ -323,6 +323,9 @@ def find_best_matching_pairs(s1,s2):
     find global minimum for pairwise assignment of strings
     by using the munkres (hungarian) algorithm
     '''
+    if len(s1) == 0:
+        assert len(s2) == 0
+        return []
 
     mat, s1norm, s2norm = compute_str_dist_matrix(s1,s2)
 
