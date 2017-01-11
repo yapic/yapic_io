@@ -194,9 +194,9 @@ class TiffConnector(Connector):
                        for m, (img, lbl) in zip(mask, self.filenames) if m == False]
 
         if len(img_fnames1) == 0:
-            warining.warn('TiffConnector.split({}): First connector is empty!'.format(fraction))
+            warning.warn('TiffConnector.split({}): First connector is empty!'.format(fraction))
         if len(img_fnames1) == N:
-            warining.warn('TiffConnector.split({}): Second connector is empty!'.format(fraction))
+            warning.warn('TiffConnector.split({}): Second connector is empty!'.format(fraction))
 
         conn1 = TiffConnector(img_fnames1, lbl_fnames1,
                               savepath=self.savepath,

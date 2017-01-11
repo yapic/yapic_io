@@ -201,8 +201,6 @@ def get_random_pos_for_coordinate(coor, size, shape):
     minpos = coor - size + 1
     minpos[minpos < 0] = 0
     
-    
-
     random_pos = []
     for maxdim, mindim in zip(maxpos, minpos):
         dim_range = range(mindim, maxdim+1)
