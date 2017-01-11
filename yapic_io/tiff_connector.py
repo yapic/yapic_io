@@ -311,28 +311,28 @@ class TiffConnector(Connector):
         check if label mat dimensions fit to image dimensions, i.e.
         everything identical except nr of channels (label mat always 1)
         '''
-        logger.info('checking labelmatrix dimensions...')
+        logger.info('Checking labelmatrix dimensions...')
         nr_channels = []
         for image_nr in list(range(self.get_image_count())):
             im_dim = self.load_img_dimensions(image_nr)
             label_dim = self.load_labelmat_dimensions(image_nr)
 
             if label_dim is None:
-                logger.debug('check image nr %s: ok (no labelmat found) ', image_nr)
+                logger.debug('Check image nr %s: ok (no labelmat found) ', image_nr)
             else:
                 nr_channels.append(label_dim[0])
-                logger.debug('found %s label channel(s)', nr_channels[-1])
+                logger.debug('Found %s label channel(s)', nr_channels[-1])
                 
                 if label_dim[1:] == im_dim[1:]:
-                    logger.debug('check image nr %s: ok ', image_nr)
+                    logger.debug('Check image nr %s: ok ', image_nr)
                 else:
-                    logger.error('check image nr %s (%s): image dim is %s, label dim is %s '\
+                    logger.error('Check image nr %s (%s): image dim is %s, label dim is %s '\
                         , image_nr, self.filenames[image_nr], im_dim, label_dim)
-                    raise ValueError('check image nr %s: dims do not match ' % str(image_nr))   
+                    raise ValueError('Check image nr %s: dims do not match ' % str(image_nr))   
         if len(set(nr_channels))>1:
-            raise ValueError('nr of channels not consitent in input data, found following nr of labelmask channels: %s' % str(set(nr_channels))) 
+            raise ValueError('Nr of channels not consitent in input data, found following nr of labelmask channels: %s' % str(set(nr_channels))) 
 
-        logger.info('labelmatrix dimensions ok')               
+        logger.info('Labelmatrix dimensions ok')               
 
     @lru_cache(maxsize = 20)
     def load_image(self, image_nr):
@@ -428,7 +428,7 @@ class TiffConnector(Connector):
         Keys are the original labels, values are the assigned labels that
         will be seen by the Dataset object.
         '''
-        logger.info('mapping labelvalues...')
+        logger.info('Mapping label values...')
 
         label_mappings = []
         o_labelvals = self.get_original_labelvalues()
@@ -443,7 +443,7 @@ class TiffConnector(Connector):
         
         self.labelvalue_mapping = label_mappings
 
-        logger.info('label values are mapped to ascending values:')
+        logger.info('Label values are mapped to ascending values:')
         logger.info(label_mappings)
         return label_mappings           
 
@@ -542,7 +542,7 @@ class TiffConnector(Connector):
         
         #check for correct label_value
         if not self.labelvalue_is_valid(label_value):
-            raise ValueError('Labelvalue %s does not exist. Labelvalue mapping: %s' %\
+            raise ValueError('Label value %s does not exist. Label value mapping: %s' %\
                 (str(label_value), str(self.labelvalue_mapping)))
 
         #label matrix
@@ -552,7 +552,7 @@ class TiffConnector(Connector):
         
         n_coors = coors.shape[1]
         if (label_index < 0)  or (label_index >= n_coors):
-            raise ValueError('''Label index %s for labelvalue %s in image %s 
+            raise ValueError('''Label index %s for label value %s in image %s 
                 not correct. Only %s labels of that value for this image''' %\
                 (str(label_index), str(label_value), str(image_nr), str(n_coors)))
 
@@ -592,7 +592,8 @@ class TiffConnector(Connector):
         filenames = sorted(glob.glob(os.path.join(self.img_path, filemask)))
         filenames = [os.path.split(fname)[1] for fname in filenames]
         
-        logger.info('following pixel image files detected:')
-        logger.info(filenames)
+        logger.info('{} pixel image files detected.'.format(len(filenames)))
+        logger.debug('Pixel image files:')
+        logger.debug(filenames)
         return filenames
 
