@@ -321,10 +321,10 @@ class TiffConnector(Connector):
                 logger.debug('check image nr %s: ok (no labelmat found) ', image_nr)
             else:
                 nr_channels.append(label_dim[0])
-                logger.info('found %s label channel(s)', nr_channels[-1])
+                logger.debug('found %s label channel(s)', nr_channels[-1])
                 
                 if label_dim[1:] == im_dim[1:]:
-                    logger.info('check image nr %s: ok ', image_nr)
+                    logger.debug('check image nr %s: ok ', image_nr)
                 else:
                     logger.error('check image nr %s (%s): image dim is %s, label dim is %s '\
                         , image_nr, self.filenames[image_nr], im_dim, label_dim)
