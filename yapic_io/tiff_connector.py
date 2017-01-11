@@ -180,7 +180,7 @@ class TiffConnector(Connector):
 
         state = np.random.get_state()
         np.random.seed(random_seed)
-        mask = np.random.choice([True, False], size=5, p=[1-fraction, fraction])
+        mask = np.random.choice([True, False], size=N, p=[1-fraction, fraction])
         np.random.set_state(state)
 
         img_fnames1 = [os.path.join(self.img_path, img)
