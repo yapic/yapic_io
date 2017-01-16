@@ -117,12 +117,14 @@ class TiffConnector(Connector):
 
             if len(img_filenames) > 0:
                 self.img_path, _ = os.path.split(img_filenames[0])
+                img_filenames = [os.path.split(fname)[-1] if fname is not None else None for fname in img_filenames]
             else:
                 self.img_path = None
 
             filtered_labels = [fname for fname in lbl_filenames if fname is not None]
             if len(filtered_labels) > 0:
                 self.label_path, _ = os.path.split(filtered_labels[0])
+                lbl_filenames = [os.path.split(fname)[-1] if fname is not None else None for fname in lbl_filenames]
             else:
                 self.label_path = None
 
@@ -155,7 +157,60 @@ class TiffConnector(Connector):
         '''
         Returns a new TiffConnector containing only images that have labels
         '''
-        raise
+        img_fnames = [os.path.join(self.img_path, img) for img, lbl in self.filenames
+                      if lbl is not None]
+
+        lbl_fnames = [os.path.join(self.label_path, lbl) if lbl is not None else None
+                      for img, lbl in self.filenames
+                      if lbl is not None]
+
+        return TiffConnector(img_fnames, lbl_fnames,
+                             savepath=self.savepath,
+                             multichannel_pixel_image=self.multichannel_pixel_image,
+                             multichannel_label_image=self.multichannel_label_image,
+                             zstack=self.zstack)
+
+
+    def split(self, fraction, random_seed=42):
+        '''
+        Split the images pseudo-randomly into two subsets (both TiffConnectors).
+        The first of size `(1-fraction)*N_images`, the other of size `fraction*N_images`
+        '''
+        N = len(self.filenames)
+
+        state = np.random.get_state()
+        np.random.seed(random_seed)
+        mask = np.random.choice([True, False], size=N, p=[1-fraction, fraction])
+        np.random.set_state(state)
+
+        img_fnames1 = [os.path.join(self.img_path, img)
+                      for m, (img, lbl) in zip(mask, self.filenames) if m == True]
+        lbl_fnames1 = [os.path.join(self.label_path, lbl) if lbl is not None else None
+                       for m, (img, lbl) in zip(mask, self.filenames) if m == True]
+
+        img_fnames2 = [os.path.join(self.img_path, img)
+                      for m, (img, lbl) in zip(mask, self.filenames) if m == False]
+        lbl_fnames2 = [os.path.join(self.label_path, lbl) if lbl is not None else None
+                       for m, (img, lbl) in zip(mask, self.filenames) if m == False]
+
+        if len(img_fnames1) == 0:
+            warning.warn('TiffConnector.split({}): First connector is empty!'.format(fraction))
+        if len(img_fnames1) == N:
+            warning.warn('TiffConnector.split({}): Second connector is empty!'.format(fraction))
+
+        conn1 = TiffConnector(img_fnames1, lbl_fnames1,
+                              savepath=self.savepath,
+                              multichannel_pixel_image=self.multichannel_pixel_image,
+                              multichannel_label_image=self.multichannel_label_image,
+                              zstack=self.zstack)
+        conn2 = TiffConnector(img_fnames2, lbl_fnames2,
+                              savepath=self.savepath,
+                              multichannel_pixel_image=self.multichannel_pixel_image,
+                              multichannel_label_image=self.multichannel_label_image,
+                              zstack=self.zstack)
+
+        return conn1, conn2
+
 
 
     def get_image_count(self):
@@ -256,28 +311,28 @@ class TiffConnector(Connector):
         check if label mat dimensions fit to image dimensions, i.e.
         everything identical except nr of channels (label mat always 1)
         '''
-        logger.info('checking labelmatrix dimensions...')
+        logger.info('Checking labelmatrix dimensions...')
         nr_channels = []
         for image_nr in list(range(self.get_image_count())):
             im_dim = self.load_img_dimensions(image_nr)
             label_dim = self.load_labelmat_dimensions(image_nr)
 
             if label_dim is None:
-                logger.debug('check image nr %s: ok (no labelmat found) ', image_nr)
+                logger.debug('Check image nr %s: ok (no labelmat found) ', image_nr)
             else:
                 nr_channels.append(label_dim[0])
-                logger.info('found %s label channel(s)', nr_channels[-1])
+                logger.debug('Found %s label channel(s)', nr_channels[-1])
                 
                 if label_dim[1:] == im_dim[1:]:
-                    logger.info('check image nr %s: ok ', image_nr)
+                    logger.debug('Check image nr %s: ok ', image_nr)
                 else:
-                    logger.error('check image nr %s (%s): image dim is %s, label dim is %s '\
+                    logger.error('Check image nr %s (%s): image dim is %s, label dim is %s '\
                         , image_nr, self.filenames[image_nr], im_dim, label_dim)
-                    raise ValueError('check image nr %s: dims do not match ' % str(image_nr))   
+                    raise ValueError('Check image nr %s: dims do not match ' % str(image_nr))   
         if len(set(nr_channels))>1:
-            raise ValueError('nr of channels not consitent in input data, found following nr of labelmask channels: %s' % str(set(nr_channels))) 
+            raise ValueError('Nr of channels not consitent in input data, found following nr of labelmask channels: %s' % str(set(nr_channels))) 
 
-        logger.info('labelmatrix dimensions ok')               
+        logger.info('Labelmatrix dimensions ok')               
 
     @lru_cache(maxsize = 20)
     def load_image(self, image_nr):
@@ -373,7 +428,7 @@ class TiffConnector(Connector):
         Keys are the original labels, values are the assigned labels that
         will be seen by the Dataset object.
         '''
-        logger.info('mapping labelvalues...')
+        logger.info('Mapping label values...')
 
         label_mappings = []
         o_labelvals = self.get_original_labelvalues()
@@ -388,7 +443,7 @@ class TiffConnector(Connector):
         
         self.labelvalue_mapping = label_mappings
 
-        logger.info('label values are mapped to ascending values:')
+        logger.info('Label values are mapped to ascending values:')
         logger.info(label_mappings)
         return label_mappings           
 
@@ -487,7 +542,7 @@ class TiffConnector(Connector):
         
         #check for correct label_value
         if not self.labelvalue_is_valid(label_value):
-            raise ValueError('Labelvalue %s does not exist. Labelvalue mapping: %s' %\
+            raise ValueError('Label value %s does not exist. Label value mapping: %s' %\
                 (str(label_value), str(self.labelvalue_mapping)))
 
         #label matrix
@@ -497,7 +552,7 @@ class TiffConnector(Connector):
         
         n_coors = coors.shape[1]
         if (label_index < 0)  or (label_index >= n_coors):
-            raise ValueError('''Label index %s for labelvalue %s in image %s 
+            raise ValueError('''Label index %s for label value %s in image %s 
                 not correct. Only %s labels of that value for this image''' %\
                 (str(label_index), str(label_value), str(image_nr), str(n_coors)))
 
@@ -537,7 +592,8 @@ class TiffConnector(Connector):
         filenames = sorted(glob.glob(os.path.join(self.img_path, filemask)))
         filenames = [os.path.split(fname)[1] for fname in filenames]
         
-        logger.info('following pixel image files detected:')
-        logger.info(filenames)
+        logger.info('{} pixel image files detected.'.format(len(filenames)))
+        logger.debug('Pixel image files:')
+        logger.debug(filenames)
         return filenames
 
