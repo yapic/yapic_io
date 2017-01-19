@@ -1,3 +1,4 @@
+import tempfile
 from unittest import TestCase
 import os
 from yapic_io.tiff_connector import TiffConnector
@@ -265,44 +266,31 @@ class TestPredictionBatch(TestCase):
 
     
     def test_prediction_loop(self):
-        #mock classification function
-        def classify(pixels, value):
-            return np.ones(pixels.shape) * value
-        
-        
-        #define data loacations
-        pixel_image_dir = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
-        label_image_dir = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
-        savepath = os.path.join(base_path, '../test_data/tmp/')
-         
-        tpl_size = (1,5,4) # size of network output layer in zxy
-        padding = (0,0,0) # padding of network input layer in zxy, in respect to output layer
-        
-         # make training_batch mb and prediction interface p with TiffConnector binding
-        _, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size, padding_zxy=padding, training_batch_size=2) 
-        
-        self.assertEqual(len(p), 255)
-        self.assertEqual(p.get_labels(), [1,2,3])
-        
-        #classify the whole bound dataset
-        counter = 0 #needed for mock data
-        
-        for item in p:
-        
-            print(counter)
-            print(item.curr_batch_pos)
-            print(len(item._batch_index_list))
-            #print(item.curr_batch_pos)
-            #print(item._batch_index_list)
-            pixels = item.pixels() #input for classifier
-            mock_classifier_result = classify(pixels, counter) #classifier output
-            #pass classifier results for each class to data source
-            item.put_probmap_data(mock_classifier_result)     
-            counter += 1
-        
-            
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            #mock classification function
+            def classify(pixels, value):
+                return np.ones(pixels.shape) * value
 
-    
+            #define data loacations
+            pixel_image_dir = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
+            label_image_dir = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
+            savepath = tmpdirname
+
+            tpl_size = (1,5,4) # size of network output layer in zxy
+            padding = (0,0,0) # padding of network input layer in zxy, in respect to output layer
+
+             # make training_batch mb and prediction interface p with TiffConnector binding
+            _, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size, padding_zxy=padding, training_batch_size=2) 
+
+            self.assertEqual(len(p), 255)
+            self.assertEqual(p.get_labels(), [1,2,3])
+
+            #classify the whole bound dataset
+            for counter, item in enumerate(p):
+                pixels = item.pixels() #input for classifier
+                mock_classifier_result = classify(pixels, counter) #classifier output
+                #pass classifier results for each class to data source
+                item.put_probmap_data(mock_classifier_result)     
 
 
     def test_put_probmap_data_for_label(self):
