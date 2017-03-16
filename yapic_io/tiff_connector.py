@@ -5,12 +5,18 @@ import itertools
 from functools import lru_cache
 import yapic_io.utils as ut
 import numpy as np
+import itertools
 
 import yapic_io.image_importers as ip
 from yapic_io.utils import get_template_meshgrid, add_to_filename, find_best_matching_pairs
 from yapic_io.connector import Connector
 from pprint import pprint
 logger = logging.getLogger(os.path.basename(__file__))
+
+
+def flatten(listOfLists):
+    "Flatten one level of nesting"
+    return itertools.chain.from_iterable(listOfLists)
 
 
 class TiffConnector(Connector):
@@ -518,13 +524,8 @@ class TiffConnector(Connector):
 
     
     def labelvalue_is_valid(self,label_value):
-        labelvalues = []
-        for d in self.labelvalue_mapping:
-            labelvalues += d.values()
-
-        if label_value in set(labelvalues):
-            return True
-        return False    
+        labelvalues = flatten(d.values() for d in self.labelvalue_mapping)
+        return label_value in set(labelvalues):
             
 
     def get_label_coordinate(self, image_nr, label_value, label_index):
