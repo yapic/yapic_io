@@ -215,7 +215,6 @@ class TiffConnector(Connector):
     def get_image_count(self):
         if self.filenames is None:
             return 0
-        
         return len(self.filenames)
 
 
@@ -241,7 +240,7 @@ class TiffConnector(Connector):
         
         if not os.path.isfile(out_path) or overwrite:
             ip.init_empty_tiff_image(out_path, x_shape, y_shape, z_size=z_shape)
-            logger.info('initialize a new probmap image: %s', out_path)
+            logger.debug('initialize a new probmap image: %s', out_path)
         return out_path        
 
 
@@ -308,7 +307,7 @@ class TiffConnector(Connector):
         check if label mat dimensions fit to image dimensions, i.e.
         everything identical except nr of channels (label mat always 1)
         '''
-        logger.info('Checking labelmatrix dimensions...')
+        logger.debug('Checking labelmatrix dimensions...')
         nr_channels = []
         for image_nr in list(range(self.get_image_count())):
             im_dim = self.load_img_dimensions(image_nr)
@@ -329,7 +328,7 @@ class TiffConnector(Connector):
         if len(set(nr_channels))>1:
             raise ValueError('Nr of channels not consitent in input data, found following nr of labelmask channels: %s' % str(set(nr_channels))) 
 
-        logger.info('Labelmatrix dimensions ok')               
+        logger.debug('Labelmatrix dimensions ok')               
 
 
     @lru_cache(maxsize = 20)
