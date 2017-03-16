@@ -73,9 +73,7 @@ class TestTiffconnector(TestCase):
         lbl_path = os.path.join(base_path, '../test_data/tiffconnector_1/together/lbl*.tif')
         c = TiffConnector(img_path, lbl_path)
         
-        with self.assertRaises(ValueError):
-            c.load_img_dimensions(-1)
-        with self.assertRaises(ValueError):
+        with self.assertRaises(IndexError):
             c.load_img_dimensions(4)
         
         self.assertEqual(c.load_img_dimensions(0), (3, 3, 40, 26))

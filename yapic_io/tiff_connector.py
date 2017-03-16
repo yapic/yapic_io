@@ -276,10 +276,7 @@ class TiffConnector(Connector):
         
         :param image_nr: index of image
         :returns (nr_channels, nr_zslices, nr_x, nr_y)
-        '''        
-        if not self.is_valid_image_nr(image_nr):
-            raise ValueError          
-
+        '''
         path = os.path.join(self.img_path, self.filenames[image_nr][0])
         return ip.get_tiff_image_dimensions(path,\
             zstack=self.zstack, multichannel=self.multichannel_pixel_image) 
@@ -292,10 +289,7 @@ class TiffConnector(Connector):
         
         :param image_nr: index of image
         :returns (nr_channels, nr_zslices, nr_x, nr_y)
-        '''        
-        if not self.is_valid_image_nr(image_nr):
-            return False          
-
+        '''
         if self.exists_label_for_img(image_nr):
             path = os.path.join(self.label_path, self.filenames[image_nr][1])
             return ip.get_tiff_image_dimensions(path,\
@@ -309,7 +303,7 @@ class TiffConnector(Connector):
         '''
         logger.debug('Checking labelmatrix dimensions...')
         nr_channels = []
-        for image_nr in list(range(self.get_image_count())):
+        for image_nr in range(self.get_image_count()):
             im_dim = self.load_img_dimensions(image_nr)
             label_dim = self.load_labelmat_dimensions(image_nr)
 
@@ -333,15 +327,11 @@ class TiffConnector(Connector):
 
     @lru_cache(maxsize = 20)
     def load_image(self, image_nr):
-        if not self.is_valid_image_nr(image_nr):
-            return None      
         path = os.path.join(self.img_path, self.filenames[image_nr][0])
         return ip.import_tiff_image(path)    
 
 
     def exists_label_for_img(self, image_nr):
-        if not self.is_valid_image_nr(image_nr):
-            return None      
         if self.filenames[image_nr][1] is None:
             return False
         return True    
@@ -377,9 +367,6 @@ class TiffConnector(Connector):
         if original_labelvalues is False, the mapped label values are returned,
         otherwise the original labelvalues.
         '''
-        if not self.is_valid_image_nr(image_nr):
-            return None      
-
         label_filename = self.filenames[image_nr][1]      
         
         if label_filename is None:
@@ -535,16 +522,7 @@ class TiffConnector(Connector):
 
 
     def is_valid_image_nr(self, image_nr):
-        count = self.get_image_count()
-        
-        error_msg = \
-        'wrong image number. image numbers in range 0 to %s' % str(count-1)
-        
-        if image_nr not in list(range(count)):
-            logger.error(error_msg)
-            return False
-
-        return True          
+        return -1 < image_nr < self.get_image_count()
 
 
     def load_label_filenames(self, filemask):

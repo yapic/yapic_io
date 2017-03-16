@@ -1,5 +1,4 @@
 # if you change this file you should build a new docker image (see e.g. ./debian.Dockerfile)
-tifffile
 argparse==1.2.1
 docopt==0.6.2
 future==0.15.2
