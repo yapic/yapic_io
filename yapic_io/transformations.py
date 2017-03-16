@@ -119,10 +119,10 @@ def calc_warping_shift(image_shape, rotation_angle, shear_angle):
     z[center_pos[0], center_pos[1]-2:center_pos[1]+2] = 256
     m2 = warp_image_2d(mat, rotation_angle, shear_angle)
     z_rot = warp_image_2d(z, rotation_angle, shear_angle)
-    print(mat)
-    print(m2)
-    print(z)
-    print(z_rot)
+    #print(mat)
+    #print(m2)
+    #print(z)
+    #print(z_rot)
 
 
 
