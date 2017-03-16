@@ -490,10 +490,6 @@ class TiffConnector(Connector):
         return out
 
 
-
-
-
-
     @lru_cache(maxsize = 500)    
     def get_labelvalues_for_im(self, image_nr):
         mat = self.load_label_matrix(image_nr)
@@ -504,28 +500,24 @@ class TiffConnector(Connector):
         values.sort()
         return list(values)
 
+
     @lru_cache(maxsize = 500)    
     def get_labelcount_for_im(self, image_nr):
         '''
         returns for each label value the number of labels for this image
         ''' 
-
-        mat = self.load_label_matrix(image_nr)
         labels = self.get_labelvalues_for_im(image_nr)
         if labels is None:
-            #if no labelmatrix available
-            return None
-        
-        label_count = {}
-        for label in labels:
-            label_count[label] = np.count_nonzero(mat==label)
-        
+            return None #if no labelmatrix available
+
+        mat = self.load_label_matrix(image_nr)
+        label_count = { l: np.count_nonzero(mat==l) for l in labels }
         return label_count
 
     
     def labelvalue_is_valid(self,label_value):
         labelvalues = flatten(d.values() for d in self.labelvalue_mapping)
-        return label_value in set(labelvalues):
+        return label_value in set(labelvalues)
             
 
     def get_label_coordinate(self, image_nr, label_value, label_index):
