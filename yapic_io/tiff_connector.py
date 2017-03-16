@@ -36,13 +36,11 @@ class TiffConnector(Connector):
     label filepath: yapic_io/test_data/tiffconnector_1/labels
     <BLANKLINE>
     '''
-    
     def __init__(self\
             , img_filepath, label_filepath, savepath=None\
             , multichannel_pixel_image=None\
             , multichannel_label_image=None\
             , zstack=True):
-        
         '''
         :param img_filepath: path to source pixel images (use wildcards for filtering)
                              or a list of filenames
@@ -81,15 +79,11 @@ class TiffConnector(Connector):
           and in case of 2 dimensional images (single z, singechannel). In case of 3
           dimensional images, it throws an error, because it is not clear if the thrid
           dimension is z or channel (RGB images will still be mapped correctly) 
-
-
         '''
-
         self.filenames = None # list of tuples: [(imgfile_1.tif, labelfile_1.tif), (imgfile_2.tif, labelfile_2.tif), ...] 
-
-        self.labelvalue_mapping = None #list of dicts of original and assigned labelvalues
+        self.labelvalue_mapping = None # list of dicts of original and assigned labelvalues
         
-        #reason: assign unique labelvalues
+        # reason: assign unique labelvalues
         # [{orig_label1: 1, orig_label2: 2}, {orig_label1: 3, orig_label2: 4}, ...]
 
         self.zstack = zstack
@@ -145,7 +139,7 @@ class TiffConnector(Connector):
         logger.debug('Pixel and label files are assigned as follows:')
         logger.debug('\n'.join('{} <-> {}'.format(img, lbl) for img, lbl in  self.filenames))
 
-        self.savepath = savepath #path for probability maps
+        self.savepath = savepath # path for probability maps
 
         self.check_labelmat_dimensions()
         self.map_labelvalues()
@@ -218,7 +212,6 @@ class TiffConnector(Connector):
         return conn1, conn2
 
 
-
     def get_image_count(self):
         if self.filenames is None:
             return 0
@@ -251,6 +244,7 @@ class TiffConnector(Connector):
             logger.info('initialize a new probmap image: %s', out_path)
         return out_path        
 
+
     def get_probmap_path(self, image_nr, label_value):
         if self.savepath is None:
             raise ValueError('savepath not set')
@@ -267,9 +261,9 @@ class TiffConnector(Connector):
 
         return labelmat[mesh]
 
+
     @lru_cache(maxsize=5000)    
     def get_template(self, image_nr=None, pos=None, size=None):
-
         im = self.load_image(image_nr)
         mesh = get_template_meshgrid(im.shape, pos, size)
 
@@ -283,15 +277,14 @@ class TiffConnector(Connector):
         
         :param image_nr: index of image
         :returns (nr_channels, nr_zslices, nr_x, nr_y)
-
         '''        
-
         if not self.is_valid_image_nr(image_nr):
             raise ValueError          
 
         path = os.path.join(self.img_path, self.filenames[image_nr][0])
         return ip.get_tiff_image_dimensions(path,\
             zstack=self.zstack, multichannel=self.multichannel_pixel_image) 
+
 
     def load_labelmat_dimensions(self, image_nr):
         '''
@@ -300,9 +293,7 @@ class TiffConnector(Connector):
         
         :param image_nr: index of image
         :returns (nr_channels, nr_zslices, nr_x, nr_y)
-
         '''        
-
         if not self.is_valid_image_nr(image_nr):
             return False          
 
@@ -340,6 +331,7 @@ class TiffConnector(Connector):
 
         logger.info('Labelmatrix dimensions ok')               
 
+
     @lru_cache(maxsize = 20)
     def load_image(self, image_nr):
         if not self.is_valid_image_nr(image_nr):
@@ -356,35 +348,28 @@ class TiffConnector(Connector):
         return True    
 
 
-    
     def get_template_for_label(self, image_nr, pos_zxy, size_zxy, label_value):
         '''
         returns a 3d zxy boolean matrix where positions of the reuqested label
         are indicated with True. only mapped labelvalues can be requested.
         '''    
-
-        labelmat = self.load_label_matrix(image_nr) #matrix with labelvalues
+        labelmat = self.load_label_matrix(image_nr) # matrix with labelvalues
         boolmat_4d = (labelmat == label_value)
 
-        boolmat_3d = boolmat_4d.any(axis=0) #reduction to zxy dimension
-        #comment: mapped labelvalues are unique for a channel, as they
-        #are generated with map_labelvalues(). This means,
-        #a mapped labelvalue is only present in one specific channel.
-        #This means: there chould be not more than one truthy value along the
-        #channel dimension in boolmat_4d. this is not doublechecked here.
+        boolmat_3d = boolmat_4d.any(axis=0) # reduction to zxy dimension
+        # comment: mapped labelvalues are unique for a channel, as they
+        # are generated with map_labelvalues(). This means,
+        # a mapped labelvalue is only present in one specific channel.
+        # This means: there chould be not more than one truthy value along the
+        # channel dimension in boolmat_4d. this is not doublechecked here.
 
         mesh = get_template_meshgrid(boolmat_3d.shape, pos_zxy, size_zxy)
 
         return boolmat_3d[mesh]
 
 
-
-
-
-
     @lru_cache(maxsize = 20)
     def load_label_matrix(self, image_nr, original_labelvalues=False):
-
         '''
         returns a 4d labelmatrix with dimensions czxy.
         the albelmatrix consists of zeros (no label) or the respective
@@ -393,7 +378,6 @@ class TiffConnector(Connector):
         if original_labelvalues is False, the mapped label values are returned,
         otherwise the original labelvalues.
         '''
-        
         if not self.is_valid_image_nr(image_nr):
             return None      
 
@@ -417,7 +401,6 @@ class TiffConnector(Connector):
         return label_image 
 
 
-    
     def map_labelvalues(self):
         '''
         assign unique labelvalues to original labelvalues.
@@ -434,7 +417,7 @@ class TiffConnector(Connector):
         Keys are the original labels, values are the assigned labels that
         will be seen by the Dataset object.
         '''
-        logger.info('Mapping label values...')
+        logger.debug('Mapping label values...')
 
         label_mappings = []
         o_labelvals = self.get_original_labelvalues()
@@ -449,10 +432,9 @@ class TiffConnector(Connector):
         
         self.labelvalue_mapping = label_mappings
 
-        logger.info('Label values are mapped to ascending values:')
-        logger.info(label_mappings)
+        logger.debug('Label values are mapped to ascending values:')
+        logger.debug(label_mappings)
         return label_mappings           
-
 
 
     def get_original_labelvalues(self):
@@ -460,7 +442,6 @@ class TiffConnector(Connector):
         returns a list of sets. each set corresponds to 1 label channel.
         each set contains the label values of that channel.
         '''
-        
         labels_per_channel = []
         for image_nr in range(self.get_image_count()):
             labels_per_im = self.get_original_labelvalues_for_im(image_nr)
@@ -480,7 +461,6 @@ class TiffConnector(Connector):
         if mat is None:
             return None
         
-
         out = []    
         nr_channels = mat.shape[0]
         for channel in range(nr_channels):
@@ -508,7 +488,7 @@ class TiffConnector(Connector):
         ''' 
         labels = self.get_labelvalues_for_im(image_nr)
         if labels is None:
-            return None #if no labelmatrix available
+            return None # if no labelmatrix available
 
         mat = self.load_label_matrix(image_nr)
         label_count = { l: np.count_nonzero(mat==l) for l in labels }
@@ -533,12 +513,12 @@ class TiffConnector(Connector):
         '''      
         mat = self.load_label_matrix(image_nr)
         
-        #check for correct label_value
+        # check for correct label_value
         if not self.labelvalue_is_valid(label_value):
             raise ValueError('Label value %s does not exist. Label value mapping: %s' %\
                 (str(label_value), str(self.labelvalue_mapping)))
 
-        #label matrix
+        # label matrix
         mat = self.load_label_matrix(image_nr)
 
         coors = np.array(np.where(mat==label_value))
@@ -550,13 +530,9 @@ class TiffConnector(Connector):
                 (str(label_index), str(label_value), str(image_nr), str(n_coors)))
 
         coor = coors[:,label_index]    
-        coor[0] = 0 #set channel to zero
+        coor[0] = 0 # set channel to zero
         
         return coor
-
-
-
-    
 
 
     def is_valid_image_nr(self, image_nr):
