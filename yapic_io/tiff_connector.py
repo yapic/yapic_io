@@ -282,7 +282,7 @@ class TiffConnector(Connector):
             zstack=self.zstack, multichannel=self.multichannel_pixel_image) 
 
 
-    def labelmat_dimensions(self, image_nr):
+    def label_matrix_dimensions(self, image_nr):
         '''
         returns dimensions of the label image.
         dims is a 4-element-tuple:
@@ -305,7 +305,7 @@ class TiffConnector(Connector):
         nr_channels = []
         for image_nr in range(self.image_count()):
             im_dim = self.image_dimensions(image_nr)
-            label_dim = self.labelmat_dimensions(image_nr)
+            label_dim = self.label_matrix_dimensions(image_nr)
 
             if label_dim is None:
                 logger.debug('Check image nr %s: ok (no labelmat found) ', image_nr)
@@ -406,7 +406,7 @@ class TiffConnector(Connector):
         logger.debug('Mapping label values...')
 
         label_mappings = []
-        o_labelvals = self.get_original_labelvalues()
+        o_labelvals = self.original_label_values()
         new_label = 1
         for labels_per_channel in o_labelvals:
             label_mapping = {}
@@ -423,14 +423,14 @@ class TiffConnector(Connector):
         return label_mappings           
 
 
-    def get_original_labelvalues(self):
+    def original_label_values(self):
         '''
         returns a list of sets. each set corresponds to 1 label channel.
         each set contains the label values of that channel.
         '''
         labels_per_channel = []
         for image_nr in range(self.image_count()):
-            labels_per_im = self.get_original_labelvalues_for_im(image_nr)
+            labels_per_im = self.original_label_values_for_image(image_nr)
 
             if labels_per_im is not None:
                 if len(labels_per_channel) == 0:
@@ -442,7 +442,7 @@ class TiffConnector(Connector):
 
 
     @lru_cache(maxsize = 5000)  
-    def get_original_labelvalues_for_im(self, image_nr):
+    def original_label_values_for_image(self, image_nr):
         mat = self.load_label_matrix(image_nr, original_labelvalues=True)
         if mat is None:
             return None

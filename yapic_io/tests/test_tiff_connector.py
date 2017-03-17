@@ -405,45 +405,45 @@ class TestTiffconnector(TestCase):
         except: pass    
 
 
-    def test_get_original_labelvalues_for_im(self):
+    def test_original_label_values_for_image(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
 
         c = TiffConnector(img_path, label_path)
 
-        res = c.get_original_labelvalues_for_im(2)
+        res = c.original_label_values_for_image(2)
         self.assertEqual(res, [{109, 150}])
 
-        res = c.get_original_labelvalues_for_im(1)
+        res = c.original_label_values_for_image(1)
         self.assertIsNone(res)
 
-        res = c.get_original_labelvalues_for_im(0)
+        res = c.original_label_values_for_image(0)
         self.assertEqual(res, [{91, 109, 150}])
 
 
-    def test_get_original_labelvalues_for_im_2(self):
+    def test_original_label_values_for_image_2(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/*.tif')
 
         c = TiffConnector(img_path, label_path)
 
-        res = c.get_original_labelvalues_for_im(0)
+        res = c.original_label_values_for_image(0)
         self.assertEqual(res, [{91, 109, 150}, {91, 109, 150}])
 
-        res = c.get_original_labelvalues_for_im(1)
+        res = c.original_label_values_for_image(1)
         self.assertIsNone(res)
 
-        res = c.get_original_labelvalues_for_im(2)
+        res = c.original_label_values_for_image(2)
         self.assertEqual(res, [{109, 150}, {109, 150}])
 
 
-    def test_get_original_labelvalues(self):
+    def test_original_label_values(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/*.tif')
 
         c = TiffConnector(img_path, label_path)
 
-        res = c.get_original_labelvalues()
+        res = c.original_label_values()
         self.assertEqual(res, [{91, 109, 150}, {91, 109, 150}])
         
 
