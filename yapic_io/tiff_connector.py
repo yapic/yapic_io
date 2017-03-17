@@ -290,7 +290,7 @@ class TiffConnector(Connector):
         :param image_nr: index of image
         :returns (nr_channels, nr_zslices, nr_x, nr_y)
         '''
-        if self.exists_label_for_img(image_nr):
+        if self.exists_label_for_image(image_nr):
             path = os.path.join(self.label_path, self.filenames[image_nr][1])
             return ip.get_tiff_image_dimensions(path,\
                 zstack=self.zstack, multichannel=self.multichannel_label_image)               
@@ -331,7 +331,7 @@ class TiffConnector(Connector):
         return ip.import_tiff_image(path)    
 
 
-    def exists_label_for_img(self, image_nr):
+    def exists_label_for_image(self, image_nr):
         if self.filenames[image_nr][1] is None:
             return False
         return True    

@@ -113,9 +113,9 @@ class TestTiffconnector(TestCase):
 
         c = TiffConnector(img_path, label_path)
         
-        self.assertTrue(c.exists_label_for_img(0))
-        self.assertFalse(c.exists_label_for_img(1))
-        self.assertTrue(c.exists_label_for_img(2))
+        self.assertTrue(c.exists_label_for_image(0))
+        self.assertFalse(c.exists_label_for_image(1))
+        self.assertTrue(c.exists_label_for_image(2))
 
 
     def test_load_label_filenames(self):
