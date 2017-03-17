@@ -521,7 +521,7 @@ class TiffConnector(Connector):
         return coor
 
 
-    def is_valid_image_nr(self, image_nr):
+    def is_image_nr_valid(self, image_nr):
         return -1 < image_nr < self.get_image_count()
 
 
