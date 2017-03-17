@@ -854,7 +854,7 @@ class TestDataset(TestCase):
         
 
     
-    def test_pick_random_training_template(self):
+    def test_random_training_template(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
         c = TiffConnector(img_path, label_path)
@@ -870,7 +870,7 @@ class TestDataset(TestCase):
         
         #mapping [{91: 1, 109: 2, 150: 3}]
         labels_val = [1, 2, 3]
-        tpl = d.pick_random_training_template(\
+        tpl = d.random_training_template(\
             size, channels, pixel_padding=pad, rotation_angle=45)
 
         
@@ -880,7 +880,7 @@ class TestDataset(TestCase):
         self.assertEqual(tpl.labels,labels_val)
 
 
-    def test_pick_random_training_template_spec_label(self):
+    def test_random_training_template_spec_label(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
         c = TiffConnector(img_path, label_path)
@@ -893,14 +893,14 @@ class TestDataset(TestCase):
         
         labels_val = [1, 2, 3]
         
-        tpl_1 = d.pick_random_training_template(\
+        tpl_1 = d.random_training_template(\
             size, channels, pixel_padding=pad, rotation_angle=45, label_region=1)
 
 
-        tpl_2 = d.pick_random_training_template(\
+        tpl_2 = d.random_training_template(\
             size, channels, pixel_padding=pad, rotation_angle=45, label_region=2)
 
-        tpl_3 = d.pick_random_training_template(\
+        tpl_3 = d.random_training_template(\
             size, channels, pixel_padding=pad, rotation_angle=45, label_region=3)
 
         print(tpl_1[2])

@@ -163,14 +163,14 @@ class TrainingBatch(Minibatch):
         '''
 
         if not self.augment:
-            return self._dataset.pick_random_training_template(self._size_zxy\
+            return self._dataset.random_training_template(self._size_zxy\
             , self._channels, pixel_padding=self._padding_zxy,\
                  equalized=self.equalized, labels=self._labels, label_region=for_label)
 
         shear_angle = self._get_random_shear()
         rotation_angle = self._get_random_rotation()
 
-        return self._dataset.pick_random_training_template(self._size_zxy\
+        return self._dataset.random_training_template(self._size_zxy\
             , self._channels, pixel_padding=self._padding_zxy\
             , equalized=self.equalized, rotation_angle=rotation_angle\
             , shear_angle=shear_angle, labels=self._labels, label_region=for_label)

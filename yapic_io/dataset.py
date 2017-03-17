@@ -70,15 +70,15 @@ class Dataset(object):
         return self.pixel_connector.put_template(probmap_tpl, pos_zxy, image_nr, label_value)
 
 
-    def pick_random_training_template(self,
-                                      size_zxy,
-                                      channels,
-                                      pixel_padding=(0,0,0),
-                                      equalized=False,
-                                      rotation_angle=0,
-                                      shear_angle=0,
-                                      labels='all',
-                                      label_region=None):
+    def random_training_template(self,
+                                 size_zxy,
+                                 channels,
+                                 pixel_padding=(0,0,0),
+                                 equalized=False,
+                                 rotation_angle=0,
+                                 shear_angle=0,
+                                 labels='all',
+                                 label_region=None):
         if labels == 'all':
             labels = self.label_values()
 
