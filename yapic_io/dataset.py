@@ -47,7 +47,7 @@ class Dataset(object):
         return self.pixel_connector.image_dimensions(image_nr)
 
 
-    def get_channels(self):
+    def channel_list(self):
         nr_channels = self.image_dimensions(0)[0]
         return list(range(nr_channels))
 

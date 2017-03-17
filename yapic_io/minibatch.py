@@ -46,7 +46,7 @@ class Minibatch(object):
         self.set_tpl_size_zxy(size_zxy)
         self._padding_zxy = None
         self.set_padding_zxy(padding_zxy)
-        self._channels = self._dataset.get_channels() #imports all available channels by default
+        self._channels = self._dataset.channel_list() #imports all available channels by default
         self._labels = self._dataset.label_values() #imports all available labels by default
 
 
@@ -139,7 +139,7 @@ class Minibatch(object):
         self._padding_zxy = padding_zxy    
 
     
-    def get_channels(self):
+    def channel_list(self):
         '''
         Returns the selected image channels.
         Per default, all available channels are selected.
@@ -159,7 +159,7 @@ class Minibatch(object):
         >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size) #upon object initialization all available image channels are set
         >>>
         >>>
-        >>> p.get_channels() #we have 3 channels in the prediction interface
+        >>> p.channel_list() #we have 3 channels in the prediction interface
         [0, 1, 2]
         >>> 
         >>> p[0].pixels().shape #accordingly, we have 3 channels in the 5D pixels template (n,c,z,x,y)
@@ -185,14 +185,14 @@ class Minibatch(object):
         >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size)
         >>>
         >>>
-        >>> p.get_channels() #we have 3 channels
+        >>> p.channel_list() #we have 3 channels
         [0, 1, 2]
         >>> p[0].pixels().shape #accordingly, we have 3 channels in the 5D pixels template (n,c,z,x,y)
         (10, 3, 1, 5, 4)
         >>>
         >>> p.remove_channel(1) #remove channel 1
         True
-        >>> p.get_channels() #only 2 channels selected
+        >>> p.channel_list() #only 2 channels selected
         [0, 2]
         >>> p[0].pixels().shape #only 2 channels left in the pixel template
         (10, 2, 1, 5, 4)
@@ -214,9 +214,9 @@ class Minibatch(object):
         if channel in self._channels:
             logger.warning('channel already selected %s', channel)
             return False
-        if channel not in self._dataset.get_channels():
+        if channel not in self._dataset.channel_list():
             raise ValueError('not possible to add channel %s from dataset channels %s'\
-                % (str(channel), str(self._dataset.get_channels())))
+                % (str(channel), str(self._dataset.channel_list())))
 
         insort_left(self._channels,channel)    
         return True
