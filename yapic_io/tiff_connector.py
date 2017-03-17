@@ -104,7 +104,7 @@ class TiffConnector(Connector):
             self.img_path, img_filemask = os.path.split(img_filepath)
             self.label_path, label_filemask = os.path.split(label_filepath)
 
-            img_filenames = self.load_img_filenames(img_filemask)
+            img_filenames = self.load_image_filenames(img_filemask)
             lbl_filenames = self.load_label_filenames(label_filemask)
 
             self.filenames = find_best_matching_pairs(img_filenames, lbl_filenames)
@@ -531,7 +531,7 @@ class TiffConnector(Connector):
         return label_filenames
 
 
-    def load_img_filenames(self, filemask):
+    def load_image_filenames(self, filemask):
         '''
         find all tiff images in specified folder (self.img_path, filemask)
         '''
