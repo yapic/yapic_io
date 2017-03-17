@@ -71,7 +71,7 @@ class Connector(metaclass=ABCMeta):
         pass
     
     @abstractmethod
-    def get_template_for_label(self, image_nr, pos_zxy, size_zxy, label_value):
+    def label_template(self, image_nr, pos_zxy, size_zxy, label_value):
         '''
         returns a 3d zxy boolean matrix where positions of the reuqested label
         are indicated with True. only mapped labelvalues can be requested.

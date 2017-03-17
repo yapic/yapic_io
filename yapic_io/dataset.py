@@ -9,6 +9,10 @@ import random
 import collections
 logger = logging.getLogger(os.path.basename(__file__))
 
+TrainingTemplate = collections.namedtuple('TrainingTemplate',
+                   ['pixels', 'channels', 'weights', 'labels', 'augmentation'])
+
+
 class Dataset(object):
     '''
     provides connectors to pixel data source and
@@ -25,9 +29,6 @@ class Dataset(object):
         self.n_images = pixel_connector.image_count()
         self.label_counts = self.load_label_counts()
         self.init_label_weights()
-
-        self.training_template = collections.namedtuple('TrainingTemplate',
-                   ['pixels', 'channels', 'weights', 'labels', 'augmentation'])
 
 
     def __repr__(self):
@@ -60,7 +61,7 @@ class Dataset(object):
 
     def put_prediction_template(self, probmap_tpl, pos_zxy, image_nr, label_value):
         # check if pos and tpl size are 3d
-        if not self.image_nr_is_valid(image_nr):
+        if not self.is_image_nr_valid(image_nr):
             raise ValueError('no valid image nr: %s' % str(image_nr))
 
         if not _check_pos_size(pos_zxy, probmap_tpl.shape, 3):
@@ -85,23 +86,23 @@ class Dataset(object):
         if label_region is None:
         # pick training template where it is assured that weights for a specified label
         # are within the template. the specified label is label_region
-            _, coor = self.pick_random_label_coordinate(equalized=equalized)
+            _, coor = self.random_label_coordinate(equalized=equalized)
         else:
-            _, coor = self.pick_random_label_coordinate_for_label(label_region)
+            _, coor = self.random_label_coordinate_for_label(label_region)
 
         img_nr = coor[0]
         coor_zxy = coor[2:]
         shape_zxy = self.image_dimensions(img_nr)[1:]
         pos_zxy = np.array(ut.get_random_pos_for_coordinate(coor_zxy, size_zxy, shape_zxy))
 
-        tpl_data = self.get_training_template(img_nr, pos_zxy, size_zxy,
+        tpl_data = self.training_template(img_nr, pos_zxy, size_zxy,
                 channels, labels, pixel_padding=pixel_padding,
                 rotation_angle=rotation_angle, shear_angle=shear_angle)
 
         return tpl_data
 
 
-    def get_training_template(self,
+    def training_template(self,
                               image_nr,
                               pos_zxy,
                               size_zxy,
@@ -111,22 +112,21 @@ class Dataset(object):
                               rotation_angle=0,
                               shear_angle=0):
         # 4d pixel template with selected channels in 1st dimension
-        pixel_tpl =  self.get_multichannel_pixel_template(image_nr, pos_zxy, size_zxy, channels,
+        pixel_tpl =  self.multichannel_pixel_template(image_nr, pos_zxy, size_zxy, channels,
                       pixel_padding=pixel_padding, rotation_angle=rotation_angle, shear_angle=shear_angle)
 
         label_tpl = []
-
         for label in labels:
-            tpl = self.get_template_for_label(image_nr, pos_zxy, size_zxy, label,
+            tpl = self.label_template(image_nr, pos_zxy, size_zxy, label,
                            rotation_angle=rotation_angle, shear_angle=shear_angle)
             label_tpl.append(tpl)
         label_tpl = np.array(label_tpl) # 4d label template with selected labels in 1st dimension
 
         augmentation = {'rotation_angle' : rotation_angle, 'shear_angle' : shear_angle}
-        return self.training_template(pixel_tpl, channels, label_tpl, labels, augmentation)
+        return TrainingTemplate(pixel_tpl, channels, label_tpl, labels, augmentation)
 
 
-    def get_multichannel_pixel_template(self,
+    def multichannel_pixel_template(self,
                                         image_nr,
                                         pos_zxy,
                                         size_zxy,
@@ -135,7 +135,7 @@ class Dataset(object):
                                         rotation_angle=0,
                                         shear_angle=0):
         if not _check_pos_size(pos_zxy, size_zxy,3):
-            logger.debug('checked pos size in get_multichannel_pixel_template')
+            logger.debug('checked pos size in multichannel_pixel_template')
             raise ValueError('pos and size must have length 3. pos_zxy: %s, size_zxy: %s' \
             % (str(pos_zxy), str(size_zxy)))
 
@@ -150,7 +150,7 @@ class Dataset(object):
 
         pixel_tpl =  []
         for channel in channels:
-            tpl = self.get_template_singlechannel(image_nr,tuple(pos_padded), tuple(size_padded), channel,
+            tpl = self.template_singlechannel(image_nr,tuple(pos_padded), tuple(size_padded), channel,
                              rotation_angle=rotation_angle, shear_angle=shear_angle)
             pixel_tpl.append(tpl)
 
@@ -160,7 +160,7 @@ class Dataset(object):
         return pixel_tpl
 
 
-    def get_template_singlechannel(self,
+    def template_singlechannel(self,
                                    image_nr,
                                    pos_zxy,
                                    size_zxy,
@@ -180,7 +180,7 @@ class Dataset(object):
         :type size: tuple
         :returns: 3d template as numpy array with dimensions zxy
         '''
-        if not self.image_nr_is_valid(image_nr):
+        if not self.is_image_nr_valid(image_nr):
             return False
 
         if not _check_pos_size(pos_zxy, size_zxy, 3):
@@ -192,7 +192,7 @@ class Dataset(object):
 
         shape_czxy = self.image_dimensions(image_nr)
 
-        tpl = get_augmented_template(shape_czxy,
+        tpl = augment_template(shape_czxy,
                                      pos_czxy,
                                      size_czxy,
                                      self.pixel_connector.get_template,
@@ -204,14 +204,14 @@ class Dataset(object):
         return np.squeeze(tpl, axis=(0,))
 
 
-    def get_template_for_label(self,
-                               image_nr,
-                               pos_zxy,
-                               size_zxy,
-                               label_value,
-                               reflect=True,
-                               rotation_angle=0,
-                               shear_angle=0):
+    def label_template(self,
+                       image_nr,
+                       pos_zxy,
+                       size_zxy,
+                       label_value,
+                       reflect=True,
+                       rotation_angle=0,
+                       shear_angle=0):
         '''
         returns a recangular subsection of label weights with specified size.
         if requested template is out of bounds, values will be added by reflection
@@ -232,10 +232,10 @@ class Dataset(object):
 
         shape_zxy = self.image_dimensions(image_nr)[1:]
 
-        tpl = get_augmented_template(shape_zxy,
+        tpl = augment_template(shape_zxy,
                                      pos_zxy,
                                      size_zxy,
-                                     self._get_template_for_label_inner,
+                                     self._label_template_inner,
                                      rotation_angle=rotation_angle,
                                      shear_angle=shear_angle,
                                      reflect=reflect,
@@ -244,18 +244,18 @@ class Dataset(object):
         return tpl
 
 
-    def _get_template_for_label_inner(self, image_nr=None, pos=None, size=None, label_value=None):
+    def _label_template_inner(self, image_nr=None, pos=None, size=None, label_value=None):
         '''
         returns a 3d weight matrix template for a ceratin label with dimensions zxy.
         '''
-        if not self.label_value_is_valid(label_value):
+        if not self.is_label_value_valid(label_value):
             return False
 
         pos_zxy = pos
         size_zxy = size
         label_weight = self.label_weights[label_value]
 
-        boolmat = self.pixel_connector.get_template_for_label(image_nr,
+        boolmat = self.pixel_connector.label_template(image_nr,
                           pos_zxy, size_zxy, label_value)
 
         weight_mat = np.zeros(boolmat.shape)
@@ -265,14 +265,14 @@ class Dataset(object):
         return weight_mat
 
 
-    def set_weight_for_label(self, weight, label_value):
+    def set_label_weight(self, weight, label_value):
         '''
         sets the same weight for all labels of label_value
         in self.label_weights
         :param weight: weight value
         :param label_value: label
         '''
-        if not self.label_value_is_valid(label_value):
+        if not self.is_label_value_valid(label_value):
             logger.warning(\
                 'could not set label weight for label value %s'\
                 , str(label_value))
@@ -313,7 +313,7 @@ class Dataset(object):
         for label in labels:
             total_label_count[label] = self.label_counts[label].sum()
 
-        self.label_weights = calc_equalized_label_weights(total_label_count)
+        self.label_weights = equalize_label_weights(total_label_count)
         return True
 
 
@@ -351,7 +351,7 @@ class Dataset(object):
         return label_counts
 
 
-    def label_value_is_valid(self, label_value):
+    def is_label_value_valid(self, label_value):
         '''
         check if label value is part of self.label_coordinates
         '''
@@ -361,7 +361,7 @@ class Dataset(object):
         return True
 
 
-    def image_nr_is_valid(self, image_nr):
+    def is_image_nr_valid(self, image_nr):
         '''
         check if image_nr is between 0 and self.n_images
         '''
@@ -372,16 +372,16 @@ class Dataset(object):
         return True
 
 
-    def get_nth_label_coordinate_for_label(self, label_value, n):
+    def label_coordinate(self, label_value, index):
         '''
-        for each labelvalue there exist n labels in the dataset.
+        for each labelvalue there exist `index` labels in the dataset.
         returns the coordinate (image_nr,channel,z,x,y) of the nth label.
         '''
-        if not self.label_value_is_valid(label_value):
+        if not self.is_label_value_valid(label_value):
             raise ValueError('label value %s not valid, possible label values are %s'\
                 % (str(label_value),str(self.label_values())))
 
-        choice = n + 1
+        choice = index + 1
 
         counts = self.label_counts[label_value]
         counts_cs = counts.cumsum()
@@ -401,7 +401,7 @@ class Dataset(object):
         return coor_iczxy
 
 
-    def pick_random_label_coordinate_for_label(self, label_value):
+    def random_label_coordinate_for_label(self, label_value):
         '''
         returns a rondomly chosen label coordinate and the label value for a givel label value:
 
@@ -412,7 +412,7 @@ class Dataset(object):
         :param equalized: If true, less frequent label_values are picked with same probability as frequent label_values
         :type equalized: bool
         '''
-        if not self.label_value_is_valid(label_value):
+        if not self.is_label_value_valid(label_value):
             raise ValueError('label value %s not valid, possible label values are %s'\
                 % (str(label_value),str(self.label_values())))
 
@@ -423,10 +423,10 @@ class Dataset(object):
             raise ValueError('no labels of value %s existing' % str(label_value))
         choice = random.randint(0,total_count-1)
 
-        return (label_value, self.get_nth_label_coordinate_for_label(label_value, choice))
+        return (label_value, self.label_coordinate(label_value, choice))
 
 
-    def pick_random_label_coordinate(self, equalized=False):
+    def random_label_coordinate(self, equalized=False):
         '''
         returns a randomly chosen label coordinate and the label value:
 
@@ -440,7 +440,7 @@ class Dataset(object):
         labels = self.label_values()
         if equalized:
             label_sel = random.choice(labels)
-            return self.pick_random_label_coordinate_for_label(label_sel)
+            return self.random_label_coordinate_for_label(label_sel)
         else:
             label_values = []
             total_counts = []
@@ -457,7 +457,7 @@ class Dataset(object):
             random_nr = random.uniform(0,1)
             chosen_label = label_values[(random_nr <= total_counts_norm_cs).nonzero()[0][0]]
 
-            return self.pick_random_label_coordinate_for_label(chosen_label)
+            return self.random_label_coordinate_for_label(chosen_label)
 
 
 def label_values(self):
@@ -490,7 +490,7 @@ def is_padding(padding_size):
     return False
 
 
-def calc_inner_template_size(shape, pos, size):
+def inner_template_size(shape, pos, size):
     '''
     if a requested template is out of bounds, this function calculates
     a transient template position size and pos. The transient template has to be padded in a
@@ -536,18 +536,18 @@ def calc_inner_template_size(shape, pos, size):
     return tuple(pos_out), tuple(size_out), tuple(pos_tpl), padding_sizes
 
 
-def get_dist_to_upper_img_edge(shape, pos):
+def distance_to_upper_img_edge(shape, pos):
     return np.array(shape)-np.array(pos)-1
 
 
 def pos_shift_for_padding(shape, pos, size):
     padding_size = get_padding_size(shape, pos, size)
-    dist = get_dist_to_upper_img_edge(shape, pos)
+    dist = distance_to_upper_img_edge(shape, pos)
 
     return dist + 1 - padding_size
 
 
-def calc_equalized_label_weights(label_n):
+def equalize_label_weights(label_n):
     '''
     :param label_n: dict with label numbers where keys are label_values
     :returns dict with equalized weights for each label value
@@ -579,27 +579,27 @@ def calc_equalized_label_weights(label_n):
     return eq_weight
 
 
-def get_augmented_template(shape,
-                           pos,
-                           size,
-                           get_template_func,
-                           rotation_angle=0,
-                           shear_angle=0,
-                           reflect=True,
-                           **kwargs):
+def augment_template(shape,
+                     pos,
+                     size,
+                     get_template_func,
+                     rotation_angle=0,
+                     shear_angle=0,
+                     reflect=True,
+                     **kwargs):
     '''
     fixme: morph template works only in 2d.
     morphing has to be applied slice by slice
     '''
     if (rotation_angle == 0) and (shear_angle == 0):
-        return get_template_with_reflection(shape,  pos, size, get_template_func,
+        return template_with_reflection(shape,  pos, size, get_template_func,
                                             reflect=reflect, **kwargs)
 
     if (size[-2]) == 1 and (size[-1] == 1):
         # if the requested template is only of size 1 in x and y,
         # augmentation can be omitted, since rotation always
         # occurs around the center axis.
-        return get_template_with_reflection(shape, pos, size, get_template_func,
+        return template_with_reflection(shape, pos, size, get_template_func,
                                             reflect=reflect, **kwargs)
 
     size = np.array(size)
@@ -607,7 +607,7 @@ def get_augmented_template(shape,
 
     size_new = size * 3 # triple template size if morphing takes place
     pos_new = pos-size
-    tpl_large = get_template_with_reflection(shape, pos_new, size_new, get_template_func,
+    tpl_large = template_with_reflection(shape, pos_new, size_new, get_template_func,
                                              reflect=reflect, **kwargs)
     tpl_large_morphed = trafo.warp_image_2d_stack(tpl_large, rotation_angle, shear_angle)
 
@@ -616,9 +616,9 @@ def get_augmented_template(shape,
     return tpl_large_morphed[mesh]
 
 
-def get_template_with_reflection(shape, pos, size, get_template_func,
-                                 reflect=True, **kwargs):
-    res = calc_inner_template_size(shape, pos, size)
+def template_with_reflection(shape, pos, size, get_template_func,
+                             reflect=True, **kwargs):
+    res = inner_template_size(shape, pos, size)
     pos_transient, size_transient, pos_inside_transient, pad_size = res
 
     if is_padding(pad_size) and not reflect:
@@ -651,6 +651,6 @@ def _check_pos_size(pos, size, nr_dim):
            'is  %s for size and %s for pos') % (str(len(size)), str(len(pos)))
 
     if (len(pos) != nr_dim) or (len(size) != nr_dim):
-        logger.error(error_msg)
+        logger.error(msg)
         return False
     return True

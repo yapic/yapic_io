@@ -152,7 +152,7 @@ class TestTiffconnector(TestCase):
         self.assertEqual(labelmat.shape, (2, 3, 6, 4)) 
 
 
-    def test_get_template_for_label(self):
+    def test_label_template(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/*.tif')
 
@@ -162,7 +162,7 @@ class TestTiffconnector(TestCase):
         pos_zxy = (0,0,0)
         size_zxy = (1,6,4)
 
-        tpl = c.get_template_for_label(2, pos_zxy, size_zxy, label_value)
+        tpl = c.label_template(2, pos_zxy, size_zxy, label_value)
 
         val_z0 = np.array(\
                 [[[False, False, False, False],
@@ -176,7 +176,7 @@ class TestTiffconnector(TestCase):
         pos_zxy = (1,0,0)
         size_zxy = (1,6,4)
 
-        tpl_z1 = c.get_template_for_label(2, pos_zxy, size_zxy, label_value)
+        tpl_z1 = c.label_template(2, pos_zxy, size_zxy, label_value)
 
         val_z1 = np.array(\
         [[[False, False, False, False],

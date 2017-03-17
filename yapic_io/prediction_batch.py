@@ -97,7 +97,7 @@ class PredictionBatch(Minibatch):
     def pixels(self):
         
         
-        pixfunc = self._dataset.get_multichannel_pixel_template
+        pixfunc = self._dataset.multichannel_pixel_template
 
         pixels = [pixfunc(im_nr,\
                   pos_zxy,\
@@ -114,7 +114,7 @@ class PredictionBatch(Minibatch):
         # for tpl_position in tpl_positions:
         #     self._ge
         
-        # return self._dataset.get_multichannel_pixel_template(\
+        # return self._dataset.multichannel_pixel_template(\
         #     self._image_nr, self._pos_zxy, self._size_zxy, self._channels,\
         #     pixel_padding=self._padding_zxy)       
 
