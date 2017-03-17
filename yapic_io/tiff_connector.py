@@ -481,7 +481,7 @@ class TiffConnector(Connector):
         return label_count
 
     
-    def labelvalue_is_valid(self,label_value):
+    def is_labelvalue_valid(self,label_value):
         labelvalues = flatten(d.values() for d in self.labelvalue_mapping)
         return label_value in set(labelvalues)
             
@@ -500,7 +500,7 @@ class TiffConnector(Connector):
         mat = self.load_label_matrix(image_nr)
         
         # check for correct label_value
-        if not self.labelvalue_is_valid(label_value):
+        if not self.is_labelvalue_valid(label_value):
             raise ValueError('Label value %s does not exist. Label value mapping: %s' %\
                 (str(label_value), str(self.labelvalue_mapping)))
 
