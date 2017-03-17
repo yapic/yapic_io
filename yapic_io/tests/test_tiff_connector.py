@@ -203,13 +203,13 @@ class TestTiffconnector(TestCase):
         self.assertRaises(ValueError, lambda: TiffConnector(img_path, label_path))    
 
 
-    def test_get_labelvalues_for_im(self):
+    def test_label_values_for_image(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
 
         c = TiffConnector(img_path, label_path)
 
-        labelvals = c.get_labelvalues_for_im(2)
+        labelvals = c.label_values_for_image(2)
         self.assertEqual(labelvals, [2, 3])
 
 
@@ -231,13 +231,13 @@ class TestTiffconnector(TestCase):
         #self.assertTrue(False)    
     
 
-    def test_get_labelcount_for_im(self):
+    def test_label_count_for_image(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
 
         c = TiffConnector(img_path, label_path)
 
-        count = c.get_labelcount_for_im(2)
+        count = c.label_count_for_image(2)
         print(c.labelvalue_mapping)
 
         self.assertEqual(count, {2 : 11, 3: 3})

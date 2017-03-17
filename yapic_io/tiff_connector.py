@@ -457,7 +457,7 @@ class TiffConnector(Connector):
 
 
     @lru_cache(maxsize = 500)    
-    def get_labelvalues_for_im(self, image_nr):
+    def label_values_for_image(self, image_nr):
         mat = self.load_label_matrix(image_nr)
         if mat is None:
             return None
@@ -468,11 +468,11 @@ class TiffConnector(Connector):
 
 
     @lru_cache(maxsize = 500)    
-    def get_labelcount_for_im(self, image_nr):
+    def label_count_for_image(self, image_nr):
         '''
         returns for each label value the number of labels for this image
         ''' 
-        labels = self.get_labelvalues_for_im(image_nr)
+        labels = self.label_values_for_image(image_nr)
         if labels is None:
             return None # if no labelmatrix available
 
@@ -493,7 +493,7 @@ class TiffConnector(Connector):
 
         The count of labels for a specific labelvalue can be retrieved by
         
-        count = get_labelcount_for_im()
+        count = label_count_for_image()
 
         The label_index must be a value between 0 and count[label_value].
         '''      

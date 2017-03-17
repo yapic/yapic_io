@@ -39,7 +39,7 @@ class Connector(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_labelcount_for_im(self, image_nr):
+    def label_count_for_image(self, image_nr):
         '''
         returns for each label value the number of labels for this image
         
@@ -126,7 +126,7 @@ class Connector(metaclass=ABCMeta):
 
         The count of labels for a specific labelvalue can be retrieved by
         
-        count = get_labelcount_for_im()
+        count = label_count_for_image()
 
         The label_index must be a value between 0 and count[label_value].
         '''      

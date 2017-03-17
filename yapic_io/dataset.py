@@ -379,7 +379,7 @@ class Dataset(object):
 
         '''
         logger.info('start loading label counts...')
-        label_counts_raw = [self.pixel_connector.get_labelcount_for_im(im) \
+        label_counts_raw = [self.pixel_connector.label_count_for_image(im) \
                            for im in range(self.n_images)]
         
         #identify all label_values in dataset
