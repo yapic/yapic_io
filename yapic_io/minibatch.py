@@ -17,7 +17,7 @@ class Minibatch(object):
     '''
     
 
-    def __init__(self, dataset, batch_size, size_zxy, padding_zxy=(0,0,0)):
+    def __init__(self, dataset, batch_size, size_zxy, padding_zxy=(0, 0, 0)):
         
         '''
         :param dataset: dataset object, to connect to pixels and labels weights 
@@ -26,13 +26,13 @@ class Minibatch(object):
         :type batch_size: int
         :param size_zxy: 3d template size (size of classifier output tmeplate)
         :type size_zxy: tuple (with length 3)
-        :param padding_zxy: growing of pixel template in (z,x,y).
+        :param padding_zxy: growing of pixel template in (z, x, y).
         :type padding_zxy: tuple (with length 3)
         :param augment: if True, templates are randomly rotatted and sheared
         :type augment: bool
-        :param rotation_range: range of random rotation in degrees (min_angle,max_angle) 
+        :param rotation_range: range of random rotation in degrees (min_angle, max_angle) 
         :type rotation_angle: tuple (with length 2)
-        :param shear_range: range of random shear in degrees (min_angle,max_angle) 
+        :param shear_range: range of random shear in degrees (min_angle, max_angle) 
         :type shear_angle: tuple (with length 2)
         :param equalized: if True, less frequent labels are favored in randomized template selection
         :type equalized: bool
@@ -55,14 +55,14 @@ class Minibatch(object):
 
     def get_tpl_size_zxy(self):
         '''
-        Returns the size in (z,x,y) of the template. Should match the size in (z,x,y)
+        Returns the size in (z, x, y) of the template. Should match the size in (z, x, y)
         of the network's output layer.
         '''
         return self._size_zxy
 
     def set_tpl_size_zxy(self, size_zxy):
         '''
-        Sets the size in (z,x,y) of the template. Should match the size in (z,x,y)
+        Sets the size in (z, x, y) of the template. Should match the size in (z, x, y)
         of the network's output layer.
 
         Must not be larger than the smallest image of the dataset!!
@@ -71,7 +71,7 @@ class Minibatch(object):
         if len(size_zxy) != 3: 
             raise ValueError(\
                 '''no valid size for probmap template: 
-                   shape is %s, len of shape should be 3: (z,x,y)'''\
+                   shape is %s, len of shape should be 3: (z, x, y)'''\
                                 % str(size_zxy))
 
         self._size_zxy = size_zxy
@@ -83,7 +83,7 @@ class Minibatch(object):
 
     def get_padding_zxy(self):
         '''
-        Returns the padding size in (z,x,y), i.e. the padding of the network's
+        Returns the padding size in (z, x, y), i.e. the padding of the network's
         input layer compared to its output layer.
 
         Padding size has to be defined by the user according to the used network
@@ -94,14 +94,14 @@ class Minibatch(object):
 
     def set_padding_zxy(self, padding_zxy):
         '''
-        Sets the padding size in (z,x,y), i.e. the padding of the network's
+        Sets the padding size in (z, x, y), i.e. the padding of the network's
         input layer compared to its output layer.
 
         Padding size has to be defined according to the used network
         structure.
 
-        Example: If the output layer's size is (1,6,4) and the input layer's 
-                 size is (1,8,6), then the padding in xyz is (0,1,1), i.e 
+        Example: If the output layer's size is (1, 6, 4) and the input layer's 
+                 size is (1, 8, 6), then the padding in xyz is (0, 1, 1), i.e 
                  the input layer grows 0 pixels in z, and 1 pixel in
                  in x and y, compared to the output layer. (The growth of
                  1 pixel at both ends results in a matrix that is 2 pixels larger
@@ -110,31 +110,31 @@ class Minibatch(object):
                 >>> import numpy as np
                 >>> from pprint import pprint
                 >>> 
-                >>> output_layer = np.zeros((1,6,4))
-                >>> input_layer = np.zeros((1,8,6)) #padded by (0,1,1) compared to output_layer
+                >>> output_layer = np.zeros((1, 6, 4))
+                >>> input_layer = np.zeros((1, 8, 6)) #padded by (0, 1, 1) compared to output_layer
                 >>> 
                 >>> pprint(output_layer)
-                array([[[ 0.,  0.,  0.,  0.],
-                        [ 0.,  0.,  0.,  0.],
-                        [ 0.,  0.,  0.,  0.],
-                        [ 0.,  0.,  0.,  0.],
-                        [ 0.,  0.,  0.,  0.],
-                        [ 0.,  0.,  0.,  0.]]])
+                array([[[ 0., 0., 0., 0.], 
+                        [ 0., 0., 0., 0.], 
+                        [ 0., 0., 0., 0.], 
+                        [ 0., 0., 0., 0.], 
+                        [ 0., 0., 0., 0.], 
+                        [ 0., 0., 0., 0.]]])
                 >>> pprint(input_layer)
-                array([[[ 0.,  0.,  0.,  0.,  0.,  0.],
-                        [ 0.,  0.,  0.,  0.,  0.,  0.],
-                        [ 0.,  0.,  0.,  0.,  0.,  0.],
-                        [ 0.,  0.,  0.,  0.,  0.,  0.],
-                        [ 0.,  0.,  0.,  0.,  0.,  0.],
-                        [ 0.,  0.,  0.,  0.,  0.,  0.],
-                        [ 0.,  0.,  0.,  0.,  0.,  0.],
-                        [ 0.,  0.,  0.,  0.,  0.,  0.]]])
+                array([[[ 0., 0., 0., 0., 0., 0.], 
+                        [ 0., 0., 0., 0., 0., 0.], 
+                        [ 0., 0., 0., 0., 0., 0.], 
+                        [ 0., 0., 0., 0., 0., 0.], 
+                        [ 0., 0., 0., 0., 0., 0.], 
+                        [ 0., 0., 0., 0., 0., 0.], 
+                        [ 0., 0., 0., 0., 0., 0.], 
+                        [ 0., 0., 0., 0., 0., 0.]]])
                    
         '''     
         if len(padding_zxy) != 3: 
             raise ValueError(\
                 '''no valid dimension for padding: 
-                   shape is %s, len of shape should be 3: (z,x,y)'''\
+                   shape is %s, len of shape should be 3: (z, x, y)'''\
                                 % str(padding_zxy.shape))
         self._padding_zxy = padding_zxy    
 
@@ -146,7 +146,7 @@ class Minibatch(object):
 
         The order of the channels list defines the order of the
         channels layer in the pixels (accessed with get_pixels()).
-        Pixels have the dimensionality (channels,z,x,y)
+        Pixels have the dimensionality (channels, z, x, y)
         
         >>> from yapic_io.factories import make_tiff_interface
         >>>
@@ -154,7 +154,7 @@ class Minibatch(object):
         >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
         >>> savepath = 'yapic_io/test_data/tmp/'
         >>> 
-        >>> tpl_size = (1,5,4)
+        >>> tpl_size = (1, 5, 4)
         >>> # make training_batch mb and prediction interface p: upon object initialization all available image channels are set
         >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size) #upon object initialization all available image channels are set
         >>>
@@ -162,7 +162,7 @@ class Minibatch(object):
         >>> p.channel_list() #we have 3 channels in the prediction interface
         [0, 1, 2]
         >>> 
-        >>> p[0].pixels().shape #accordingly, we have 3 channels in the 5D pixels template (n,c,z,x,y)
+        >>> p[0].pixels().shape #accordingly, we have 3 channels in the 5D pixels template (n, c, z, x, y)
         (10, 3, 1, 5, 4)
         >>> 
         '''
@@ -180,14 +180,14 @@ class Minibatch(object):
         >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
         >>> savepath = 'yapic_io/test_data/tmp/'
         >>> 
-        >>> tpl_size = (1,5,4)
+        >>> tpl_size = (1, 5, 4)
         >>> #upon object initialization all available image channels are set
         >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size)
         >>>
         >>>
         >>> p.channel_list() #we have 3 channels
         [0, 1, 2]
-        >>> p[0].pixels().shape #accordingly, we have 3 channels in the 5D pixels template (n,c,z,x,y)
+        >>> p[0].pixels().shape #accordingly, we have 3 channels in the 5D pixels template (n, c, z, x, y)
         (10, 3, 1, 5, 4)
         >>>
         >>> p.remove_channel(1) #remove channel 1
@@ -218,7 +218,7 @@ class Minibatch(object):
             raise ValueError('not possible to add channel %s from dataset channels %s'\
                 % (str(channel), str(self._dataset.channel_list())))
 
-        insort_left(self._channels,channel)    
+        insort_left(self._channels, channel)    
         return True
         
     
@@ -249,7 +249,7 @@ class Minibatch(object):
         >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
         >>> savepath = 'yapic_io/test_data/tmp/'
         >>> 
-        >>> tpl_size = (1,5,4)
+        >>> tpl_size = (1, 5, 4)
         >>> #upon object initialization all available image channels are set
         >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size)
         >>>
@@ -280,7 +280,7 @@ class Minibatch(object):
         >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
         >>> savepath = 'yapic_io/test_data/tmp/'
         >>> 
-        >>> tpl_size = (1,5,4)
+        >>> tpl_size = (1, 5, 4)
         >>> #upon object initialization all available image channels are set
         >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size)
         >>>
@@ -313,7 +313,7 @@ class Minibatch(object):
             raise ValueError('not possible to add label class %s from dataset label classes %s'\
                 % (str(label), str(self._dataset.label_values())))
 
-        insort_left(self._labels,label)    
+        insort_left(self._labels, label)    
         return True    
 
 

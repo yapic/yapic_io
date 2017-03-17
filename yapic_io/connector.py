@@ -16,7 +16,7 @@ class Connector(metaclass=ABCMeta):
 
     - Images are 4D datasets with following dimensions: (channel, z, x, y)
     
-    - All images must have the same nr of channels but can vary in z,x, and y.
+    - All images must have the same nr of channels but can vary in z, x, and y.
     
     - Time series are not supported. However, time frames can be modeled as
       individual images.  
@@ -44,9 +44,9 @@ class Connector(metaclass=ABCMeta):
         returns for each label value the number of labels for this image
         
         label_counts = {
-             label_value_1 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...],
-             label_value_2 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...],
-             label_value_3 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...],
+             label_value_1 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...], 
+             label_value_2 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...], 
+             label_value_3 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...], 
              ...
         }
 
@@ -76,10 +76,10 @@ class Connector(metaclass=ABCMeta):
         returns a 3d zxy boolean matrix where positions of the reuqested label
         are indicated with True. only mapped labelvalues can be requested.
 
-        dimension order: (z,x,y)
+        dimension order: (z, x, y)
 
         :param image_nr: index of image
-        :param pos_zxy: upper left position of subsection (zslice,x,y)
+        :param pos_zxy: upper left position of subsection (zslice, x, y)
         :type pos_zxy: 4 element tuple of integers (zslice, x, y)
         :param label_value: the id of the label
         :type label_value: integer
@@ -97,9 +97,9 @@ class Connector(metaclass=ABCMeta):
         output of the classier)
 
         :param pixels: 3D matrix of probability values
-        :type pixels: 3D numpy array of floats with shape (z,x,y)
+        :type pixels: 3D numpy array of floats with shape (z, x, y)
         :param pos_zxy: upper left position of pixels in source image_nr
-        :type pos_zxy: tuple of length 3 (z,x,y) with integer values
+        :type pos_zxy: tuple of length 3 (z, x, y) with integer values
         :param image_nr: index of image
         :param label_value: the id of the label
         :type label_value: integer
@@ -139,16 +139,16 @@ class Connector(metaclass=ABCMeta):
     #     dimensions with corresponding pixel data 
 
     #     {
-    #         label_nr1 : numpy.array([[c,z,x,y],
-    #                                  [c,z,x,y],
-    #                                  [c,z,x,y],
-    #                                  [c,z,x,y],
-    #                                  ...]),
-    #         label_nr2 : numpy.array([[c,z,x,y],
-    #                                  [c,z,x,y],
-    #                                  [c,z,x,y],
-    #                                  [c,z,x,y],
-    #                                  ...]),
+    #         label_nr1 : numpy.array([[c, z, x, y], 
+    #                                  [c, z, x, y], 
+    #                                  [c, z, x, y], 
+    #                                  [c, z, x, y], 
+    #                                  ...]), 
+    #         label_nr2 : numpy.array([[c, z, x, y], 
+    #                                  [c, z, x, y], 
+    #                                  [c, z, x, y], 
+    #                                  [c, z, x, y], 
+    #                                  ...]), 
     #         ...
     #     }
 

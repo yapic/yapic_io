@@ -114,8 +114,8 @@ def calc_warping_shift(image_shape, rotation_angle, shear_angle):
     mat = np.arange(image_shape[0]*image_shape[1]).reshape((image_shape))
     center_pos = (np.array(image_shape)-1)/2
     
-    z[:,center_pos[1]] = 111
-    z[center_pos[0],:] = 256
+    z[:, center_pos[1]] = 111
+    z[center_pos[0], :] = 256
     z[center_pos[0], center_pos[1]-2:center_pos[1]+2] = 256
     m2 = warp_image_2d(mat, rotation_angle, shear_angle)
     z_rot = warp_image_2d(z, rotation_angle, shear_angle)

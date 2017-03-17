@@ -62,7 +62,7 @@ class TiffConnector(Connector):
         Different labels from different channels can overlap (can share identical
         xyz positions).
 
-        Multichannel_pixel_image,  multichannel_pixel_image and zstack
+        Multichannel_pixel_image, multichannel_pixel_image and zstack
         can be set to None. In this case the importer tries to map 
         dimensions automatically. This does not always work, esp. in case
         of 3 dimensional images. 
@@ -70,11 +70,11 @@ class TiffConnector(Connector):
         
         Examples:
         
-        - If zstack is set to False and multichannel_pixel_image is set to None,
+        - If zstack is set to False and multichannel_pixel_image is set to None, 
           the importer will assign the thrid dimensions (in case of 3 dimensional images)
           to channels, i.e. interprets the image as multichannel, single z image.
 
-        - If zstack is set to None and multichannel_pixel_image is set to None,
+        - If zstack is set to None and multichannel_pixel_image is set to None, 
           the importer will assign all dims correctly in case of 4 dimensional images
           and in case of 2 dimensional images (single z, singechannel). In case of 3
           dimensional images, it throws an error, because it is not clear if the thrid
@@ -164,10 +164,10 @@ class TiffConnector(Connector):
                       for img, lbl in self.filenames
                       if lbl is not None]
 
-        return TiffConnector(img_fnames, lbl_fnames,
-                             savepath=self.savepath,
-                             multichannel_pixel_image=self.multichannel_pixel_image,
-                             multichannel_label_image=self.multichannel_label_image,
+        return TiffConnector(img_fnames, lbl_fnames, 
+                             savepath=self.savepath, 
+                             multichannel_pixel_image=self.multichannel_pixel_image, 
+                             multichannel_label_image=self.multichannel_label_image, 
                              zstack=self.zstack)
 
 
@@ -198,15 +198,15 @@ class TiffConnector(Connector):
         if len(img_fnames1) == N:
             warning.warn('TiffConnector.split({}): Second connector is empty!'.format(fraction))
 
-        conn1 = TiffConnector(img_fnames1, lbl_fnames1,
-                              savepath=self.savepath,
-                              multichannel_pixel_image=self.multichannel_pixel_image,
-                              multichannel_label_image=self.multichannel_label_image,
+        conn1 = TiffConnector(img_fnames1, lbl_fnames1, 
+                              savepath=self.savepath, 
+                              multichannel_pixel_image=self.multichannel_pixel_image, 
+                              multichannel_label_image=self.multichannel_label_image, 
                               zstack=self.zstack)
-        conn2 = TiffConnector(img_fnames2, lbl_fnames2,
-                              savepath=self.savepath,
-                              multichannel_pixel_image=self.multichannel_pixel_image,
-                              multichannel_label_image=self.multichannel_label_image,
+        conn2 = TiffConnector(img_fnames2, lbl_fnames2, 
+                              savepath=self.savepath, 
+                              multichannel_pixel_image=self.multichannel_pixel_image, 
+                              multichannel_label_image=self.multichannel_label_image, 
                               zstack=self.zstack)
 
         return conn1, conn2
@@ -224,7 +224,7 @@ class TiffConnector(Connector):
 
         if not len(pixels.shape) == 3:
             raise ValueError('''probability map pixel template
-             must have 3 dimensions (z,x,y), but has %s : 
+             must have 3 dimensions (z, x, y), but has %s : 
              pixels shape is %s''' % \
              (str(len(pixels.shape)), str(pixels.shape)))
 
@@ -248,7 +248,7 @@ class TiffConnector(Connector):
         if self.savepath is None:
             raise ValueError('savepath not set')
         image_filename = self.filenames[image_nr][0]
-        probmap_filename = add_to_filename(image_filename,\
+        probmap_filename = add_to_filename(image_filename, \
                      'class_' + str(label_value))
         return os.path.join(self.savepath, probmap_filename)
 
@@ -278,7 +278,7 @@ class TiffConnector(Connector):
         :returns (nr_channels, nr_zslices, nr_x, nr_y)
         '''
         path = os.path.join(self.img_path, self.filenames[image_nr][0])
-        return ip.get_tiff_image_dimensions(path,\
+        return ip.get_tiff_image_dimensions(path, \
             zstack=self.zstack, multichannel=self.multichannel_pixel_image) 
 
 
@@ -292,7 +292,7 @@ class TiffConnector(Connector):
         '''
         if self.exists_label_for_image(image_nr):
             path = os.path.join(self.label_path, self.filenames[image_nr][1])
-            return ip.get_tiff_image_dimensions(path,\
+            return ip.get_tiff_image_dimensions(path, \
                 zstack=self.zstack, multichannel=self.multichannel_label_image)               
     
          
@@ -347,7 +347,7 @@ class TiffConnector(Connector):
 
         boolmat_3d = boolmat_4d.any(axis=0) # reduction to zxy dimension
         # comment: mapped labelvalues are unique for a channel, as they
-        # are generated with map_labelvalues(). This means,
+        # are generated with map_labelvalues(). This means, 
         # a mapped labelvalue is only present in one specific channel.
         # This means: there chould be not more than one truthy value along the
         # channel dimension in boolmat_4d. this is not doublechecked here.
@@ -364,7 +364,7 @@ class TiffConnector(Connector):
         the albelmatrix consists of zeros (no label) or the respective
         label value.
 
-        if original_labelvalues is False, the mapped label values are returned,
+        if original_labelvalues is False, the mapped label values are returned, 
         otherwise the original labelvalues.
         '''
         label_filename = self.filenames[image_nr][1]      
@@ -374,9 +374,9 @@ class TiffConnector(Connector):
             return None
         
         path = os.path.join(self.label_path, label_filename)
-        logger.debug('try loading labelmat %s',path)
+        logger.debug('try loading labelmat %s', path)
         
-        label_image = ip.import_tiff_image(path,\
+        label_image = ip.import_tiff_image(path, \
                 zstack=self.zstack, multichannel=self.multichannel_label_image)    
 
         if original_labelvalues:
@@ -393,7 +393,7 @@ class TiffConnector(Connector):
         for multichannel label images it might happen, that identical
         labels occur in different channels.
         to avoid conflicts, original labelvalues are mapped to unique values
-        in ascending order 1,2,3,4...
+        in ascending order 1, 2, 3, 4...
 
         This is defined in self.labelvalue_mapping:
 
@@ -450,7 +450,7 @@ class TiffConnector(Connector):
         out = []    
         nr_channels = mat.shape[0]
         for channel in range(nr_channels):
-            values =  np.unique(mat[channel,:,:,:])
+            values =  np.unique(mat[channel, :, :, :])
             values = values[values!=0]
             out.append(set(values))
         return out
@@ -481,7 +481,7 @@ class TiffConnector(Connector):
         return label_count
 
     
-    def is_labelvalue_valid(self,label_value):
+    def is_labelvalue_valid(self, label_value):
         labelvalues = flatten(d.values() for d in self.labelvalue_mapping)
         return label_value in set(labelvalues)
             
@@ -515,7 +515,7 @@ class TiffConnector(Connector):
                 not correct. Only %s labels of that value for this image''' %\
                 (str(label_index), str(label_value), str(image_nr), str(n_coors)))
 
-        coor = coors[:,label_index]    
+        coor = coors[:, label_index]    
         coor[0] = 0 # set channel to zero
         
         return coor

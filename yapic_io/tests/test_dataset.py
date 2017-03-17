@@ -18,7 +18,7 @@ class TestDataset(TestCase):
     def test_n_images(self):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        c = TiffConnector(img_path,'path/to/nowhere/')
+        c = TiffConnector(img_path, 'path/to/nowhere/')
         d = Dataset(c)
 
         self.assertEqual(d.n_images, 3)
@@ -44,7 +44,7 @@ class TestDataset(TestCase):
         size = (3, 5)
 
         res = ds.get_padding_size(shape, pos, size)
-        self.assertEqual([(3,0),(0,0)], res) 
+        self.assertEqual([(3, 0), (0, 0)], res) 
 
     def test_get_padding_size_3(self):
 
@@ -100,7 +100,7 @@ class TestDataset(TestCase):
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)    
         self.assertEqual(pos_tpl_val, pos_tpl)  
-        self.assertEqual(padding, [(4,5),(0,6)])
+        self.assertEqual(padding, [(4, 5), (0, 6)])
 
     def test_inner_template_size_2(self):
 
@@ -119,8 +119,8 @@ class TestDataset(TestCase):
 
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)        
-        self.assertEqual(pos_tpl, (0,0))
-        self.assertEqual(pd, [(4,0),(1,0)])        
+        self.assertEqual(pos_tpl, (0, 0))
+        self.assertEqual(pd, [(4, 0), (1, 0)])        
 
     def test_inner_template_size_3(self):
 
@@ -139,8 +139,8 @@ class TestDataset(TestCase):
 
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)        
-        self.assertEqual(pos_tpl, (0,0))
-        self.assertEqual(pd, [(2,0),(3,0)])        
+        self.assertEqual(pos_tpl, (0, 0))
+        self.assertEqual(pd, [(2, 0), (3, 0)])        
 
     def test_inner_template_size_4(self):
 
@@ -159,8 +159,8 @@ class TestDataset(TestCase):
 
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)        
-        self.assertEqual(pos_tpl, (0,0))
-        self.assertEqual(pd, [(5,0),(0,0)])        
+        self.assertEqual(pos_tpl, (0, 0))
+        self.assertEqual(pd, [(5, 0), (0, 0)])        
 
 
     def test_inner_template_size_5(self):
@@ -180,8 +180,8 @@ class TestDataset(TestCase):
 
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)        
-        self.assertEqual(pos_tpl, (0,0))
-        self.assertEqual(pd, [(0,0),(4,0)])        
+        self.assertEqual(pos_tpl, (0, 0))
+        self.assertEqual(pd, [(0, 0), (4, 0)])        
     def test_inner_template_size_6(self):
 
         shape = (7, 11)
@@ -199,8 +199,8 @@ class TestDataset(TestCase):
 
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)        
-        self.assertEqual(pos_tpl, (0,2))
-        self.assertEqual(pd, [(0,0),(0,4)]) 
+        self.assertEqual(pos_tpl, (0, 2))
+        self.assertEqual(pd, [(0, 0), (0, 4)]) 
 
     def test_inner_template_size_7(self):
 
@@ -219,8 +219,8 @@ class TestDataset(TestCase):
 
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)        
-        self.assertEqual(pos_tpl, (0,1))
-        self.assertEqual(pd, [(0,1),(0,3)]) 
+        self.assertEqual(pos_tpl, (0, 1))
+        self.assertEqual(pd, [(0, 1), (0, 3)]) 
 
     def test_inner_template_size_8(self):
 
@@ -239,8 +239,8 @@ class TestDataset(TestCase):
 
         self.assertEqual(tuple(pos_out), pos_val)
         self.assertEqual(tuple(size_out), size_val)        
-        self.assertEqual(tuple(pos_tpl), (1,2))
-        self.assertEqual(pd, [(0,3),(0,4)]) 
+        self.assertEqual(tuple(pos_tpl), (1, 2))
+        self.assertEqual(pd, [(0, 3), (0, 4)]) 
 
 
     def test_inner_template_size_9(self):
@@ -260,8 +260,8 @@ class TestDataset(TestCase):
 
         self.assertEqual(tuple(pos_out), pos_val)
         self.assertEqual(tuple(size_out), size_val)        
-        self.assertEqual(tuple(pos_tpl), (0,0))
-        self.assertEqual(pd, [(4,0),(1,0)]) 
+        self.assertEqual(tuple(pos_tpl), (0, 0))
+        self.assertEqual(pd, [(4, 0), (1, 0)]) 
 
     def test_inner_template_size_10(self):
 
@@ -280,8 +280,8 @@ class TestDataset(TestCase):
 
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)        
-        self.assertEqual(pos_tpl, (2,0))
-        self.assertEqual(pd, [(0,3),(0,0)]) 
+        self.assertEqual(pos_tpl, (2, 0))
+        self.assertEqual(pd, [(0, 3), (0, 0)]) 
 
 
 
@@ -302,15 +302,15 @@ class TestDataset(TestCase):
 
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)        
-        self.assertEqual(pos_tpl, (0,0))
-        self.assertEqual(pd, [(0,0),(0,0)])                 
+        self.assertEqual(pos_tpl, (0, 0))
+        self.assertEqual(pd, [(0, 0), (0, 0)])                 
                       
       
     def test_is_padding(self):
-        self.assertTrue(ds.is_padding([(2,3),(0,0)]))
-        self.assertTrue(ds.is_padding([(2,3),(20,3)]))
-        self.assertTrue(ds.is_padding([(0,0),(3,0)]))
-        self.assertFalse(ds.is_padding([(0,0),(0,0)]))
+        self.assertTrue(ds.is_padding([(2, 3), (0, 0)]))
+        self.assertTrue(ds.is_padding([(2, 3), (20, 3)]))
+        self.assertTrue(ds.is_padding([(0, 0), (3, 0)]))
+        self.assertFalse(ds.is_padding([(0, 0), (0, 0)]))
 
     def test_template_singlechannel_1(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
@@ -318,13 +318,13 @@ class TestDataset(TestCase):
         d = Dataset(c)
 
         image_nr = 2
-        pos = (0,0,0)
+        pos = (0, 0, 0)
         size= (3, 6, 4)
         channel = 0
         tpl = d.template_singlechannel(image_nr, pos, size, channel, reflect=False)
 
         
-        self.assertEqual(tpl.shape,(3,6,4))
+        self.assertEqual(tpl.shape, (3, 6, 4))
 
 
     def test_template_singlechannel_2(self):
@@ -333,17 +333,17 @@ class TestDataset(TestCase):
         d = Dataset(c)
 
         image_nr = 2
-        pos = (0,0,0)
+        pos = (0, 0, 0)
         size= (1, 6, 4)
         channel = 0
         tpl = d.template_singlechannel(image_nr, pos, size, channel, reflect=False)
 
         val = \
-        [[[151, 132, 154, 190],\
-           [140,  93, 122, 183],\
-           [148, 120, 133, 171],\
-           [165, 175, 166, 161],\
-           [175, 200, 184, 161],\
+        [[[151, 132, 154, 190], \
+           [140, 93, 122, 183], \
+           [148, 120, 133, 171], \
+           [165, 175, 166, 161], \
+           [175, 200, 184, 161], \
            [174, 180, 168, 157]]]
 
         val = np.array(val) 
@@ -358,14 +358,14 @@ class TestDataset(TestCase):
         d = Dataset(c)
 
         image_nr = 2
-        pos = (0,-1,-2)
+        pos = (0, -1, -2)
         size= (1, 3, 3)
         channel = 0
         tpl = d.template_singlechannel(image_nr, pos, size, channel, reflect=True)
 
         val = \
-        [[[132, 151, 151],\
-           [132,  151, 151],\
+        [[[132, 151, 151], \
+           [132, 151, 151], \
            [93, 140, 140]]]
         
         val = np.array(val) 
@@ -387,8 +387,8 @@ class TestDataset(TestCase):
         tpl = d.template_singlechannel(image_nr, pos, size, channel, reflect=True)
 
         val = \
-        [[[184, 161, 161, 184, 200, 175],\
-           [168,  157, 157, 168, 180, 174]]]
+        [[[184, 161, 161, 184, 200, 175], \
+           [168, 157, 157, 168, 180, 174]]]
         
         val = np.array(val) 
         print(val)
@@ -403,16 +403,16 @@ class TestDataset(TestCase):
         d = Dataset(c)
 
         img_nr = 2
-        pos_czxy = (0,0,0)
-        size_czxy = (1,6,4)
+        pos_czxy = (0, 0, 0)
+        size_czxy = (1, 6, 4)
         label_value = 3
-        mat = d._label_template_inner(img_nr,\
+        mat = d._label_template_inner(img_nr, \
          pos_czxy, size_czxy, label_value)
         
         val = np.zeros(size_czxy)
-        val[0,0,1] = 1
-        val[0,4,1] = 1
-        val[0,5,1] = 1 
+        val[0, 0, 1] = 1
+        val[0, 4, 1] = 1
+        val[0, 5, 1] = 1 
 
         np.testing.assert_array_equal(val, mat)
 
@@ -424,19 +424,19 @@ class TestDataset(TestCase):
         d = Dataset(c)
 
         img_nr = 2
-        pos_czxy = np.array((0,0,0))
-        size_czxy = np.array((1,6,4))
+        pos_czxy = np.array((0, 0, 0))
+        size_czxy = np.array((1, 6, 4))
         label_value = 3
-        mat = d.label_template(img_nr,\
+        mat = d.label_template(img_nr, \
          pos_czxy, size_czxy, label_value)
         
         val = np.zeros(size_czxy)
-        val[0,0,1] = 1
-        val[0,4,1] = 1
-        val[0,5,1] = 1 
+        val[0, 0, 1] = 1
+        val[0, 4, 1] = 1
+        val[0, 5, 1] = 1 
 
         self.assertTrue((val==mat).all())   
-        self.assertEqual(len(mat.shape),3)
+        self.assertEqual(len(mat.shape), 3)
 
 
     def test_label_template_2(self):
@@ -446,28 +446,28 @@ class TestDataset(TestCase):
         d = Dataset(c)
 
         img_nr = 2
-        pos_czxy = np.array((0,2,1))
-        size_czxy = np.array((1,7,2))
+        pos_czxy = np.array((0, 2, 1))
+        size_czxy = np.array((1, 7, 2))
         label_value = 3
-        mat = d.label_template(img_nr,\
+        mat = d.label_template(img_nr, \
          pos_czxy, size_czxy, label_value)
         
         val = np.zeros(size_czxy)
-        # val[0,0,1] = 1
-        # val[0,4,1] = 1
-        # val[0,5,1] = 1 
+        # val[0, 0, 1] = 1
+        # val[0, 4, 1] = 1
+        # val[0, 5, 1] = 1 
         
         print('tpl')
         print(mat)
 
         val = [\
-            [0.,0.],\
-            [0.,0.],\
-            [1.,0.],\
-            [1.,0.],\
-            [1.,0.],\
-            [1.,0.],\
-            [0.,0.]\
+            [0., 0.], \
+            [0., 0.], \
+            [1., 0.], \
+            [1., 0.], \
+            [1., 0.], \
+            [1., 0.], \
+            [0., 0.]\
         ]
         val = np.array(val)
         self.assertTrue((mat==val).all())         
@@ -481,19 +481,19 @@ class TestDataset(TestCase):
         
         d.set_label_weight(1.2, 3)
         img_nr = 2
-        pos_czxy = np.array((0,0,0))
-        size_czxy = np.array((1,6,4))
+        pos_czxy = np.array((0, 0, 0))
+        size_czxy = np.array((1, 6, 4))
         label_value = 3
         
-        mat = d._label_template_inner(img_nr,\
+        mat = d._label_template_inner(img_nr, \
          pos_czxy, size_czxy, label_value)
         
         val = np.zeros(size_czxy)
         print('valshae')
         print(val.shape)
-        val[0,0,1] = 1.2
-        val[0,4,1] = 1.2
-        val[0,5,1] = 1.2 
+        val[0, 0, 1] = 1.2
+        val[0, 4, 1] = 1.2
+        val[0, 5, 1] = 1.2 
         pprint('mat')
         pprint(mat)
         pprint(val)
@@ -516,19 +516,19 @@ class TestDataset(TestCase):
         assert_array_equal(val_1, t[1])
         assert_array_equal(val_2, t[2])
         assert_array_equal(val_3, t[3])
-        self.assertTrue(sorted(list(t.keys())), [1,2,3]) 
+        self.assertTrue(sorted(list(t.keys())), [1, 2, 3]) 
 
 
     def test_label_coordinate(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/')
 
-        img_fnames = [os.path.join(img_path, '6width4height3slices_rgb.tif'),
-                      os.path.join(img_path, '40width26height6slices_rgb.tif'),
-                      os.path.join(img_path, '40width26height3slices_rgb.tif'),]
-        label_fnames = [os.path.join(label_path, '6width4height3slices_rgb.tif'),
-                        None,
-                        os.path.join(label_path, '40width26height3slices_rgb.tif'),]
+        img_fnames = [os.path.join(img_path, '6width4height3slices_rgb.tif'), 
+                      os.path.join(img_path, '40width26height6slices_rgb.tif'), 
+                      os.path.join(img_path, '40width26height3slices_rgb.tif'), ]
+        label_fnames = [os.path.join(label_path, '6width4height3slices_rgb.tif'), 
+                        None, 
+                        os.path.join(label_path, '40width26height3slices_rgb.tif'), ]
 
 #        c = TiffConnector(img_path, label_path)
         c = TiffConnector(img_fnames, label_fnames)
@@ -538,12 +538,12 @@ class TestDataset(TestCase):
 
         label_value = 3
         choice = 5
-        res = d.label_coordinate(label_value,choice)
+        res = d.label_coordinate(label_value, choice)
         assert_array_equal(res, np.array((2, 0, 1, 39, 25)))
 
         label_value = 1
         choice = 0
-        res = d.label_coordinate(label_value,choice)
+        res = d.label_coordinate(label_value, choice)
         assert_array_equal(res, np.array((2, 0, 0, 0, 0)))
 
 
@@ -638,25 +638,25 @@ class TestDataset(TestCase):
 
 
         val = np.array(\
-            [[[[1., 1., 0., 0., 0., 0., 0., 0., 2.],\
-             [0., 1., 1., 0., 0., 0., 0., 2., 2.],\
-             [0., 0., 1., 1., 0., 0., 2., 2., 0.],\
-             [0., 0., 0., 1., 1., 2., 2., 0., 0.],\
-             [0., 0., 0., 0., 3., 3., 0., 0., 0.],\
-             [0., 0., 0., 2., 2., 1., 1., 0., 0.],\
-             [0., 0., 2., 2., 0., 0., 1., 1., 0.],\
-             [0., 2., 2., 0., 0., 0., 0., 1., 1.],\
+            [[[[1., 1., 0., 0., 0., 0., 0., 0., 2.], \
+             [0., 1., 1., 0., 0., 0., 0., 2., 2.], \
+             [0., 0., 1., 1., 0., 0., 2., 2., 0.], \
+             [0., 0., 0., 1., 1., 2., 2., 0., 0.], \
+             [0., 0., 0., 0., 3., 3., 0., 0., 0.], \
+             [0., 0., 0., 2., 2., 1., 1., 0., 0.], \
+             [0., 0., 2., 2., 0., 0., 1., 1., 0.], \
+             [0., 2., 2., 0., 0., 0., 0., 1., 1.], \
              [2., 2., 0., 0., 0., 0., 0., 0., 1.]]]])
 
 
 
         im = np.zeros((1, 1, 15, 15))
-        im[0,0, 7, :] = 1
-        im[0,0, :, 7] = 2
-        im[0,0, 7, 7] = 3
+        im[0, 0, 7, :] = 1
+        im[0, 0, :, 7] = 2
+        im[0, 0, 7, 7] = 3
 
-        pos = np.array((0,0,3,3))
-        size=np.array((1,1,9,9))
+        pos = np.array((0, 0, 3, 3))
+        size=np.array((1, 1, 9, 9))
         tpl = get_tpl_func(pos=pos, size=size, img=im)
 
         tpl_rot = ds.augment_template(im.shape, pos, size, \
@@ -708,8 +708,8 @@ class TestDataset(TestCase):
         im[0, 0, :, 7] = 2
         im[0, 0, 7, 7] = 3
 
-        pos =np.array((0,0,7,7))
-        size=np.array((1,1,1,1))
+        pos =np.array((0, 0, 7, 7))
+        size=np.array((1, 1, 1, 1))
         tpl = get_tpl_func(pos=pos, size=size, img=im)
 
         tpl_rot = ds.augment_template(im.shape, pos, size, \
@@ -730,15 +730,15 @@ class TestDataset(TestCase):
         d = Dataset(c)
 
         img = 2
-        pos_zxy = (0,0,0)
-        size_zxy = (1,4,3)
+        pos_zxy = (0, 0, 0)
+        size_zxy = (1, 4, 3)
         channels = [1]
 
         val = np.array(\
             [[[[102, 89, 82]\
-               ,[ 81, 37, 43]\
-               ,[ 87, 78, 68]\
-               ,[107, 153,125]]]]\
+               , [ 81, 37, 43]\
+               , [ 87, 78, 68]\
+               , [107, 153, 125]]]]\
             )
 
         tpl = d.multichannel_pixel_template(img, pos_zxy, size_zxy, channels)
@@ -755,20 +755,20 @@ class TestDataset(TestCase):
         d = Dataset(c)
 
         img = 2
-        pos_zxy = (0,0,0)
-        size_zxy = (1,4,3)
+        pos_zxy = (0, 0, 0)
+        size_zxy = (1, 4, 3)
         channels = [1]
-        pd = (0,2,3)
+        pd = (0, 2, 3)
 
         val = np.array(\
-            [[[[43, 37,  81,  81, 37, 43, 78, 78, 43]\
-              ,[82, 89, 102, 102, 89, 82, 87, 87, 82]\
-              ,[82, 89, 102, 102, 89, 82, 87, 87, 82]\
-              ,[43, 37, 81, 81, 37, 43, 78, 78, 43]\
-              ,[68, 78, 87, 87, 78, 68, 73, 73, 68]\
-              ,[125, 153, 107, 107, 153,125, 82, 82, 125]\
-              ,[161, 180, 121, 121, 180,161, 106, 106, 161]\
-              ,[147, 143, 111, 111, 143,147, 123, 123, 147]]]]\
+            [[[[43, 37, 81, 81, 37, 43, 78, 78, 43]\
+              , [82, 89, 102, 102, 89, 82, 87, 87, 82]\
+              , [82, 89, 102, 102, 89, 82, 87, 87, 82]\
+              , [43, 37, 81, 81, 37, 43, 78, 78, 43]\
+              , [68, 78, 87, 87, 78, 68, 73, 73, 68]\
+              , [125, 153, 107, 107, 153, 125, 82, 82, 125]\
+              , [161, 180, 121, 121, 180, 161, 106, 106, 161]\
+              , [147, 143, 111, 111, 143, 147, 123, 123, 147]]]]\
             )
 
         tpl = d.multichannel_pixel_template(img, pos_zxy, size_zxy, channels\
@@ -790,20 +790,20 @@ class TestDataset(TestCase):
         d = Dataset(c)
 
         img = 2
-        pos_zxy = (0,0,0)
-        size_zxy = (1,4,3)
+        pos_zxy = (0, 0, 0)
+        size_zxy = (1, 4, 3)
         channels = [1]
-        pd = (0,2,3)
+        pd = (0, 2, 3)
 
         val = np.array(\
-            [[[[ 73,  73,  43,  89,  89, 102,  81,  87,  78]\
-               ,[ 82,  68,  78,  37, 102, 102, 102,  37,  68]\
-               ,[161, 153,  78,  87,  81, 102,  89,  82,  78]\
-               ,[180, 180, 107,  87,  87,  37,  82,  87,  87]\
-               ,[143, 121, 121, 107,  78,  68,  78,  87,  87]\
-               ,[111, 111, 121, 180, 125,  73,  73,  78,  82]\
-               ,[121, 111, 143, 161, 106,  82,  73,  68,  43]\
-               ,[121, 180, 147, 123, 106, 106, 125,  68,  78]]]]
+            [[[[ 73, 73, 43, 89, 89, 102, 81, 87, 78]\
+               , [ 82, 68, 78, 37, 102, 102, 102, 37, 68]\
+               , [161, 153, 78, 87, 81, 102, 89, 82, 78]\
+               , [180, 180, 107, 87, 87, 37, 82, 87, 87]\
+               , [143, 121, 121, 107, 78, 68, 78, 87, 87]\
+               , [111, 111, 121, 180, 125, 73, 73, 78, 82]\
+               , [121, 111, 143, 161, 106, 82, 73, 68, 43]\
+               , [121, 180, 147, 123, 106, 106, 125, 68, 78]]]]
             )
 
         tpl = d.multichannel_pixel_template(img, pos_zxy, size_zxy, channels\
@@ -822,18 +822,18 @@ class TestDataset(TestCase):
         d = Dataset(c)
 
         img = 2
-        pos_zxy = (0,0,0)
-        size_zxy = (1,4,3)
+        pos_zxy = (0, 0, 0)
+        size_zxy = (1, 4, 3)
         channels = [1]
         labels = [2, 3]
         
 
-        tr = d.training_template(img, pos_zxy, size_zxy, channels, labels,\
+        tr = d.training_template(img, pos_zxy, size_zxy, channels, labels, \
             pixel_padding=(0, 1, 2))
 
         print(tr)
-        self.assertEqual(tr.pixels.shape, (1,1,6,7))
-        self.assertEqual(tr.weights.shape, (2,1,4,3))
+        self.assertEqual(tr.pixels.shape, (1, 1, 6, 7))
+        self.assertEqual(tr.weights.shape, (2, 1, 4, 3))
 
         #self.assertTrue(False)
 
@@ -860,12 +860,12 @@ class TestDataset(TestCase):
         c = TiffConnector(img_path, label_path)
         d = Dataset(c)
 
-        size = (1,3,4)
-        pad = (1,2,2)
-        channels = [0,1,2]
+        size = (1, 3, 4)
+        pad = (1, 2, 2)
+        channels = [0, 1, 2]
 
-        pixel_shape_val = (3,3,7,8)
-        weight_shape_val = (3,1,3,4)
+        pixel_shape_val = (3, 3, 7, 8)
+        weight_shape_val = (3, 1, 3, 4)
         #labels_val = [91, 109, 150]
         
         #mapping [{91: 1, 109: 2, 150: 3}]
@@ -874,10 +874,10 @@ class TestDataset(TestCase):
             size, channels, pixel_padding=pad, rotation_angle=45)
 
         
-        self.assertEqual(tpl.pixels.shape,pixel_shape_val)
-        self.assertEqual(tpl.channels,channels)
-        self.assertEqual(tpl.weights.shape,weight_shape_val)
-        self.assertEqual(tpl.labels,labels_val)
+        self.assertEqual(tpl.pixels.shape, pixel_shape_val)
+        self.assertEqual(tpl.channels, channels)
+        self.assertEqual(tpl.weights.shape, weight_shape_val)
+        self.assertEqual(tpl.labels, labels_val)
 
 
     def test_random_training_template_spec_label(self):
@@ -886,9 +886,9 @@ class TestDataset(TestCase):
         c = TiffConnector(img_path, label_path)
         d = Dataset(c)
 
-        size = (1,1,1)
-        pad = (0,2,2)
-        channels = [0,1,2]
+        size = (1, 1, 1)
+        pad = (0, 2, 2)
+        channels = [0, 1, 2]
 
         
         labels_val = [1, 2, 3]
@@ -904,15 +904,15 @@ class TestDataset(TestCase):
             size, channels, pixel_padding=pad, rotation_angle=45, label_region=3)
 
         print(tpl_1[2])
-        self.assertEqual(tpl_1[2][0][0][0][0],1)
-        self.assertEqual(tpl_2[2][1][0][0][0],1)
-        self.assertEqual(tpl_3[2][2][0][0][0],1)
-        #self.assertEqual(tpl_1['weights'][0][0][0][0],1)
+        self.assertEqual(tpl_1[2][0][0][0][0], 1)
+        self.assertEqual(tpl_2[2][1][0][0][0], 1)
+        self.assertEqual(tpl_3[2][2][0][0][0], 1)
+        #self.assertEqual(tpl_1['weights'][0][0][0][0], 1)
 
-        # self.assertEqual(tpl.pixels.shape,pixel_shape_val)
-        # self.assertEqual(tpl.channels,channels)
-        # self.assertEqual(tpl.weights.shape,weight_shape_val)
-        # self.assertEqual(tpl.labels,labels_val)
+        # self.assertEqual(tpl.pixels.shape, pixel_shape_val)
+        # self.assertEqual(tpl.channels, channels)
+        # self.assertEqual(tpl.weights.shape, weight_shape_val)
+        # self.assertEqual(tpl.labels, labels_val)
     
 
     
@@ -923,7 +923,7 @@ class TestDataset(TestCase):
         c = TiffConnector(img_path, label_path, savepath=savepath)
         d = Dataset(c)
 
-        pixels = np.array([[[.1, .2, .3],\
+        pixels = np.array([[[.1, .2, .3], \
                             [.4, .5, .6]]], dtype=np.float32)
         
         path = savepath + '6width4height3slices_rgb_class_2.tif'
@@ -933,29 +933,29 @@ class TestDataset(TestCase):
         except:
             pass    
 
-        d.put_prediction_template(pixels, pos_zxy=(0,1,1), image_nr=2, label_value=2)
+        d.put_prediction_template(pixels, pos_zxy=(0, 1, 1), image_nr=2, label_value=2)
         probim = ip.import_tiff_image(path, zstack=True)
         pprint(probim)
 
         val = \
-        np.array([[[[ 0.        ,  0.        ,  0.        ,  0.        ],\
-         [ 0.        ,  0.1       ,  0.2       ,  0.3       ],\
-         [ 0.        ,  0.4       ,  0.5       ,  0.6       ],\
-         [ 0.        ,  0.        ,  0.        ,  0.        ],\
-         [ 0.        ,  0.        ,  0.        ,  0.        ],\
-         [ 0.        ,  0.        ,  0.        ,  0.        ]],\
-        [[ 0.        ,  0.        ,  0.        ,  0.        ],\
-         [ 0.        ,  0.        ,  0.        ,  0.        ],\
-         [ 0.        ,  0.        ,  0.        ,  0.        ],\
-         [ 0.        ,  0.        ,  0.        ,  0.        ],\
-         [ 0.        ,  0.        ,  0.        ,  0.        ],\
-         [ 0.        ,  0.        ,  0.        ,  0.        ]],\
-        [[ 0.        ,  0.        ,  0.        ,  0.        ],\
-         [ 0.        ,  0.        ,  0.        ,  0.        ],\
-         [ 0.        ,  0.        ,  0.        ,  0.        ],\
-         [ 0.        ,  0.        ,  0.        ,  0.        ],\
-         [ 0.        ,  0.        ,  0.        ,  0.        ],\
-         [ 0.        ,  0.        ,  0.        ,  0.        ]]]], dtype=np.float32)
+        np.array([[[[ 0.        , 0.        , 0.        , 0.        ], \
+         [ 0.        , 0.1       , 0.2       , 0.3       ], \
+         [ 0.        , 0.4       , 0.5       , 0.6       ], \
+         [ 0.        , 0.        , 0.        , 0.        ], \
+         [ 0.        , 0.        , 0.        , 0.        ], \
+         [ 0.        , 0.        , 0.        , 0.        ]], \
+        [[ 0.        , 0.        , 0.        , 0.        ], \
+         [ 0.        , 0.        , 0.        , 0.        ], \
+         [ 0.        , 0.        , 0.        , 0.        ], \
+         [ 0.        , 0.        , 0.        , 0.        ], \
+         [ 0.        , 0.        , 0.        , 0.        ], \
+         [ 0.        , 0.        , 0.        , 0.        ]], \
+        [[ 0.        , 0.        , 0.        , 0.        ], \
+         [ 0.        , 0.        , 0.        , 0.        ], \
+         [ 0.        , 0.        , 0.        , 0.        ], \
+         [ 0.        , 0.        , 0.        , 0.        ], \
+         [ 0.        , 0.        , 0.        , 0.        ], \
+         [ 0.        , 0.        , 0.        , 0.        ]]]], dtype=np.float32)
         
         self.assertTrue((val==probim).all())
 

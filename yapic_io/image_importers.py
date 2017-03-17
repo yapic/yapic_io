@@ -71,7 +71,7 @@ def get_tiff_image_dimensions(path, multichannel=None, zstack=None):
 
 def import_tiff_image(path, multichannel=None, zstack=None):
     '''
-    Returns a tiff image as numpy array with dimensions (c,z,x,y).
+    Returns a tiff image as numpy array with dimensions (c, z, x, y).
 
     :param path: path to file
     :param multichannel: if True, the image is interpreted as multichannel image in unclear cases
@@ -84,11 +84,11 @@ def import_tiff_image(path, multichannel=None, zstack=None):
         
     Examples:
     
-    - If zstack is set to False and multichannel is set to None,
+    - If zstack is set to False and multichannel is set to None, 
       the importer will assign the thrid dimensions (in case of 3 dimensional images)
       to channels, i.e. interprets the image as multichannel, single z image.
 
-    - If zstack is set to None and multichannel is set to None,
+    - If zstack is set to None and multichannel is set to None, 
       the importer will assign all dims correctly in case of 4 dimensional images
       and in case of 2 dimensional images (single z, singechannel). In case of 3
       dimensional images, it throws an error, because it is not clear if the thrid
@@ -103,16 +103,16 @@ def import_tiff_image(path, multichannel=None, zstack=None):
         return IOError('can not read images with more than 4 dimensions (czxy)')
 
     if n_dims == 2: #case one z, one channel 
-        img = np.swapaxes(img,0,1) # (y,x) -> (x,y)
-        img = np.expand_dims(img,axis=0) # (x,y) -> (z,x,y)
-        img = np.expand_dims(img,axis=0) # (z,x,y) -> (c,z,x,y)
+        img = np.swapaxes(img, 0, 1) # (y, x) -> (x, y)
+        img = np.expand_dims(img, axis=0) # (x, y) -> (z, x, y)
+        img = np.expand_dims(img, axis=0) # (z, x, y) -> (c, z, x, y)
         return img
 
     rgb = is_rgb_image(path)
         
     if n_dims == 3 and rgb: #case one z, three channels in rgb mode
-        img = np.swapaxes(img,0,2) # (y,x,c) -> (c,x,y)
-        img = np.expand_dims(img,axis=1) # (c,x,y) -> (c,z,x,y)
+        img = np.swapaxes(img, 0, 2) # (y, x, c) -> (c, x, y)
+        img = np.expand_dims(img, axis=1) # (c, x, y) -> (c, z, x, y)
         return img
 
     #try to determine multichannel or multi_z automatically in case of 3 dims
@@ -130,24 +130,24 @@ def import_tiff_image(path, multichannel=None, zstack=None):
     
 
     if n_dims == 3 and not rgb and multichannel and not zstack: #case one z, >1 channels in grayscale mode
-        img = np.swapaxes(img,1,2) # (c,y,x) -> (c,x,y)
-        img = np.expand_dims(img,axis=1) # (c,x,y) -> (c,z,x,y)
+        img = np.swapaxes(img, 1, 2) # (c, y, x) -> (c, x, y)
+        img = np.expand_dims(img, axis=1) # (c, x, y) -> (c, z, x, y)
         return img
 
     if n_dims == 3 and not rgb and zstack and not multichannel: #case >1 z, 1 channel in grayscale mode
-        img = np.swapaxes(img,1,2) # (z,y,x) -> (z,x,y)
-        img = np.expand_dims(img,axis=0) # (z,x,y) -> (c,z,x,y)
+        img = np.swapaxes(img, 1, 2) # (z, y, x) -> (z, x, y)
+        img = np.expand_dims(img, axis=0) # (z, x, y) -> (c, z, x, y)
         return img
 
 
     if n_dims == 4 and rgb: #case >1 z, three channel in rgb mode
-        img = np.swapaxes(img,1,3) # (z,y,x,c) -> (z,c,x,y)
-        img = np.swapaxes(img,0,1) # (z,c,x,y) -> (c,z,x,y)
+        img = np.swapaxes(img, 1, 3) # (z, y, x, c) -> (z, c, x, y)
+        img = np.swapaxes(img, 0, 1) # (z, c, x, y) -> (c, z, x, y)
         return img
 
     if n_dims == 4 and not rgb: #case >1 z, >1 channel in grayscale mode
-        img = np.swapaxes(img,2,3) # (z,c,y,x) -> (z,c,x,y)
-        img = np.swapaxes(img,0,1) # (z,c,x,y) -> (c,z,x,y)
+        img = np.swapaxes(img, 2, 3) # (z, c, y, x) -> (z, c, x, y)
+        img = np.swapaxes(img, 0, 1) # (z, c, x, y) -> (c, z, x, y)
         return img
 
     
@@ -178,12 +178,12 @@ def import_tiff_image(path, multichannel=None, zstack=None):
 #     # print(dims)
 #     # add dimension for channel
 #     if dims[0] == 1:
-#         image = np.expand_dims(image,axis=-1)
+#         image = np.expand_dims(image, axis=-1)
 
 #     # bring dimensions in right order
-#     # (z,y,x,c) -> (c,z,x,y)
-#     image = np.swapaxes(image,3,0) # (z,y,x,c) -> (c,y,x,z)
-#     image = np.swapaxes(image,1,3) # (c,y,x,z) -> (c,z,x,y)
+#     # (z, y, x, c) -> (c, z, x, y)
+#     image = np.swapaxes(image, 3, 0) # (z, y, x, c) -> (c, y, x, z)
+#     image = np.swapaxes(image, 1, 3) # (c, y, x, z) -> (c, z, x, y)
     
 #     return image
 
@@ -200,8 +200,8 @@ def init_empty_tiff_image(path, x_size, y_size, z_size=1):
 
     data = np.zeros((z_size, y_size, x_size), dtype=np.float32)
     logger.info('write empty tiff image with %s values to %s'\
-        , type(data[0,0,0]), path)
-    #print(type(data[0,0]))
+        , type(data[0, 0, 0]), path)
+    #print(type(data[0, 0]))
     #img = Image.fromarray(data)
     #img.save(path)
     imsave(path, data, imagej=True)
@@ -212,7 +212,7 @@ def add_vals_to_tiff_image(path, pos_zxy, pixels):
     opens a onechannel zstack tiff image, overwrites pixels values 
     with pixels at pos_zxy
     and overwrites the input tiff image with the new pixels.
-    pixels and pos_zxy are in order (z,x,y)
+    pixels and pos_zxy are in order (z, x, y)
 
     '''
     
@@ -223,13 +223,13 @@ def add_vals_to_tiff_image(path, pos_zxy, pixels):
 
     img = import_tiff_image(path, zstack=True)
 
-    pos_czxy = (0,) + pos_zxy
-    size_czxy = (1,) + pixels.shape
+    pos_czxy = (0, ) + pos_zxy
+    size_czxy = (1, ) + pixels.shape
     mesh = ut.get_template_meshgrid(img.shape, pos_czxy, size_czxy)
 
     img[mesh] = pixels
     img = np.squeeze(img, axis=0) #remove channel axis, which should be 1
-    img = np.swapaxes(img,2,1) # (z,x,y) -> (z,y,x)
+    img = np.swapaxes(img, 2, 1) # (z, x, y) -> (z, y, x)
     
     #imsave(path, img)
     #im = Image.fromarray(img)

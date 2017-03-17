@@ -124,7 +124,7 @@ class TestImageImports(TestCase):
         path = os.path.join(base_path, '../test_data/tif_images/6width_4height_2slices_8bit_grayscale_zstack.tif')
         
         im = ip.import_tiff_image(path, zstack=True)
-        self.assertEqual((1,2,6,4), im.shape)
+        self.assertEqual((1, 2, 6, 4), im.shape)
         
         
 
@@ -135,7 +135,7 @@ class TestImageImports(TestCase):
         im = ip.import_tiff_image(path)
         print(im.shape)
         print(np.unique(im.flatten()))
-        self.assertEqual((2,3,6,4), im.shape)
+        self.assertEqual((2, 3, 6, 4), im.shape)
 
     def test_init_empty_tiff_image(self):
         path = os.path.join(base_path, '../test_data/tmp/empty.tif')
@@ -150,7 +150,7 @@ class TestImageImports(TestCase):
 
         print(img2)
         print(img2.shape)
-        self.assertEqual(img2.shape, (1,1,70,50))
+        self.assertEqual(img2.shape, (1, 1, 70, 50))
         print(np.unique(img2[:]))
         print (type(np.unique(img2[:])[0]))
         self.assertTrue(isinstance(np.unique(img2[:])[0], np.float32))
@@ -175,7 +175,7 @@ class TestImageImports(TestCase):
 
         print(img2)
         print(img2.shape)
-        self.assertEqual(img2.shape, (1,5,70,50))
+        self.assertEqual(img2.shape, (1, 5, 70, 50))
         print(np.unique(img2[:]))
         print (type(np.unique(img2[:])[0]))
         self.assertTrue(isinstance(np.unique(img2[:])[0], np.float32))
@@ -209,17 +209,17 @@ class TestImageImports(TestCase):
         
         ip.init_empty_tiff_image(path, xsize, ysize)
 
-        pos = (0,1,2)
+        pos = (0, 1, 2)
 
-        pixels = np.array([[[0.1,0.2,0.3,0.4],\
-                           [0.5,0.6,0.7,0.8]]])
+        pixels = np.array([[[0.1, 0.2, 0.3, 0.4], \
+                           [0.5, 0.6, 0.7, 0.8]]])
 
         
         val = np.array(\
-         [[[[0, 0, 0, 0, 0, 0, 0],\
-            [0, 0, .1,.2,.3,.4,0],\
-            [0, 0, .5,.6,.7,.8,0],\
-            [0, 0, 0, 0, 0, 0, 0],\
+         [[[[0, 0, 0, 0, 0, 0, 0], \
+            [0, 0, .1, .2, .3, .4, 0], \
+            [0, 0, .5, .6, .7, .8, 0], \
+            [0, 0, 0, 0, 0, 0, 0], \
             [0, 0, 0, 0, 0, 0, 0]]]]\
             , dtype=np.float32)
 
@@ -231,8 +231,8 @@ class TestImageImports(TestCase):
         print(val.shape)
         print(img.shape)
         #r_img = np.around(img, decimals=2)
-        print(type(val[0,0,0,0]))
-        print(type(img[0,0,0,0]))
+        print(type(val[0, 0, 0, 0]))
+        print(type(img[0, 0, 0, 0]))
         print(val==img)
 
         self.assertTrue((val==img).all())
@@ -261,25 +261,25 @@ class TestImageImports(TestCase):
         
         ip.init_empty_tiff_image(path, xsize, ysize, z_size=zsize)
 
-        pos = (0,1,2)
+        pos = (0, 1, 2)
 
-        pixels = np.array([[[0.1,0.2,0.3,0.4],\
-                            [0.5,0.6,0.7,0.8]],\
-                           [[1.1,1.2,1.3,1.4],\
-                            [1.5,1.6,1.7,1.8]]\
+        pixels = np.array([[[0.1, 0.2, 0.3, 0.4], \
+                            [0.5, 0.6, 0.7, 0.8]], \
+                           [[1.1, 1.2, 1.3, 1.4], \
+                            [1.5, 1.6, 1.7, 1.8]]\
                            ])
 
         
         val = np.array(\
-         [[[[0, 0, 0, 0, 0, 0, 0],\
-            [0, 0, .1,.2,.3,.4,0],\
-            [0, 0, .5,.6,.7,.8,0],\
-            [0, 0, 0, 0, 0, 0, 0],\
-            [0, 0, 0, 0, 0, 0, 0]],\
-           [[0, 0, 0, 0, 0, 0, 0],\
-            [0, 0, 1.1,1.2,1.3,1.4,0],\
-            [0, 0, 1.5,1.6,1.7,1.8,0],\
-            [0, 0, 0, 0, 0, 0, 0],\
+         [[[[0, 0, 0, 0, 0, 0, 0], \
+            [0, 0, .1, .2, .3, .4, 0], \
+            [0, 0, .5, .6, .7, .8, 0], \
+            [0, 0, 0, 0, 0, 0, 0], \
+            [0, 0, 0, 0, 0, 0, 0]], \
+           [[0, 0, 0, 0, 0, 0, 0], \
+            [0, 0, 1.1, 1.2, 1.3, 1.4, 0], \
+            [0, 0, 1.5, 1.6, 1.7, 1.8, 0], \
+            [0, 0, 0, 0, 0, 0, 0], \
             [0, 0, 0, 0, 0, 0, 0]]\
          ]], dtype=np.float32)
 
@@ -291,8 +291,8 @@ class TestImageImports(TestCase):
         print(val.shape)
         print(img.shape)
         #r_img = np.around(img, decimals=2)
-        print(type(val[0,0,0,0]))
-        print(type(img[0,0,0,0]))
+        print(type(val[0, 0, 0, 0]))
+        print(type(img[0, 0, 0, 0]))
         print(val==img)
 
         self.assertTrue((val==img).all())

@@ -12,7 +12,7 @@ class PredictionBatch(Minibatch):
     List-like data interface for classification with neural networks.
 
     - Provides get_pixels() method for getting pixel templates from 
-      4D images (channels, z, x,y) that fit into your neural network 
+      4D images (channels, z, x, y) that fit into your neural network 
       input layer.
 
     - Pixel data is loaded lazily to support arbitrary large image datasets.
@@ -35,8 +35,8 @@ class PredictionBatch(Minibatch):
         >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/*.tif'
         >>> savepath = 'yapic_io/test_data/tmp/'
         >>> 
-        >>> tpl_size = (1,5,4) # size of network output layer in zxy
-        >>> padding = (0,0,0) # padding of network input layer in zxy, in respect to output layer
+        >>> tpl_size = (1, 5, 4) # size of network output layer in zxy
+        >>> padding = (0, 0, 0) # padding of network input layer in zxy, in respect to output layer
         >>>
         >>> # make training_batch mb and prediction interface p with TiffConnector binding
         >>> _, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size, padding_zxy=padding, training_batch_size=2) 
@@ -55,17 +55,17 @@ class PredictionBatch(Minibatch):
     '''
     
 
-    def __init__(self, dataset, batch_size, size_zxy, padding_zxy=(0,0,0)):
+    def __init__(self, dataset, batch_size, size_zxy, padding_zxy=(0, 0, 0)):
 
         '''
         :param dataset: Dataset object for data binding of 
                         image pixel data and classification results.
         :type dataset: Dataset
         :param size_zxy: zxy_size of the neural network output layer.
-        :type size_zxy: tuple of 3 integers (z,x,y)
+        :type size_zxy: tuple of 3 integers (z, x, y)
         :param padding_zxy: The padding of the network's input layer
                             relative to its output layer.
-        :type padding_zxy: Tuple of 3 integers (z,x,y).
+        :type padding_zxy: Tuple of 3 integers (z, x, y).
         '''
 
         super().__init__(dataset, batch_size, size_zxy, padding_zxy=padding_zxy)
@@ -99,10 +99,10 @@ class PredictionBatch(Minibatch):
         
         pixfunc = self._dataset.multichannel_pixel_template
 
-        pixels = [pixfunc(im_nr,\
-                  pos_zxy,\
-                  self._size_zxy,\
-                  self._channels,\
+        pixels = [pixfunc(im_nr, \
+                  pos_zxy, \
+                  self._size_zxy, \
+                  self._channels, \
                   self._padding_zxy)\
                         for im_nr, pos_zxy in self.get_curr_tpl_positions()]
 
@@ -115,7 +115,7 @@ class PredictionBatch(Minibatch):
         #     self._ge
         
         # return self._dataset.multichannel_pixel_template(\
-        #     self._image_nr, self._pos_zxy, self._size_zxy, self._channels,\
+        #     self._image_nr, self._pos_zxy, self._size_zxy, self._channels, \
         #     pixel_padding=self._padding_zxy)       
 
         
@@ -179,7 +179,7 @@ class PredictionBatch(Minibatch):
 
         To pass 3D probmaps for a certain label, use put_probmap_data_for_label() 
 
-        :param probmap_data: 4D matrix with shape (nr_labels, z,x,y).
+        :param probmap_data: 4D matrix with shape (nr_labels, z, x, y).
         :type probmap_data: numpy.array.
         :returns: bool (True if successful).
 
@@ -189,7 +189,7 @@ class PredictionBatch(Minibatch):
         if len(probmap_data.shape) != 5: 
             raise ValueError(\
                 '''no valid dimension for probmap template: 
-                   shape is %s, but nr of dimesnions must be 5: (n,c,z,x,y)'''\
+                   shape is %s, but nr of dimesnions must be 5: (n, c, z, x, y)'''\
                                 % str(probmap_data.shape))
 
         n_b, n_c, n_z, n_x, n_y = probmap_data.shape
@@ -229,13 +229,13 @@ class PredictionBatch(Minibatch):
             raise ValueError(\
                 '''tpl_pos_index too large: 
                    is %s, only %s tpl positions available in dataset'''\
-                                % (str(tpl_pos_index),str(len(self._tpl_pos_all))))
+                                % (str(tpl_pos_index), str(len(self._tpl_pos_all))))
 
 
         if len(probmap_data.shape) != 3: 
             raise ValueError(\
                 '''no valid dimension for probmap template: 
-                   shape is %s, len of shape should be 3: (z,x,y)'''\
+                   shape is %s, len of shape should be 3: (z, x, y)'''\
                                 % str(probmap_data.shape))
 
         n_z, n_x, n_y = probmap_data.shape

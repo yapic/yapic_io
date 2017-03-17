@@ -74,7 +74,7 @@ class Dataset(object):
     def random_training_template(self,
                                  size_zxy,
                                  channels,
-                                 pixel_padding=(0,0,0),
+                                 pixel_padding=(0, 0, 0),
                                  equalized=False,
                                  rotation_angle=0,
                                  shear_angle=0,
@@ -134,7 +134,7 @@ class Dataset(object):
                                         pixel_padding=(0, 0, 0),
                                         rotation_angle=0,
                                         shear_angle=0):
-        if not _check_pos_size(pos_zxy, size_zxy,3):
+        if not _check_pos_size(pos_zxy, size_zxy, 3):
             logger.debug('checked pos size in multichannel_pixel_template')
             raise ValueError('pos and size must have length 3. pos_zxy: %s, size_zxy: %s' \
             % (str(pos_zxy), str(size_zxy)))
@@ -150,7 +150,7 @@ class Dataset(object):
 
         pixel_tpl =  []
         for channel in channels:
-            tpl = self.template_singlechannel(image_nr,tuple(pos_padded), tuple(size_padded), channel,
+            tpl = self.template_singlechannel(image_nr, tuple(pos_padded), tuple(size_padded), channel,
                              rotation_angle=rotation_angle, shear_angle=shear_angle)
             pixel_tpl.append(tpl)
 
@@ -201,7 +201,7 @@ class Dataset(object):
                                      reflect=reflect,
                                      **{'image_nr' : image_nr})
 
-        return np.squeeze(tpl, axis=(0,))
+        return np.squeeze(tpl, axis=(0, ))
 
 
     def label_template(self,
@@ -376,7 +376,7 @@ class Dataset(object):
     def label_coordinate(self, label_value, label_index):
         '''
         for each labelvalue there exist `index` labels in the dataset.
-        returns the coordinate (image_nr,channel,z,x,y) of the nth label.
+        returns the coordinate (image_nr, channel, z, x, y) of the nth label.
         '''
         counts = self.label_counts[label_value]
         counts_cs = counts.cumsum()
@@ -399,7 +399,7 @@ class Dataset(object):
         '''
         returns a rondomly chosen label coordinate and the label value for a givel label value:
 
-        (label_value, (img_nr,channel,z,x,y))
+        (label_value, (img_nr, channel, z, x, y))
 
         channel is always zero!!
 
@@ -408,14 +408,14 @@ class Dataset(object):
         '''
         if not self.is_label_value_valid(label_value):
             raise ValueError('label value %s not valid, possible label values are %s'\
-                % (str(label_value),str(self.label_values())))
+                % (str(label_value), str(self.label_values())))
 
         counts = self.label_counts[label_value]
         total_count = counts.sum()
 
         if total_count < 1: # if no labels of that value
             raise ValueError('no labels of value %s existing' % str(label_value))
-        choice = random.randint(0,total_count-1)
+        choice = random.randint(0, total_count-1)
 
         return (label_value, self.label_coordinate(label_value, choice))
 
@@ -424,7 +424,7 @@ class Dataset(object):
         '''
         returns a randomly chosen label coordinate and the label value:
 
-        (label_value, (img_nr,channel,z,x,y))
+        (label_value, (img_nr, channel, z, x, y))
 
         channel is always zero!!
 
@@ -448,7 +448,7 @@ class Dataset(object):
             label_values = np.array(label_values)
 
             # pick a labelvalue according to the labelvalue probability
-            random_nr = random.uniform(0,1)
+            random_nr = random.uniform(0, 1)
             chosen_label = label_values[(random_nr <= total_counts_norm_cs).nonzero()[0][0]]
 
             return self.random_label_coordinate_for_label(chosen_label)
@@ -460,7 +460,7 @@ def label_values(self):
 
 def get_padding_size(shape, pos, size):
     '''
-    [(x_lower, x_upper), (y_lower,_y_upper)]
+    [(x_lower, x_upper), (y_lower, _y_upper)]
     '''
     padding_size = []
     for sh, po, si in zip(shape, pos, size):
@@ -470,7 +470,7 @@ def get_padding_size(shape, pos, size):
             p_l = abs(po)
         if po + si > sh:
             p_u = po + si - sh
-        padding_size.append((p_l,p_u))
+        padding_size.append((p_l, p_u))
     return padding_size
 
 
@@ -519,13 +519,13 @@ def inner_template_size(shape, pos, size):
     pos_out = pos + shift
 
     dist_lu_s = shape - pos - shift
-    size_new_1 = np.vstack([size,dist_lu_s]).min(axis=0)
+    size_new_1 = np.vstack([size, dist_lu_s]).min(axis=0)
     pos_r = pos.copy()
     pos_r[pos>0]=0
     size_inmat = size + pos_r
 
-    size_new_2 = np.vstack([padding_lower,size_inmat]).max(axis=0)
-    size_out = np.vstack([size_new_1,size_new_2]).min(axis=0)
+    size_new_2 = np.vstack([padding_lower, size_inmat]).max(axis=0)
+    size_out = np.vstack([size_new_1, size_new_2]).min(axis=0)
 
     return tuple(pos_out), tuple(size_out), tuple(pos_tpl), padding_sizes
 
@@ -586,7 +586,7 @@ def augment_template(shape,
     morphing has to be applied slice by slice
     '''
     if (rotation_angle == 0) and (shear_angle == 0):
-        return template_with_reflection(shape,  pos, size, get_template_func,
+        return template_with_reflection(shape, pos, size, get_template_func,
                                             reflect=reflect, **kwargs)
 
     if (size[-2]) == 1 and (size[-1] == 1):
@@ -600,7 +600,7 @@ def augment_template(shape,
     pos = np.array(pos)
 
     size_new = size * 3 # triple template size if morphing takes place
-    pos_new = pos-size
+    pos_new = pos - size
     tpl_large = template_with_reflection(shape, pos_new, size_new, get_template_func,
                                              reflect=reflect, **kwargs)
     tpl_large_morphed = trafo.warp_image_2d_stack(tpl_large, rotation_angle, shear_angle)

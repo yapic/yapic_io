@@ -22,19 +22,19 @@ class TrainingBatch(Minibatch):
     >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/*.tif'
     >>> savepath = 'yapic_io/test_data/tmp/'
     >>>
-    >>> tpl_size = (1,5,4) # size of network output layer in zxy
-    >>> padding = (0,2,2) # padding of network input layer in zxy, in respect to output layer
+    >>> tpl_size = (1, 5, 4) # size of network output layer in zxy
+    >>> padding = (0, 2, 2) # padding of network input layer in zxy, in respect to output layer
     >>>
     >>> # make training_batch mb and prediction interface p with TiffConnector binding
     >>> m, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size, padding_zxy=padding)
     >>>
     >>> counter=0
     >>> for mini in m:
-    ...     weights = mini.weights() #shape is (6,3,1,5,4) : 3 label-classes, 1 z, 5 x, 4 y
-    ...     #shape of weights is (6,3,1,5,4) : batchsize 6 , 3 label-classes, 1 z, 5 x, 4 y
+    ...     weights = mini.weights() #shape is (6, 3, 1, 5, 4) : 3 label-classes, 1 z, 5 x, 4 y
+    ...     #shape of weights is (6, 3, 1, 5, 4) : batchsize 6 , 3 label-classes, 1 z, 5 x, 4 y
     ...
     ...     pixels = mini.pixels()
-    ...     # shape of pixels is (6,3,1,9,8) : 3 channels, 1 z, 9 x, 4 y (more xy due to padding)
+    ...     # shape of pixels is (6, 3, 1, 9, 8) : 3 channels, 1 z, 9 x, 4 y (more xy due to padding)
     ...     #here: apply training on mini.pixels and mini.weights
     ...     counter += 1
     ...     if counter > 10: #m is infinite
@@ -48,8 +48,8 @@ class TrainingBatch(Minibatch):
     '''
 
 
-    def __init__(self, dataset, size_zxy, padding_zxy=(0,0,0),
-        augment=True, rotation_range=(-45,45), shear_range=(-5,5), equalized=False,\
+    def __init__(self, dataset, size_zxy, padding_zxy=(0, 0, 0), 
+        augment=True, rotation_range=(-45, 45), shear_range=(-5, 5), equalized=False, \
         ):
 
         '''
@@ -59,13 +59,13 @@ class TrainingBatch(Minibatch):
         :type batch_size: int
         :param size_zxy: 3d template size (size of classifier output tmeplate)
         :type size_zxy: tuple (with length 3)
-        :param padding_zxy: growing of pixel template in (z,x,y).
+        :param padding_zxy: growing of pixel template in (z, x, y).
         :type padding_zxy: tuple (with length 3)
         :param augment: if True, templates are randomly rotatted and sheared
         :type augment: bool
-        :param rotation_range: range of random rotation in degrees (min_angle,max_angle)
+        :param rotation_range: range of random rotation in degrees (min_angle, max_angle)
         :type rotation_angle: tuple (with length 2)
-        :param shear_range: range of random shear in degrees (min_angle,max_angle)
+        :param shear_range: range of random shear in degrees (min_angle, max_angle)
         :type shear_angle: tuple (with length 2)
         :param equalized: if True, less frequent labels are favored in randomized template selection
         :type equalized: bool
@@ -164,7 +164,7 @@ class TrainingBatch(Minibatch):
 
         if not self.augment:
             return self._dataset.random_training_template(self._size_zxy\
-            , self._channels, pixel_padding=self._padding_zxy,\
+            , self._channels, pixel_padding=self._padding_zxy, \
                  equalized=self.equalized, labels=self._labels, label_region=for_label)
 
         shear_angle = self._get_random_shear()

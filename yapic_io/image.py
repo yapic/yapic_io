@@ -58,7 +58,7 @@ class Image(object):
     def add_weights(self):
         '''
         weights have same dimensions as pixels
-        weights are optional: not required for prediction,
+        weights are optional: not required for prediction, 
         but required for training.
 
         weights are floating point values bewtween 0 and 1
@@ -104,7 +104,7 @@ def get_template(image, pos, size, padding=0):
 
 
 def correct_pos_for_padding(pos, padding_sizes):
-    return tuple([s[0]+p for p,s in zip(pos, padding_sizes)])
+    return tuple([s[0]+p for p, s in zip(pos, padding_sizes)])
 
 
 
@@ -119,7 +119,7 @@ def get_padding_size(shape, pos, size):
             p_l = abs(po)
         if po + si > sh:
             p_u = po + si - sh
-        padding_size.append((p_l,p_u))        
+        padding_size.append((p_l, p_u))        
     return padding_size
     
 

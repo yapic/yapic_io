@@ -10,7 +10,7 @@ from munkres import Munkres
 
 def assign_slice_by_slice(assignment_dicts, vol):
     nr_channels = vol.shape[0]
-    for c,cd in zip(range(nr_channels),assignment_dicts):
+    for c, cd in zip(range(nr_channels), assignment_dicts):
         for key in cd.keys():
             vol[c][vol[c]==key] = cd[key]
     return vol        
@@ -24,9 +24,9 @@ def remove_exclusive_vals_from_set(list_of_sets):
     that are not present any of the other sets of the list.
 
     example:
-    list_of_sets = [{1,2,3}, {1,2}, {1,4}]
+    list_of_sets = [{1, 2, 3}, {1, 2}, {1, 4}]
     remove_exclusive_vals_from_set(list_of_sets)
-    [{1,2}, {1,2}, {1}]
+    [{1, 2}, {1, 2}, {1}]
 
     '''
 
@@ -47,7 +47,7 @@ def get_exclusive_vals_from_set(list_of_sets):
     that are also present in the other sets of the list.
 
     example:
-    list_of_sets = [{1,2,3}, {1,2}, {1,4}]
+    list_of_sets = [{1, 2, 3}, {1, 2}, {1, 4}]
     remove_exclusive_vals_from_set(list_of_sets)
     [{3}, set(), {4}]
 
@@ -82,7 +82,7 @@ def get_indices(pos, size):
         raise ValueError(error_str)
 
 
-    return [list(range(p, p+s)) for p,s in zip(pos,size)]
+    return [list(range(p, p+s)) for p, s in zip(pos, size)]
 
 
 def get_indices_fast(pos, size):
@@ -102,7 +102,7 @@ def get_indices_fast(pos, size):
 
 
     
-    return [list(np.arange(p, p+s)) for p,s in zip(pos,size)]
+    return [list(np.arange(p, p+s)) for p, s in zip(pos, size)]
 
 
 
@@ -160,14 +160,14 @@ def is_valid_image_subset(image_shape, pos, size):
 
     
     if (image_shape < (pos + size)).any():
-        error_str = '''template out of image bounds: image shape: %s,  
+        error_str = '''template out of image bounds: image shape: %s, 
             pos: %s, template size: %s''' % (image_shape, pos, size)
         logger.error(error_str)
         return False
         #raise ValueError(error_str)
 
     if (pos < 0).any():
-        error_str = '''template out of image bounds: image shape: %s,  
+        error_str = '''template out of image bounds: image shape: %s, 
             pos: %s, template size: %s''' % (image_shape, pos, size)
         logger.error(error_str)
         return False    
@@ -241,12 +241,12 @@ def compute_pos(shape, size):
     
 
     pos_per_dim = \
-        [list(range(0,imlength,templength)) for imlength, templength in zip(shape,size)]
+        [list(range(0, imlength, templength)) for imlength, templength in zip(shape, size)]
 
     
     
 
-    for el,shift in zip(pos_per_dim, shift_last_tpl):   
+    for el, shift in zip(pos_per_dim, shift_last_tpl):   
         el[-1] = el[-1] + shift
         
         
@@ -271,7 +271,7 @@ def add_to_filename(path, insert_str, suffix=True):
 
     '''
     
-    if not insert_str.replace('_','').isalnum():
+    if not insert_str.replace('_', '').isalnum():
         #underscore and alphanumeric characters are allowed
         raise ValueError('insert_str characters must only be alphanumeric, not the case here: %s' \
             % insert_str)
@@ -312,11 +312,11 @@ def compute_str_dist_matrix(s1, s2):
 
     for i in range(len(s1)):
         for j in range(len(s2)):
-            mat[i,j] = string_distance(s1[i],s2[j])
+            mat[i, j] = string_distance(s1[i], s2[j])
     return mat, s1, s2        
 
 
-def find_best_matching_pairs(s1,s2):
+def find_best_matching_pairs(s1, s2):
     '''
     find global minimum for pairwise assignment of strings
     by using the munkres (hungarian) algorithm
@@ -325,7 +325,7 @@ def find_best_matching_pairs(s1,s2):
         assert len(s2) == 0
         return []
 
-    mat, s1norm, s2norm = compute_str_dist_matrix(s1,s2)
+    mat, s1norm, s2norm = compute_str_dist_matrix(s1, s2)
 
     m = Munkres()
     indexes = m.compute(mat) #find assignment combination with lowest global cost
@@ -348,13 +348,13 @@ def nest_list(ls, n):
     '''
 
         >>> import yapic_io.utils as ut
-        >>> t = [0,1,2,3,4,5,6,7,8,9]
+        >>> t = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
         >>>
         >>> res = ut.nest_list(t, 3)
         >>> print(res)
         [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
         >>>
-        >>> res2 = ut.nest_list(t,4)
+        >>> res2 = ut.nest_list(t, 4)
         >>> print(res2)
         [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9]]
         
