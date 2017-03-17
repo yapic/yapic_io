@@ -373,32 +373,25 @@ class Dataset(object):
         return True
 
 
-    def label_coordinate(self, label_value, index):
+    def label_coordinate(self, label_value, label_index):
         '''
         for each labelvalue there exist `index` labels in the dataset.
         returns the coordinate (image_nr,channel,z,x,y) of the nth label.
         '''
-        if not self.is_label_value_valid(label_value):
-            raise ValueError('label value %s not valid, possible label values are %s'\
-                % (str(label_value),str(self.label_values())))
-
-        choice = index + 1
-
         counts = self.label_counts[label_value]
         counts_cs = counts.cumsum()
         total_count = counts_cs[-1]
-        if (choice > total_count) or choice < 1:
-            raise ValueError(''''choice %s is not valid, only %s labels available
-                in the dataset for labelvalue %s''' % (str(choice-1), str(total_count), str(label_value)))
 
-        image_nr = (counts_cs >= choice).nonzero()[0][0]
-        counts_cs_shifted = np.insert(counts_cs,0,[0])[:-1] # shift cumulated counts by 1
+        np.testing.assert_array_less(-1, label_index)
+        np.testing.assert_array_less(label_index, total_count)
 
-        label_index = choice - counts_cs_shifted[image_nr] - 1
+        image_nr = np.argmax(counts_cs > label_index)
+        if image_nr > 0:
+            label_index -= counts_cs[image_nr - 1]
 
         coor_czxy = self.pixel_connector.label_index_to_coordinate(image_nr,
-                                                         label_value, label_index)
-        coor_iczxy = np.insert(coor_czxy,0,image_nr)
+                                                      label_value, label_index)
+        coor_iczxy = np.insert(coor_czxy, 0, image_nr)
         return coor_iczxy
 
 
