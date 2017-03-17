@@ -47,7 +47,7 @@ class Minibatch(object):
         self._padding_zxy = None
         self.set_padding_zxy(padding_zxy)
         self._channels = self._dataset.get_channels() #imports all available channels by default
-        self._labels = self._dataset.get_label_values() #imports all available labels by default
+        self._labels = self._dataset.label_values() #imports all available labels by default
 
 
 
@@ -309,9 +309,9 @@ class Minibatch(object):
         if label in self._labels:
             logger.warning('label class already selected %s', label)
             return False
-        if label not in self._dataset.get_label_values():
+        if label not in self._dataset.label_values():
             raise ValueError('not possible to add label class %s from dataset label classes %s'\
-                % (str(label), str(self._dataset.get_label_values())))
+                % (str(label), str(self._dataset.label_values())))
 
         insort_left(self._labels,label)    
         return True    
