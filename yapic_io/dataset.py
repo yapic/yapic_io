@@ -465,7 +465,7 @@ class Dataset(object):
         
         label_index = choice - counts_cs_shifted[image_nr] - 1
         
-        coor_czxy = self.pixel_connector.get_label_coordinate(image_nr\
+        coor_czxy = self.pixel_connector.label_index_to_coordinate(image_nr\
                                                        , label_value\
                                                        , label_index)
         coor_iczxy = np.insert(coor_czxy,0,image_nr)

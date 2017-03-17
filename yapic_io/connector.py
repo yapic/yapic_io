@@ -119,7 +119,7 @@ class Connector(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_label_coordinate(self, image_nr, label_value, label_index):
+    def label_index_to_coordinate(self, image_nr, label_value, label_index):
         '''
         returns a czxy coordinate of a specific label (specified by the
         label index) with labelvalue label_value (mapped label value).
@@ -132,7 +132,7 @@ class Connector(metaclass=ABCMeta):
         '''      
     
     # @abstractmethod 
-    # def get_label_coordinates(self, image_nr):
+    # def label_index_to_coordinates(self, image_nr):
     #     ''''
     #     returns label coordinates as dict in following format:
     #     channel has always value 0!! This value is just kept for consitency in 

@@ -486,7 +486,7 @@ class TiffConnector(Connector):
         return label_value in set(labelvalues)
             
 
-    def get_label_coordinate(self, image_nr, label_value, label_index):
+    def label_index_to_coordinate(self, image_nr, label_value, label_index):
         '''
         returns a czxy coordinate of a specific label (specified by the
         label index) with labelvalue label_value (mapped label value).
