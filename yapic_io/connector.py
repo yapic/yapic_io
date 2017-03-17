@@ -108,7 +108,7 @@ class Connector(metaclass=ABCMeta):
 
 
     @abstractmethod
-    def load_img_dimensions(self, image_nr):
+    def image_dimensions(self, image_nr):
         '''
         returns dimensions of the dataset.
         dims is a 4-element-tuple:

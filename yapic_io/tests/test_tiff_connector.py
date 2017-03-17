@@ -68,17 +68,17 @@ class TestTiffconnector(TestCase):
         self.assertEqual(len(c.filenames), 0)
 
 
-    def test_load_img_dimensions(self):
+    def test_image_dimensions(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/together/img*.tif')
         lbl_path = os.path.join(base_path, '../test_data/tiffconnector_1/together/lbl*.tif')
         c = TiffConnector(img_path, lbl_path)
         
         with self.assertRaises(IndexError):
-            c.load_img_dimensions(4)
+            c.image_dimensions(4)
         
-        self.assertEqual(c.load_img_dimensions(0), (3, 3, 40, 26))
-        self.assertEqual(c.load_img_dimensions(1), (3, 6, 40, 26))
-        self.assertEqual(c.load_img_dimensions(2), (3, 3, 6, 4))   
+        self.assertEqual(c.image_dimensions(0), (3, 3, 40, 26))
+        self.assertEqual(c.image_dimensions(1), (3, 6, 40, 26))
+        self.assertEqual(c.image_dimensions(2), (3, 3, 6, 4))   
 
 
     def test_load_image(self):

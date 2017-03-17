@@ -236,7 +236,7 @@ class TiffConnector(Connector):
 
     def init_probmap_image(self, image_nr, label_value, overwrite=False):
         out_path = self.get_probmap_path(image_nr, label_value)
-        _, z_shape, x_shape, y_shape = self.load_img_dimensions(image_nr)
+        _, z_shape, x_shape, y_shape = self.image_dimensions(image_nr)
         
         if not os.path.isfile(out_path) or overwrite:
             ip.init_empty_tiff_image(out_path, x_shape, y_shape, z_size=z_shape)
@@ -269,7 +269,7 @@ class TiffConnector(Connector):
         return(im[mesh])
 
 
-    def load_img_dimensions(self, image_nr):
+    def image_dimensions(self, image_nr):
         '''
         returns dimensions of the dataset.
         dims is a 4-element-tuple:
@@ -304,7 +304,7 @@ class TiffConnector(Connector):
         logger.debug('Checking labelmatrix dimensions...')
         nr_channels = []
         for image_nr in range(self.get_image_count()):
-            im_dim = self.load_img_dimensions(image_nr)
+            im_dim = self.image_dimensions(image_nr)
             label_dim = self.load_labelmat_dimensions(image_nr)
 
             if label_dim is None:

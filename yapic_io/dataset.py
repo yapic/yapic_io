@@ -56,7 +56,7 @@ class Dataset(object):
         :returns (nr_channels, nr_zslices, nr_x, nr_y)
 
         '''      
-        return self.pixel_connector.load_img_dimensions(image_nr)
+        return self.pixel_connector.image_dimensions(image_nr)
 
     
     def get_channels(self):
