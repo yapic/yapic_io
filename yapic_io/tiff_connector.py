@@ -212,7 +212,7 @@ class TiffConnector(Connector):
         return conn1, conn2
 
 
-    def get_image_count(self):
+    def image_count(self):
         if self.filenames is None:
             return 0
         return len(self.filenames)
@@ -303,7 +303,7 @@ class TiffConnector(Connector):
         '''
         logger.debug('Checking labelmatrix dimensions...')
         nr_channels = []
-        for image_nr in range(self.get_image_count()):
+        for image_nr in range(self.image_count()):
             im_dim = self.image_dimensions(image_nr)
             label_dim = self.load_labelmat_dimensions(image_nr)
 
@@ -429,7 +429,7 @@ class TiffConnector(Connector):
         each set contains the label values of that channel.
         '''
         labels_per_channel = []
-        for image_nr in range(self.get_image_count()):
+        for image_nr in range(self.image_count()):
             labels_per_im = self.get_original_labelvalues_for_im(image_nr)
 
             if labels_per_im is not None:
@@ -522,7 +522,7 @@ class TiffConnector(Connector):
 
 
     def is_image_nr_valid(self, image_nr):
-        return -1 < image_nr < self.get_image_count()
+        return -1 < image_nr < self.image_count()
 
 
     def load_label_filenames(self, filemask):

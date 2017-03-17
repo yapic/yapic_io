@@ -32,7 +32,7 @@ class Connector(metaclass=ABCMeta):
     '''
     
     @abstractmethod
-    def get_image_count(self):
+    def image_count(self):
         '''
         :returns: the number of images in the dataset
         '''

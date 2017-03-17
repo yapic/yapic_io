@@ -25,7 +25,7 @@ class Dataset(object):
         
         self.pixel_connector = pixel_connector
         
-        self.n_images = pixel_connector.get_image_count()
+        self.n_images = pixel_connector.image_count()
         
         self.label_counts = self.load_label_counts()
         #self.load_label_coordinates() #to be removed
