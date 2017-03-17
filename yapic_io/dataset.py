@@ -328,7 +328,7 @@ class Dataset(object):
              ...
         }
         '''
-        logger.info('start loading label counts...')
+        logger.debug('start loading label counts...')
         label_counts_raw = [self.pixel_connector.label_count_for_image(im) \
                            for im in range(self.n_images)]
 
@@ -347,7 +347,8 @@ class Dataset(object):
                 for label_value in label_counts_raw[i].keys():
                     label_counts[label_value][i]= label_counts_raw[i][label_value]
 
-        logger.info(label_counts)
+        logger.debug('label_counts:')
+        logger.debug(label_counts)
         return label_counts
 
 
