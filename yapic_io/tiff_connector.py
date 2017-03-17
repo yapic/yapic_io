@@ -141,7 +141,7 @@ class TiffConnector(Connector):
 
         self.savepath = savepath # path for probability maps
 
-        self.check_labelmat_dimensions()
+        self.check_label_matrix_dimensions()
         self.map_labelvalues()
         
 
@@ -296,7 +296,7 @@ class TiffConnector(Connector):
                 zstack=self.zstack, multichannel=self.multichannel_label_image)               
     
          
-    def check_labelmat_dimensions(self):
+    def check_label_matrix_dimensions(self):
         '''
         check if label mat dimensions fit to image dimensions, i.e.
         everything identical except nr of channels (label mat always 1)

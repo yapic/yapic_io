@@ -188,15 +188,15 @@ class TestTiffconnector(TestCase):
         assert_array_equal(val_z1,tpl_z1)
 
 
-    def test_check_labelmat_dimensions(self):
+    def test_check_label_matrix_dimensions(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/*.tif')
 
         c = TiffConnector(img_path, label_path)
-        c.check_labelmat_dimensions()
+        c.check_label_matrix_dimensions()
 
 
-    def test_check_labelmat_dimensions_2(self):
+    def test_check_label_matrix_dimensions_2(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel_not_valid/')
     
