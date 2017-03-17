@@ -26,20 +26,16 @@ class Dataset(object):
         self.label_counts = self.load_label_counts()
         self.init_label_weights() 
 
-        self.training_template = collections.namedtuple(\
-            'TrainingTemplate',['pixels', 'channels', 'weights', 'labels', 'augmentation'])
+        self.training_template = collections.namedtuple('TrainingTemplate',
+                   ['pixels', 'channels', 'weights', 'labels', 'augmentation'])
 
 
     def __repr__(self):
-        infostring = \
-            'YAPIC Dataset object \n' +\
-            'nr of images: %s \n' % (self.n_images)\
-
-        return infostring
+        return 'Dataset (%s images)' % (self.n_images)
 
 
     @lru_cache(maxsize = 1000)
-    def get_img_dimensions(self, image_nr):
+    def image_dimensions(self, image_nr):
         '''
         returns dimensions of the dataset.
         dims is a 4-element-tuple:
@@ -52,8 +48,7 @@ class Dataset(object):
 
 
     def get_channels(self):
-        nr_channels = self.get_img_dimensions(0)[0]
-        
+        nr_channels = self.image_dimensions(0)[0]
         return list(range(nr_channels))
 
 
@@ -96,7 +91,7 @@ class Dataset(object):
         
         img_nr = coor[0]
         coor_zxy = coor[2:]
-        shape_zxy = self.get_img_dimensions(img_nr)[1:]
+        shape_zxy = self.image_dimensions(img_nr)[1:]
         pos_zxy = np.array(ut.get_random_pos_for_coordinate(coor_zxy, size_zxy, shape_zxy))
 
         tpl_data = self.get_training_template(img_nr, pos_zxy, size_zxy,
@@ -144,7 +139,7 @@ class Dataset(object):
             raise ValueError('pos and size must have length 3. pos_zxy: %s, size_zxy: %s' \
             % (str(pos_zxy), str(size_zxy)))
 
-        image_shape_zxy = self.get_img_dimensions(image_nr)[1:]
+        image_shape_zxy = self.image_dimensions(image_nr)[1:]
         if not ut.is_valid_image_subset(image_shape_zxy, pos_zxy, size_zxy):
             raise ValueError('image subset not correct')
 
@@ -195,7 +190,7 @@ class Dataset(object):
         # size in channel dimension is set to 1 to only select a single channel
         size_czxy = np.array([1] + list(size_zxy))
 
-        shape_czxy = self.get_img_dimensions(image_nr)
+        shape_czxy = self.image_dimensions(image_nr)
 
         tpl = get_augmented_template(shape_czxy,
                                      pos_czxy,
@@ -235,7 +230,7 @@ class Dataset(object):
             raise ValueError('pos, size or shape have %s dimensions instead of 3'\
                                 % len(pos_zxy))
         
-        shape_zxy = self.get_img_dimensions(image_nr)[1:]    
+        shape_zxy = self.image_dimensions(image_nr)[1:]    
 
         tpl = get_augmented_template(shape_zxy, 
                                      pos_zxy,

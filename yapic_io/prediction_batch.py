@@ -268,7 +268,7 @@ class PredictionBatch(Minibatch):
         '''
         tpl_pos = []
         for img_nr in list(range(self._dataset.n_images)):    
-            img_shape_czxy = self._dataset.get_img_dimensions(img_nr)
+            img_shape_czxy = self._dataset.image_dimensions(img_nr)
             
             img_shape_zxy = img_shape_czxy[1:]
             
