@@ -282,7 +282,7 @@ class TiffConnector(Connector):
             zstack=self.zstack, multichannel=self.multichannel_pixel_image) 
 
 
-    def load_labelmat_dimensions(self, image_nr):
+    def labelmat_dimensions(self, image_nr):
         '''
         returns dimensions of the label image.
         dims is a 4-element-tuple:
@@ -305,7 +305,7 @@ class TiffConnector(Connector):
         nr_channels = []
         for image_nr in range(self.image_count()):
             im_dim = self.image_dimensions(image_nr)
-            label_dim = self.load_labelmat_dimensions(image_nr)
+            label_dim = self.labelmat_dimensions(image_nr)
 
             if label_dim is None:
                 logger.debug('Check image nr %s: ok (no labelmat found) ', image_nr)
