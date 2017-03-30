@@ -58,7 +58,7 @@ class Connector(metaclass=ABCMeta):
 
 
     @abstractmethod
-    def get_template(self, image_nr=None, pos=None, size=None):
+    def get_tile(self, image_nr=None, pos=None, size=None):
         '''
         returns 4D subsection of one image in following dimension order:
         (channel, zslice, x, y)
@@ -71,7 +71,7 @@ class Connector(metaclass=ABCMeta):
         pass
     
     @abstractmethod
-    def label_template(self, image_nr, pos_zxy, size_zxy, label_value):
+    def label_tile(self, image_nr, pos_zxy, size_zxy, label_value):
         '''
         returns a 3d zxy boolean matrix where positions of the reuqested label
         are indicated with True. only mapped labelvalues can be requested.
@@ -90,7 +90,7 @@ class Connector(metaclass=ABCMeta):
 
 
     @abstractmethod    
-    def put_template(self, pixels, pos_zxy, image_nr, label_value):
+    def put_tile(self, pixels, pos_zxy, image_nr, label_value):
         '''
         Puts probabilities (pixels) for a certain label to the data storage.
         These probabilities are prediction values from a classifier (i.e. the

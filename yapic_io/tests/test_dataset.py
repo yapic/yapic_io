@@ -4,7 +4,7 @@ import numpy as np
 
 from yapic_io.tiff_connector import TiffConnector
 from yapic_io.dataset import Dataset
-from yapic_io.utils import get_template_meshgrid
+from yapic_io.utils import get_tile_meshgrid
 import yapic_io.dataset as ds
 import yapic_io.image_importers as ip
 from pprint import pprint
@@ -82,7 +82,7 @@ class TestDataset(TestCase):
 
 
 
-    def test_inner_template_size_1(self):
+    def test_inner_tile_size_1(self):
 
         shape = (7, 11)
         pos = (-4, 8)
@@ -92,7 +92,7 @@ class TestDataset(TestCase):
         size_val = (7, 6)
         pos_tpl_val = (0, 3)
         pos_out, size_out, pos_tpl, padding = \
-                ds.inner_template_size(shape, pos, size)
+                ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
@@ -102,7 +102,7 @@ class TestDataset(TestCase):
         self.assertEqual(pos_tpl_val, pos_tpl)  
         self.assertEqual(padding, [(4, 5), (0, 6)])
 
-    def test_inner_template_size_2(self):
+    def test_inner_tile_size_2(self):
 
         shape = (7, 11)
         pos = (-4, -1)
@@ -112,7 +112,7 @@ class TestDataset(TestCase):
         size_val = (4, 7)
 
         pos_out, size_out, pos_tpl, pd = \
-                ds.inner_template_size(shape, pos, size)
+                ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
@@ -122,7 +122,7 @@ class TestDataset(TestCase):
         self.assertEqual(pos_tpl, (0, 0))
         self.assertEqual(pd, [(4, 0), (1, 0)])        
 
-    def test_inner_template_size_3(self):
+    def test_inner_tile_size_3(self):
 
         shape = (7, 11)
         pos = (-2, -3)
@@ -132,7 +132,7 @@ class TestDataset(TestCase):
         size_val = (2, 3)
         
         pos_out, size_out, pos_tpl, pd = \
-                ds.inner_template_size(shape, pos, size)
+                ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
@@ -142,7 +142,7 @@ class TestDataset(TestCase):
         self.assertEqual(pos_tpl, (0, 0))
         self.assertEqual(pd, [(2, 0), (3, 0)])        
 
-    def test_inner_template_size_4(self):
+    def test_inner_tile_size_4(self):
 
         shape = (7, 11)
         pos = (-5, 2)
@@ -152,7 +152,7 @@ class TestDataset(TestCase):
         size_val = (5, 4)
 
         pos_out, size_out, pos_tpl, pd = \
-                ds.inner_template_size(shape, pos, size)
+                ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
@@ -163,7 +163,7 @@ class TestDataset(TestCase):
         self.assertEqual(pd, [(5, 0), (0, 0)])        
 
 
-    def test_inner_template_size_5(self):
+    def test_inner_tile_size_5(self):
 
         shape = (7, 11)
         pos = (2, -4)
@@ -173,7 +173,7 @@ class TestDataset(TestCase):
         size_val = (3, 4)
 
         pos_out, size_out, pos_tpl, pd = \
-                ds.inner_template_size(shape, pos, size)
+                ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
@@ -182,7 +182,7 @@ class TestDataset(TestCase):
         self.assertEqual(size_out, size_val)        
         self.assertEqual(pos_tpl, (0, 0))
         self.assertEqual(pd, [(0, 0), (4, 0)])        
-    def test_inner_template_size_6(self):
+    def test_inner_tile_size_6(self):
 
         shape = (7, 11)
         pos = (2, 9)
@@ -192,7 +192,7 @@ class TestDataset(TestCase):
         size_val = (3, 4)
 
         pos_out, size_out, pos_tpl, pd = \
-                ds.inner_template_size(shape, pos, size)
+                ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
@@ -202,7 +202,7 @@ class TestDataset(TestCase):
         self.assertEqual(pos_tpl, (0, 2))
         self.assertEqual(pd, [(0, 0), (0, 4)]) 
 
-    def test_inner_template_size_7(self):
+    def test_inner_tile_size_7(self):
 
         shape = (7, 11)
         pos = (2, 9)
@@ -212,7 +212,7 @@ class TestDataset(TestCase):
         size_val = (5, 3)
 
         pos_out, size_out, pos_tpl, pd = \
-                ds.inner_template_size(shape, pos, size)
+                ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
@@ -222,7 +222,7 @@ class TestDataset(TestCase):
         self.assertEqual(pos_tpl, (0, 1))
         self.assertEqual(pd, [(0, 1), (0, 3)]) 
 
-    def test_inner_template_size_8(self):
+    def test_inner_tile_size_8(self):
 
         shape = (7, 11)
         pos = (5, 9)
@@ -232,7 +232,7 @@ class TestDataset(TestCase):
         size_val = (3, 4)
 
         pos_out, size_out, pos_tpl, pd = \
-                ds.inner_template_size(shape, pos, size)
+                ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
@@ -243,7 +243,7 @@ class TestDataset(TestCase):
         self.assertEqual(pd, [(0, 3), (0, 4)]) 
 
 
-    def test_inner_template_size_9(self):
+    def test_inner_tile_size_9(self):
 
         shape = (7, 11)
         pos = (-4, -1)
@@ -253,7 +253,7 @@ class TestDataset(TestCase):
         size_val = (4, 5)
 
         pos_out, size_out, pos_tpl, pd = \
-                ds.inner_template_size(shape, pos, size)
+                ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
@@ -263,7 +263,7 @@ class TestDataset(TestCase):
         self.assertEqual(tuple(pos_tpl), (0, 0))
         self.assertEqual(pd, [(4, 0), (1, 0)]) 
 
-    def test_inner_template_size_10(self):
+    def test_inner_tile_size_10(self):
 
         shape = (7, 11)
         pos = (6, 7)
@@ -273,7 +273,7 @@ class TestDataset(TestCase):
         size_val = (3, 3)
 
         pos_out, size_out, pos_tpl, pd = \
-                ds.inner_template_size(shape, pos, size)
+                ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
@@ -285,7 +285,7 @@ class TestDataset(TestCase):
 
 
 
-    def test_inner_template_size_11(self):
+    def test_inner_tile_size_11(self):
 
         shape = (7, 11)
         pos = (2, 2)
@@ -295,7 +295,7 @@ class TestDataset(TestCase):
         size_val = (3, 4)
 
         pos_out, size_out, pos_tpl, pd = \
-                ds.inner_template_size(shape, pos, size)
+                ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
         print(size_out)
@@ -312,7 +312,7 @@ class TestDataset(TestCase):
         self.assertTrue(ds.is_padding([(0, 0), (3, 0)]))
         self.assertFalse(ds.is_padding([(0, 0), (0, 0)]))
 
-    def test_template_singlechannel_1(self):
+    def test_tile_singlechannel_1(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         c = TiffConnector(img_path, 'path/to/nowhere/')
         d = Dataset(c)
@@ -321,13 +321,13 @@ class TestDataset(TestCase):
         pos = (0, 0, 0)
         size= (3, 6, 4)
         channel = 0
-        tpl = d.template_singlechannel(image_nr, pos, size, channel, reflect=False)
+        tpl = d.tile_singlechannel(image_nr, pos, size, channel, reflect=False)
 
         
         self.assertEqual(tpl.shape, (3, 6, 4))
 
 
-    def test_template_singlechannel_2(self):
+    def test_tile_singlechannel_2(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         c = TiffConnector(img_path, 'path/to/nowhere/')
         d = Dataset(c)
@@ -336,7 +336,7 @@ class TestDataset(TestCase):
         pos = (0, 0, 0)
         size= (1, 6, 4)
         channel = 0
-        tpl = d.template_singlechannel(image_nr, pos, size, channel, reflect=False)
+        tpl = d.tile_singlechannel(image_nr, pos, size, channel, reflect=False)
 
         val = \
         [[[151, 132, 154, 190], \
@@ -352,7 +352,7 @@ class TestDataset(TestCase):
         self.assertTrue((tpl == val).all())   
 
 
-    def test_template_singlechannel_3(self):
+    def test_tile_singlechannel_3(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         c = TiffConnector(img_path, 'path/to/nowhere/')
         d = Dataset(c)
@@ -361,7 +361,7 @@ class TestDataset(TestCase):
         pos = (0, -1, -2)
         size= (1, 3, 3)
         channel = 0
-        tpl = d.template_singlechannel(image_nr, pos, size, channel, reflect=True)
+        tpl = d.tile_singlechannel(image_nr, pos, size, channel, reflect=True)
 
         val = \
         [[[132, 151, 151], \
@@ -375,7 +375,7 @@ class TestDataset(TestCase):
 
 
 
-    def test_template_singlechannel_4(self):
+    def test_tile_singlechannel_4(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         c = TiffConnector(img_path, 'path/to/nowhere/')
         d = Dataset(c)
@@ -384,7 +384,7 @@ class TestDataset(TestCase):
         pos = (0, 4, 2)
         size= (1, 2, 6)
         channel = 0
-        tpl = d.template_singlechannel(image_nr, pos, size, channel, reflect=True)
+        tpl = d.tile_singlechannel(image_nr, pos, size, channel, reflect=True)
 
         val = \
         [[[184, 161, 161, 184, 200, 175], \
@@ -396,7 +396,7 @@ class TestDataset(TestCase):
         self.assertTrue((tpl == val).all())
 
 
-    def test_get_weight_template_for_label(self):
+    def test_get_weight_tile_for_label(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
         c = TiffConnector(img_path, label_path)
@@ -406,7 +406,7 @@ class TestDataset(TestCase):
         pos_czxy = (0, 0, 0)
         size_czxy = (1, 6, 4)
         label_value = 3
-        mat = d._label_template_inner(img_nr, \
+        mat = d._label_tile_inner(img_nr, \
          pos_czxy, size_czxy, label_value)
         
         val = np.zeros(size_czxy)
@@ -417,7 +417,7 @@ class TestDataset(TestCase):
         np.testing.assert_array_equal(val, mat)
 
 
-    def test_label_template_1(self):
+    def test_label_tile_1(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
         c = TiffConnector(img_path, label_path)
@@ -427,7 +427,7 @@ class TestDataset(TestCase):
         pos_czxy = np.array((0, 0, 0))
         size_czxy = np.array((1, 6, 4))
         label_value = 3
-        mat = d.label_template(img_nr, \
+        mat = d.label_tile(img_nr, \
          pos_czxy, size_czxy, label_value)
         
         val = np.zeros(size_czxy)
@@ -439,7 +439,7 @@ class TestDataset(TestCase):
         self.assertEqual(len(mat.shape), 3)
 
 
-    def test_label_template_2(self):
+    def test_label_tile_2(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
         c = TiffConnector(img_path, label_path)
@@ -449,7 +449,7 @@ class TestDataset(TestCase):
         pos_czxy = np.array((0, 2, 1))
         size_czxy = np.array((1, 7, 2))
         label_value = 3
-        mat = d.label_template(img_nr, \
+        mat = d.label_tile(img_nr, \
          pos_czxy, size_czxy, label_value)
         
         val = np.zeros(size_czxy)
@@ -473,7 +473,7 @@ class TestDataset(TestCase):
         self.assertTrue((mat==val).all())         
 
 
-    def test_get_weight_template_for_label_2(self):
+    def test_get_weight_tile_for_label_2(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
         c = TiffConnector(img_path, label_path)
@@ -485,7 +485,7 @@ class TestDataset(TestCase):
         size_czxy = np.array((1, 6, 4))
         label_value = 3
         
-        mat = d._label_template_inner(img_nr, \
+        mat = d._label_tile_inner(img_nr, \
          pos_czxy, size_czxy, label_value)
         
         val = np.zeros(size_czxy)
@@ -584,7 +584,7 @@ class TestDataset(TestCase):
         self.assertEqual(weights[1]/2, weights[2])
         self.assertEqual(weights[1]+weights[2], 1)
 
-    def test_augment_template(self):
+    def test_augment_tile(self):
         
         
 
@@ -607,7 +607,7 @@ class TestDataset(TestCase):
          [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]]
 
 
-         template without augmentation
+         tile without augmentation
          tpl = 
           [[ 0.  0.  0.  0.  2.  0.  0.  0.  0.]
            [ 0.  0.  0.  0.  2.  0.  0.  0.  0.]
@@ -619,7 +619,7 @@ class TestDataset(TestCase):
            [ 0.  0.  0.  0.  2.  0.  0.  0.  0.]
            [ 0.  0.  0.  0.  2.  0.  0.  0.  0.]]
 
-        augmented template afer 45 degree rotation
+        augmented tile afer 45 degree rotation
         tpl_rot =
             [[ 1.  1.  0.  0.  0.  0.  0.  0.  2.]
              [ 0.  1.  1.  0.  0.  0.  0.  2.  2.]
@@ -634,7 +634,7 @@ class TestDataset(TestCase):
         '''
 
         def get_tpl_func(pos=None, size=None, img=None):
-            return img[get_template_meshgrid(img.shape, pos, size)]
+            return img[get_tile_meshgrid(img.shape, pos, size)]
 
 
         val = np.array(\
@@ -659,7 +659,7 @@ class TestDataset(TestCase):
         size=np.array((1, 1, 9, 9))
         tpl = get_tpl_func(pos=pos, size=size, img=im)
 
-        tpl_rot = ds.augment_template(im.shape, pos, size, \
+        tpl_rot = ds.augment_tile(im.shape, pos, size, \
         get_tpl_func, rotation_angle=45, shear_angle=0, **{'img': im})
 
         print(im)
@@ -670,7 +670,7 @@ class TestDataset(TestCase):
 
 
 
-    def test_augment_template_2(self):
+    def test_augment_tile_2(self):
     
     
 
@@ -695,7 +695,7 @@ class TestDataset(TestCase):
         '''
 
         def get_tpl_func(pos=None, size=None, img=None):
-            return img[get_template_meshgrid(img.shape, pos, size)]
+            return img[get_tile_meshgrid(img.shape, pos, size)]
 
 
         val = np.array(\
@@ -712,7 +712,7 @@ class TestDataset(TestCase):
         size=np.array((1, 1, 1, 1))
         tpl = get_tpl_func(pos=pos, size=size, img=im)
 
-        tpl_rot = ds.augment_template(im.shape, pos, size, \
+        tpl_rot = ds.augment_tile(im.shape, pos, size, \
         get_tpl_func, rotation_angle=45, shear_angle=0, **{'img': im})
 
         print(im)
@@ -723,7 +723,7 @@ class TestDataset(TestCase):
 
 
     
-    def test_multichannel_pixel_template_1(self):
+    def test_multichannel_pixel_tile_1(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
         c = TiffConnector(img_path, label_path)
@@ -741,14 +741,14 @@ class TestDataset(TestCase):
                , [107, 153, 125]]]]\
             )
 
-        tpl = d.multichannel_pixel_template(img, pos_zxy, size_zxy, channels)
+        tpl = d.multichannel_pixel_tile(img, pos_zxy, size_zxy, channels)
         print(tpl.shape)
         print(tpl)
         print(val)
         self.assertTrue((tpl==val).all())
 
 
-    def test_multichannel_pixel_template_2(self):
+    def test_multichannel_pixel_tile_2(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
         c = TiffConnector(img_path, label_path)
@@ -771,7 +771,7 @@ class TestDataset(TestCase):
               , [147, 143, 111, 111, 143, 147, 123, 123, 147]]]]\
             )
 
-        tpl = d.multichannel_pixel_template(img, pos_zxy, size_zxy, channels\
+        tpl = d.multichannel_pixel_tile(img, pos_zxy, size_zxy, channels\
                 , pixel_padding=pd, rotation_angle=0)
         print(tpl.shape)
         print(val.shape)
@@ -783,7 +783,7 @@ class TestDataset(TestCase):
 
 
 
-    def test_multichannel_pixel_template_3(self):
+    def test_multichannel_pixel_tile_3(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
         c = TiffConnector(img_path, label_path)
@@ -806,7 +806,7 @@ class TestDataset(TestCase):
                , [121, 180, 147, 123, 106, 106, 125, 68, 78]]]]
             )
 
-        tpl = d.multichannel_pixel_template(img, pos_zxy, size_zxy, channels\
+        tpl = d.multichannel_pixel_tile(img, pos_zxy, size_zxy, channels\
                 , pixel_padding=pd, rotation_angle=45)
         print(tpl.shape)
         print(val.shape)
@@ -815,7 +815,7 @@ class TestDataset(TestCase):
         self.assertTrue((tpl==val).all())
 
 
-    def test_training_template_1(self):
+    def test_training_tile_1(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
         c = TiffConnector(img_path, label_path)
@@ -828,7 +828,7 @@ class TestDataset(TestCase):
         labels = [2, 3]
         
 
-        tr = d.training_template(img, pos_zxy, size_zxy, channels, labels, \
+        tr = d.training_tile(img, pos_zxy, size_zxy, channels, labels, \
             pixel_padding=(0, 1, 2))
 
         print(tr)
@@ -854,7 +854,7 @@ class TestDataset(TestCase):
         
 
     
-    def test_random_training_template(self):
+    def test_random_training_tile(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
         c = TiffConnector(img_path, label_path)
@@ -870,7 +870,7 @@ class TestDataset(TestCase):
         
         #mapping [{91: 1, 109: 2, 150: 3}]
         labels_val = [1, 2, 3]
-        tpl = d.random_training_template(\
+        tpl = d.random_training_tile(\
             size, channels, pixel_padding=pad, rotation_angle=45)
 
         
@@ -880,7 +880,7 @@ class TestDataset(TestCase):
         self.assertEqual(tpl.labels, labels_val)
 
 
-    def test_random_training_template_spec_label(self):
+    def test_random_training_tile_spec_label(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
         c = TiffConnector(img_path, label_path)
@@ -893,14 +893,14 @@ class TestDataset(TestCase):
         
         labels_val = [1, 2, 3]
         
-        tpl_1 = d.random_training_template(\
+        tpl_1 = d.random_training_tile(\
             size, channels, pixel_padding=pad, rotation_angle=45, label_region=1)
 
 
-        tpl_2 = d.random_training_template(\
+        tpl_2 = d.random_training_tile(\
             size, channels, pixel_padding=pad, rotation_angle=45, label_region=2)
 
-        tpl_3 = d.random_training_template(\
+        tpl_3 = d.random_training_tile(\
             size, channels, pixel_padding=pad, rotation_angle=45, label_region=3)
 
         print(tpl_1[2])
@@ -916,7 +916,7 @@ class TestDataset(TestCase):
     
 
     
-    def test_put_prediction_template_1(self):
+    def test_put_prediction_tile_1(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
         savepath = os.path.join(base_path, '../test_data/tmp/')
@@ -933,7 +933,7 @@ class TestDataset(TestCase):
         except:
             pass    
 
-        d.put_prediction_template(pixels, pos_zxy=(0, 1, 1), image_nr=2, label_value=2)
+        d.put_prediction_tile(pixels, pos_zxy=(0, 1, 1), image_nr=2, label_value=2)
         probim = ip.import_tiff_image(path, zstack=True)
         pprint(probim)
 

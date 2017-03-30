@@ -8,7 +8,7 @@ from yapic_io.training_batch import TrainingBatch
 base_path = os.path.dirname(__file__)
 
 class TestTrainingBatch(TestCase):
-    def test_random_template(self):
+    def test_random_tile(self):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
@@ -24,7 +24,7 @@ class TestTrainingBatch(TestCase):
 
         m = TrainingBatch(d, size, padding_zxy=pad)
 
-        tpl = m._random_template()
+        tpl = m._random_tile()
 
 
     def test_getitem(self):

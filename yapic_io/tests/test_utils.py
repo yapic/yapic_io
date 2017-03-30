@@ -10,13 +10,13 @@ import yapic_io.utils as ut
 class TestUtils(TestCase):
     
     
-    def test_get_template_meshgrid(self):
+    def test_get_tile_meshgrid(self):
 
         shape = (10000, 30000)
         pos = (3, 3)
         size = (7000, 9000)
 
-        res = ut.get_template_meshgrid(shape, pos, size)
+        res = ut.get_tile_meshgrid(shape, pos, size)
 
         #pprint(res)
 

@@ -225,7 +225,7 @@ def add_vals_to_tiff_image(path, pos_zxy, pixels):
 
     pos_czxy = (0, ) + pos_zxy
     size_czxy = (1, ) + pixels.shape
-    mesh = ut.get_template_meshgrid(img.shape, pos_czxy, size_czxy)
+    mesh = ut.get_tile_meshgrid(img.shape, pos_czxy, size_czxy)
 
     img[mesh] = pixels
     img = np.squeeze(img, axis=0) #remove channel axis, which should be 1

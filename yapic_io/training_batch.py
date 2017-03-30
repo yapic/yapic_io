@@ -7,7 +7,7 @@ class TrainingBatch(Minibatch):
     '''
     Infinite iterator providing pixel and label data for classifier training.
 
-    - Provides template data for classifier training.
+    - Provides tile data for classifier training.
 
     - All data is loaded to memory on initialization of a training_batch.
 
@@ -52,19 +52,19 @@ class TrainingBatch(Minibatch):
         '''
         :param dataset: dataset object, to connect to pixels and labels weights
         :type dataset: Dataset
-        :param batch_size: nr of templates
+        :param batch_size: nr of tiles
         :type batch_size: int
-        :param size_zxy: 3d template size (size of classifier output tmeplate)
+        :param size_zxy: 3d tile size (size of classifier output tmeplate)
         :type size_zxy: tuple (with length 3)
-        :param padding_zxy: growing of pixel template in (z, x, y).
+        :param padding_zxy: growing of pixel tile in (z, x, y).
         :type padding_zxy: tuple (with length 3)
-        :param augment: if True, templates are randomly rotatted and sheared
+        :param augment: if True, tiles are randomly rotatted and sheared
         :type augment: bool
         :param rotation_range: range of random rotation in degrees (min_angle, max_angle)
         :type rotation_angle: tuple (with length 2)
         :param shear_range: range of random shear in degrees (min_angle, max_angle)
         :type shear_angle: tuple (with length 2)
-        :param equalized: if True, less frequent labels are favored in randomized template selection
+        :param equalized: if True, less frequent labels are favored in randomized tile selection
         :type equalized: bool
         '''
         batch_size = len(dataset.label_values())
@@ -84,7 +84,7 @@ class TrainingBatch(Minibatch):
     def __repr__(self):
         infostring = ('TrainingBatch\n'
                       '  batch_size: {}\n'
-                      '  template size (size_zxy): {}\n'
+                      '  tile size (size_zxy): {}\n'
                       '  augment: {}\n').format(
              self._batch_size, self._size_zxy, self.augment)
         return infostring
@@ -113,7 +113,7 @@ class TrainingBatch(Minibatch):
         augmentations = []
 
         for label in self._labels:
-            tpl_data = self._random_template(for_label=label)
+            tpl_data = self._random_tile(for_label=label)
             pixels.append(tpl_data.pixels)
             weights.append(tpl_data.weights)
             augmentations.append(tpl_data.augmentation)
@@ -136,12 +136,12 @@ class TrainingBatch(Minibatch):
         return random.uniform(*self.shear_range)
 
 
-    def _random_template(self, for_label=None):
+    def _random_tile(self, for_label=None):
         '''
-        pick random template in image regions where label data is present
+        pick random tile in image regions where label data is present
         '''
         if not self.augment:
-            return self._dataset.random_training_template(self._size_zxy,
+            return self._dataset.random_training_tile(self._size_zxy,
                                                           self._channels,
                                                           pixel_padding=self._padding_zxy,
                                                           equalized=self.equalized,
@@ -151,7 +151,7 @@ class TrainingBatch(Minibatch):
         shear_angle = self._random_shear_angle()
         rotation_angle = self._random_rotation_angle()
 
-        return self._dataset.random_training_template(self._size_zxy,
+        return self._dataset.random_training_tile(self._size_zxy,
                      self._channels,
                      pixel_padding=self._padding_zxy,
                      equalized=self.equalized,

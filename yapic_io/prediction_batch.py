@@ -11,7 +11,7 @@ class PredictionBatch(Minibatch):
     '''
     List-like data interface for classification with neural networks.
 
-    - Provides get_pixels() method for getting pixel templates from 
+    - Provides get_pixels() method for getting pixel tiles from 
       4D images (channels, z, x, y) that fit into your neural network 
       input layer.
 
@@ -73,11 +73,11 @@ class PredictionBatch(Minibatch):
         #self._pos_zxy = None 
         self.curr_batch_pos = 0 #current bach position 
 
-        #a list of all possible template positions 
+        #a list of all possible tile positions 
         #[(image_nr, zpos, xpos, ypos), (image_nr, zpos, xpos, ypos), ...]
         self._tpl_pos_all = self._compute_pos_zxy()
         
-        #indices for template positions, organized in batches of defined size
+        #indices for tile positions, organized in batches of defined size
         self._batch_index_list = self._get_batch_index_list() 
 
 
@@ -88,7 +88,7 @@ class PredictionBatch(Minibatch):
     def _get_batch_index_list(self):
         
 
-        n = len(self._tpl_pos_all) #nr of single templates
+        n = len(self._tpl_pos_all) #nr of single tiles
 
         return ut.nest_list(list(range(n)), self._batch_size)
 
@@ -97,7 +97,7 @@ class PredictionBatch(Minibatch):
     def pixels(self):
         
         
-        pixfunc = self._dataset.multichannel_pixel_template
+        pixfunc = self._dataset.multichannel_pixel_tile
 
         pixels = [pixfunc(im_nr, \
                   pos_zxy, \
@@ -114,7 +114,7 @@ class PredictionBatch(Minibatch):
         # for tpl_position in tpl_positions:
         #     self._ge
         
-        # return self._dataset.multichannel_pixel_template(\
+        # return self._dataset.multichannel_pixel_tile(\
         #     self._image_nr, self._pos_zxy, self._size_zxy, self._channels, \
         #     pixel_padding=self._padding_zxy)       
 
@@ -151,13 +151,13 @@ class PredictionBatch(Minibatch):
     def set_tpl_size_zxy(self, size_zxy):
         '''
         overloads the set method for the _size_zxy attribute
-        by updating the template position list
+        by updating the tile position list
 
         '''
         
         super().set_tpl_size_zxy(size_zxy)
 
-        #a list of all possible template positions 
+        #a list of all possible tile positions 
         #[(image_nr, zpos, xpos, ypos), (image_nr, zpos, xpos, ypos), ...]
         self._tpl_pos_all = self._compute_pos_zxy()   
 
@@ -188,7 +188,7 @@ class PredictionBatch(Minibatch):
 
         if len(probmap_data.shape) != 5: 
             raise ValueError(\
-                '''no valid dimension for probmap template: 
+                '''no valid dimension for probmap tile: 
                    shape is %s, but nr of dimesnions must be 5: (n, c, z, x, y)'''\
                                 % str(probmap_data.shape))
 
@@ -205,13 +205,13 @@ class PredictionBatch(Minibatch):
 
         if n_c != len(self._labels):
             raise ValueError(\
-                '''template must have %s channels, one channel for each
+                '''tile must have %s channels, one channel for each
                    label in follwoing label order: %s'''\
                                 % (str(len(self._labels)), str(self._labels)))
 
         if (n_z, n_x, n_y) != self._size_zxy:
             raise ValueError(\
-                '''zxy shape of probmap template is not valid: 
+                '''zxy shape of probmap tile is not valid: 
                    is %s, should be %s''' \
                    % ((str((n_z, n_x, n_y)), str(self._size_zxy))))
 
@@ -234,14 +234,14 @@ class PredictionBatch(Minibatch):
 
         if len(probmap_data.shape) != 3: 
             raise ValueError(\
-                '''no valid dimension for probmap template: 
+                '''no valid dimension for probmap tile: 
                    shape is %s, len of shape should be 3: (z, x, y)'''\
                                 % str(probmap_data.shape))
 
         n_z, n_x, n_y = probmap_data.shape
         if (n_z, n_x, n_y) != self._size_zxy:
             raise ValueError(\
-                '''zxy shape of probmap template is not valid: 
+                '''zxy shape of probmap tile is not valid: 
                    is %s, should be %s''' \
                    % ((str((n_z, n_x, n_y)), str(self._size_zxy))))    
 
@@ -251,16 +251,16 @@ class PredictionBatch(Minibatch):
 
         image_nr, pos_zxy = self._tpl_pos_all[tpl_pos_index]
 
-        return self._dataset.put_prediction_template(probmap_data, pos_zxy, image_nr, label)    
+        return self._dataset.put_prediction_tile(probmap_data, pos_zxy, image_nr, label)    
             
     
         
     def _compute_pos_zxy(self):
         '''
-        Compute all possible template positions for the whole dataset
-        for template_size = self._size_zxy (size of output layer).
+        Compute all possible tile positions for the whole dataset
+        for tile_size = self._size_zxy (size of output layer).
         
-        :returns: list of template positions  
+        :returns: list of tile positions  
 
         e.g.
         [(image_nr, zpos, xpos, ypos), (image_nr, zpos, xpos, ypos), ...]

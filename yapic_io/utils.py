@@ -72,8 +72,8 @@ def get_indices(pos, size):
     and n-dimensional size. 
 
 
-    :param pos: tuple defining the upper left position of the template in n dimensions
-    :param size: tuple defining size of template in all dimensions
+    :param pos: tuple defining the upper left position of the tile in n dimensions
+    :param size: tuple defining size of tile in all dimensions
     :returns: list of indices for all dimensions
     '''
     if len(pos) != len(size):
@@ -91,8 +91,8 @@ def get_indices_fast(pos, size):
     and n-dimensional size. 
 
 
-    :param pos: tuple defining the upper left position of the template in n dimensions
-    :param size: tuple defining size of template in all dimensions
+    :param pos: tuple defining the upper left position of the tile in n dimensions
+    :param size: tuple defining size of tile in all dimensions
     :returns: list of indices for all dimensions
     '''
     # if len(pos) != len(size):
@@ -108,15 +108,15 @@ def get_indices_fast(pos, size):
 
 
 
-def get_template_meshgrid(image_shape, pos, size):
+def get_tile_meshgrid(image_shape, pos, size):
     '''
     returns coordinates for selection of a sub matrix
     , given a certain n-dimensional position (upper left)
     and n-dimensional size. 
 
     :param shape: tuple defining the image shape
-    :param pos: tuple defining the upper left position of the template in n dimensions
-    :param size: tuple defining size of template in all dimensions
+    :param pos: tuple defining the upper left position of the tile in n dimensions
+    :param size: tuple defining size of tile in all dimensions
     :returns: a multidimensional meshgrid defining the sub matrix
 
     '''
@@ -160,15 +160,15 @@ def is_valid_image_subset(image_shape, pos, size):
 
     
     if (image_shape < (pos + size)).any():
-        error_str = '''template out of image bounds: image shape: %s, 
-            pos: %s, template size: %s''' % (image_shape, pos, size)
+        error_str = '''tile out of image bounds: image shape: %s, 
+            pos: %s, tile size: %s''' % (image_shape, pos, size)
         logger.error(error_str)
         return False
         #raise ValueError(error_str)
 
     if (pos < 0).any():
-        error_str = '''template out of image bounds: image shape: %s, 
-            pos: %s, template size: %s''' % (image_shape, pos, size)
+        error_str = '''tile out of image bounds: image shape: %s, 
+            pos: %s, tile size: %s''' % (image_shape, pos, size)
         logger.error(error_str)
         return False    
     return True    
@@ -212,9 +212,9 @@ def get_random_pos_for_coordinate(coor, size, shape):
 
 def compute_pos(shape, size):
     '''
-    computes all possible positions for fetching templates of a given size
-    if the templates do not fit perfectly in the image, the last positions 
-    are corrected, such that the last and the second-last template would
+    computes all possible positions for fetching tiles of a given size
+    if the tiles do not fit perfectly in the image, the last positions 
+    are corrected, such that the last and the second-last tile would
     have some overlap.
     '''
 
@@ -224,7 +224,7 @@ def compute_pos(shape, size):
     size = np.array(size)
 
     if (size > shape).any():
-        raise ValueError('template size is larger than image shape. size: %s, shape: %s' \
+        raise ValueError('tile size is larger than image shape. size: %s, shape: %s' \
             % (str(size), str(shape)))
 
 
@@ -232,7 +232,7 @@ def compute_pos(shape, size):
     
 
     shift_last_tpl = np.zeros(len(shape)).astype(int)
-    mod = shape % size #nr of out of bounds pixels for last template
+    mod = shape % size #nr of out of bounds pixels for last tile
     
     
 

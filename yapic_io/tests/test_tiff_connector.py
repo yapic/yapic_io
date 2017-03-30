@@ -89,7 +89,7 @@ class TestTiffconnector(TestCase):
         self.assertEqual(im.shape, (3, 3, 40, 26))
 
 
-    def test_get_template(self):
+    def test_get_tile(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/together/*.tif')
         c = TiffConnector(img_path, 'path/to/nowhere/')
         
@@ -97,7 +97,7 @@ class TestTiffconnector(TestCase):
         pos = (0, 0, 0, 0)
         size = (1, 1, 1, 2)
         im = c.load_image(0)
-        tpl = c.get_template(image_nr=image_nr, pos=pos, size=size)
+        tpl = c.get_tile(image_nr=image_nr, pos=pos, size=size)
         val = np.empty(shape=size)
         val[0, 0, 0, 0] = 151
         val[0, 0, 0, 1] = 151
@@ -152,7 +152,7 @@ class TestTiffconnector(TestCase):
         self.assertEqual(labelmat.shape, (2, 3, 6, 4)) 
 
 
-    def test_label_template(self):
+    def test_label_tile(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/*.tif')
 
@@ -162,7 +162,7 @@ class TestTiffconnector(TestCase):
         pos_zxy = (0, 0, 0)
         size_zxy = (1, 6, 4)
 
-        tpl = c.label_template(2, pos_zxy, size_zxy, label_value)
+        tpl = c.label_tile(2, pos_zxy, size_zxy, label_value)
 
         val_z0 = np.array(\
                 [[[False, False, False, False], 
@@ -176,7 +176,7 @@ class TestTiffconnector(TestCase):
         pos_zxy = (1, 0, 0)
         size_zxy = (1, 6, 4)
 
-        tpl_z1 = c.label_template(2, pos_zxy, size_zxy, label_value)
+        tpl_z1 = c.label_tile(2, pos_zxy, size_zxy, label_value)
 
         val_z1 = np.array(\
         [[[False, False, False, False], 
@@ -283,7 +283,7 @@ class TestTiffconnector(TestCase):
             except: pass
 
 
-    def test_put_template_1(self):
+    def test_put_tile_1(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
         savepath = os.path.join(base_path, '../test_data/tmp/')
@@ -299,7 +299,7 @@ class TestTiffconnector(TestCase):
             os.remove(path)
         except: pass    
 
-        c.put_template(pixels, pos_zxy=(0, 1, 1), image_nr=2, label_value=3)
+        c.put_tile(pixels, pos_zxy=(0, 1, 1), image_nr=2, label_value=3)
         probim = ip.import_tiff_image(path, zstack=True)
         pprint(probim)
 
@@ -331,7 +331,7 @@ class TestTiffconnector(TestCase):
 
         
 
-    def test_put_template_2(self):
+    def test_put_tile_2(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
         savepath = os.path.join(base_path, '../test_data/tmp/')
@@ -347,7 +347,7 @@ class TestTiffconnector(TestCase):
             os.remove(path)
         except: pass    
 
-        c.put_template(pixels, pos_zxy=(0, 1, 1), image_nr=2, label_value=3)
+        c.put_tile(pixels, pos_zxy=(0, 1, 1), image_nr=2, label_value=3)
         probim = ip.import_tiff_image(path, zstack=True)
         pprint(probim)
 
@@ -374,7 +374,7 @@ class TestTiffconnector(TestCase):
         self.assertTrue((val==probim).all())
 
 
-        c.put_template(pixels, pos_zxy=(2, 1, 1), image_nr=2, label_value=3)
+        c.put_tile(pixels, pos_zxy=(2, 1, 1), image_nr=2, label_value=3)
         probim_2 = ip.import_tiff_image(path, zstack=True)
         pprint(probim_2)
 

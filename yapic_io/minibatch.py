@@ -22,19 +22,19 @@ class Minibatch(object):
         '''
         :param dataset: dataset object, to connect to pixels and labels weights 
         :type dataset: Dataset
-        :param batch_size: nr of templates
+        :param batch_size: nr of tiles
         :type batch_size: int
-        :param size_zxy: 3d template size (size of classifier output tmeplate)
+        :param size_zxy: 3d tile size (size of classifier output tmeplate)
         :type size_zxy: tuple (with length 3)
-        :param padding_zxy: growing of pixel template in (z, x, y).
+        :param padding_zxy: growing of pixel tile in (z, x, y).
         :type padding_zxy: tuple (with length 3)
-        :param augment: if True, templates are randomly rotatted and sheared
+        :param augment: if True, tiles are randomly rotatted and sheared
         :type augment: bool
         :param rotation_range: range of random rotation in degrees (min_angle, max_angle) 
         :type rotation_angle: tuple (with length 2)
         :param shear_range: range of random shear in degrees (min_angle, max_angle) 
         :type shear_angle: tuple (with length 2)
-        :param equalized: if True, less frequent labels are favored in randomized template selection
+        :param equalized: if True, less frequent labels are favored in randomized tile selection
         :type equalized: bool
         '''
         self._dataset = dataset
@@ -55,14 +55,14 @@ class Minibatch(object):
 
     def get_tpl_size_zxy(self):
         '''
-        Returns the size in (z, x, y) of the template. Should match the size in (z, x, y)
+        Returns the size in (z, x, y) of the tile. Should match the size in (z, x, y)
         of the network's output layer.
         '''
         return self._size_zxy
 
     def set_tpl_size_zxy(self, size_zxy):
         '''
-        Sets the size in (z, x, y) of the template. Should match the size in (z, x, y)
+        Sets the size in (z, x, y) of the tile. Should match the size in (z, x, y)
         of the network's output layer.
 
         Must not be larger than the smallest image of the dataset!!
@@ -70,13 +70,13 @@ class Minibatch(object):
         
         if len(size_zxy) != 3: 
             raise ValueError(\
-                '''no valid size for probmap template: 
+                '''no valid size for probmap tile: 
                    shape is %s, len of shape should be 3: (z, x, y)'''\
                                 % str(size_zxy))
 
         self._size_zxy = size_zxy
 
-        #a list of all possible template positions 
+        #a list of all possible tile positions 
         #[(image_nr, zpos, xpos, ypos), (image_nr, zpos, xpos, ypos), ...]
         #self._tpl_pos_all = self._compute_pos_zxy()   
 
@@ -162,7 +162,7 @@ class Minibatch(object):
         >>> p.channel_list() #we have 3 channels in the prediction interface
         [0, 1, 2]
         >>> 
-        >>> p[0].pixels().shape #accordingly, we have 3 channels in the 5D pixels template (n, c, z, x, y)
+        >>> p[0].pixels().shape #accordingly, we have 3 channels in the 5D pixels tile (n, c, z, x, y)
         (10, 3, 1, 5, 4)
         >>> 
         '''
@@ -187,14 +187,14 @@ class Minibatch(object):
         >>>
         >>> p.channel_list() #we have 3 channels
         [0, 1, 2]
-        >>> p[0].pixels().shape #accordingly, we have 3 channels in the 5D pixels template (n, c, z, x, y)
+        >>> p[0].pixels().shape #accordingly, we have 3 channels in the 5D pixels tile (n, c, z, x, y)
         (10, 3, 1, 5, 4)
         >>>
         >>> p.remove_channel(1) #remove channel 1
         True
         >>> p.channel_list() #only 2 channels selected
         [0, 2]
-        >>> p[0].pixels().shape #only 2 channels left in the pixel template
+        >>> p[0].pixels().shape #only 2 channels left in the pixel tile
         (10, 2, 1, 5, 4)
 
         '''    

@@ -1,12 +1,12 @@
 import numpy as np
-from yapic_io.utils import get_template_meshgrid
+from yapic_io.utils import get_tile_meshgrid
 
 class Image(object):
     '''
     provides connectors to pixel data source and
     (optionally) assigned weights for classifier training
 
-    provides methods for getting image templates and data 
+    provides methods for getting image tiles and data 
     augmentation (mini batch) for training
 
     an image object is loaded into memory, so it should not
@@ -72,16 +72,16 @@ class Image(object):
 
 
 
-def get_template(image, pos, size, padding=0):
+def get_tile(image, pos, size, padding=0):
     '''
     returns a recangular subsection of an image with specified size.
     :param image: n dimensional image
     :type image: numpy array
-    :param pos: tuple defining the upper left position of the template in n dimensions
+    :param pos: tuple defining the upper left position of the tile in n dimensions
     :type pos: tuple
-    :param size: tuple defining size of template in all dimensions
+    :param size: tuple defining size of tile in all dimensions
     :type size: tuple
-    :returns: template as numpy array with same nr of dimensions as image
+    :returns: tile as numpy array with same nr of dimensions as image
 
 
     '''
@@ -90,7 +90,7 @@ def get_template(image, pos, size, padding=0):
 
 
     if padding == 0:    
-        return image[get_template_meshgrid(image.shape, pos, size)]
+        return image[get_tile_meshgrid(image.shape, pos, size)]
     
     pos_p = pos-padding
     size_p = size + 2*padding
@@ -99,7 +99,7 @@ def get_template(image, pos, size, padding=0):
     image = np.pad(image, reflect_sizes, mode='reflect')
     pos_corr = correct_pos_for_padding(pos_p, reflect_sizes)
 
-    return image[get_template_meshgrid(image.shape, pos_corr, size_p)]
+    return image[get_tile_meshgrid(image.shape, pos_corr, size_p)]
     
 
 

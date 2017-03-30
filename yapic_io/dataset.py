@@ -9,7 +9,7 @@ import random
 import collections
 logger = logging.getLogger(os.path.basename(__file__))
 
-TrainingTemplate = collections.namedtuple('TrainingTemplate',
+TrainingTile = collections.namedtuple('TrainingTile',
                    ['pixels', 'channels', 'weights', 'labels', 'augmentation'])
 
 
@@ -18,7 +18,7 @@ class Dataset(object):
     provides connectors to pixel data source and
     (optionally) assigned weights for classifier training
 
-    provides methods for getting image templates and data
+    provides methods for getting image tiles and data
     augmentation for training
 
     pixel data is loaded lazily to allow images of arbitrary size
@@ -59,7 +59,7 @@ class Dataset(object):
         return labels
 
 
-    def put_prediction_template(self, probmap_tpl, pos_zxy, image_nr, label_value):
+    def put_prediction_tile(self, probmap_tpl, pos_zxy, image_nr, label_value):
         # check if pos and tpl size are 3d
         if not self.is_image_nr_valid(image_nr):
             raise ValueError('no valid image nr: %s' % str(image_nr))
@@ -68,10 +68,10 @@ class Dataset(object):
             raise ValueError('pos, size or shape have %s dimensions instead of 3'\
                                 % str(len(pos_zxy)))
 
-        return self.pixel_connector.put_template(probmap_tpl, pos_zxy, image_nr, label_value)
+        return self.pixel_connector.put_tile(probmap_tpl, pos_zxy, image_nr, label_value)
 
 
-    def random_training_template(self,
+    def random_training_tile(self,
                                  size_zxy,
                                  channels,
                                  pixel_padding=(0, 0, 0),
@@ -84,8 +84,8 @@ class Dataset(object):
             labels = self.label_values()
 
         if label_region is None:
-        # pick training template where it is assured that weights for a specified label
-        # are within the template. the specified label is label_region
+        # pick training tile where it is assured that weights for a specified label
+        # are within the tile. the specified label is label_region
             _, coor = self.random_label_coordinate(equalized=equalized)
         else:
             _, coor = self.random_label_coordinate_for_label(label_region)
@@ -95,14 +95,14 @@ class Dataset(object):
         shape_zxy = self.image_dimensions(img_nr)[1:]
         pos_zxy = np.array(ut.get_random_pos_for_coordinate(coor_zxy, size_zxy, shape_zxy))
 
-        tpl_data = self.training_template(img_nr, pos_zxy, size_zxy,
+        tpl_data = self.training_tile(img_nr, pos_zxy, size_zxy,
                 channels, labels, pixel_padding=pixel_padding,
                 rotation_angle=rotation_angle, shear_angle=shear_angle)
 
         return tpl_data
 
 
-    def training_template(self,
+    def training_tile(self,
                               image_nr,
                               pos_zxy,
                               size_zxy,
@@ -111,22 +111,22 @@ class Dataset(object):
                               pixel_padding=(0, 0, 0),
                               rotation_angle=0,
                               shear_angle=0):
-        # 4d pixel template with selected channels in 1st dimension
-        pixel_tpl =  self.multichannel_pixel_template(image_nr, pos_zxy, size_zxy, channels,
+        # 4d pixel tile with selected channels in 1st dimension
+        pixel_tpl =  self.multichannel_pixel_tile(image_nr, pos_zxy, size_zxy, channels,
                       pixel_padding=pixel_padding, rotation_angle=rotation_angle, shear_angle=shear_angle)
 
         label_tpl = []
         for label in labels:
-            tpl = self.label_template(image_nr, pos_zxy, size_zxy, label,
+            tpl = self.label_tile(image_nr, pos_zxy, size_zxy, label,
                            rotation_angle=rotation_angle, shear_angle=shear_angle)
             label_tpl.append(tpl)
-        label_tpl = np.array(label_tpl) # 4d label template with selected labels in 1st dimension
+        label_tpl = np.array(label_tpl) # 4d label tile with selected labels in 1st dimension
 
         augmentation = {'rotation_angle' : rotation_angle, 'shear_angle' : shear_angle}
-        return TrainingTemplate(pixel_tpl, channels, label_tpl, labels, augmentation)
+        return TrainingTile(pixel_tpl, channels, label_tpl, labels, augmentation)
 
 
-    def multichannel_pixel_template(self,
+    def multichannel_pixel_tile(self,
                                         image_nr,
                                         pos_zxy,
                                         size_zxy,
@@ -135,7 +135,7 @@ class Dataset(object):
                                         rotation_angle=0,
                                         shear_angle=0):
         if not _check_pos_size(pos_zxy, size_zxy, 3):
-            logger.debug('checked pos size in multichannel_pixel_template')
+            logger.debug('checked pos size in multichannel_pixel_tile')
             raise ValueError('pos and size must have length 3. pos_zxy: %s, size_zxy: %s' \
             % (str(pos_zxy), str(size_zxy)))
 
@@ -150,17 +150,17 @@ class Dataset(object):
 
         pixel_tpl =  []
         for channel in channels:
-            tpl = self.template_singlechannel(image_nr, tuple(pos_padded), tuple(size_padded), channel,
+            tpl = self.tile_singlechannel(image_nr, tuple(pos_padded), tuple(size_padded), channel,
                              rotation_angle=rotation_angle, shear_angle=shear_angle)
             pixel_tpl.append(tpl)
 
-        # 4d pixel template with selected channels in 1st dimension
+        # 4d pixel tile with selected channels in 1st dimension
         pixel_tpl = np.array(pixel_tpl)
 
         return pixel_tpl
 
 
-    def template_singlechannel(self,
+    def tile_singlechannel(self,
                                    image_nr,
                                    pos_zxy,
                                    size_zxy,
@@ -170,15 +170,15 @@ class Dataset(object):
                                    shear_angle=0):
         '''
         returns a recangular subsection of an image with specified size.
-        if requested template is out of bounds, values will be added by reflection
+        if requested tile is out of bounds, values will be added by reflection
 
         :param image_nr: image index
         :type image: int
-        :param pos: tuple defining the upper left position of the template in 3 dimensions zxy
+        :param pos: tuple defining the upper left position of the tile in 3 dimensions zxy
         :type pos: tuple
-        :param size: tuple defining size of template in 3 dimensions zxy
+        :param size: tuple defining size of tile in 3 dimensions zxy
         :type size: tuple
-        :returns: 3d template as numpy array with dimensions zxy
+        :returns: 3d tile as numpy array with dimensions zxy
         '''
         if not self.is_image_nr_valid(image_nr):
             return False
@@ -192,10 +192,10 @@ class Dataset(object):
 
         shape_czxy = self.image_dimensions(image_nr)
 
-        tpl = augment_template(shape_czxy,
+        tpl = augment_tile(shape_czxy,
                                      pos_czxy,
                                      size_czxy,
-                                     self.pixel_connector.get_template,
+                                     self.pixel_connector.get_tile,
                                      rotation_angle=rotation_angle,
                                      shear_angle=shear_angle,
                                      reflect=reflect,
@@ -204,7 +204,7 @@ class Dataset(object):
         return np.squeeze(tpl, axis=(0, ))
 
 
-    def label_template(self,
+    def label_tile(self,
                        image_nr,
                        pos_zxy,
                        size_zxy,
@@ -214,17 +214,17 @@ class Dataset(object):
                        shear_angle=0):
         '''
         returns a recangular subsection of label weights with specified size.
-        if requested template is out of bounds, values will be added by reflection
+        if requested tile is out of bounds, values will be added by reflection
 
         :param image_nr: image index
         :type image: int
-        :param pos_zxy: tuple defining the upper left position of the template in 3 dimensions zxy
+        :param pos_zxy: tuple defining the upper left position of the tile in 3 dimensions zxy
         :type pos_zxy: tuple
-        :param size_zxy: tuple defining size of template in 3 dimensions zxy
+        :param size_zxy: tuple defining size of tile in 3 dimensions zxy
         :type size: tuple
         :param label_value: label identifier
         :type label_value: int
-        :returns: 3d template of label weights as numpy array with dimensions zxy
+        :returns: 3d tile of label weights as numpy array with dimensions zxy
         '''
         if not _check_pos_size(pos_zxy, size_zxy, 3):
             raise ValueError('pos, size or shape have %s dimensions instead of 3'\
@@ -232,10 +232,10 @@ class Dataset(object):
 
         shape_zxy = self.image_dimensions(image_nr)[1:]
 
-        tpl = augment_template(shape_zxy,
+        tpl = augment_tile(shape_zxy,
                                      pos_zxy,
                                      size_zxy,
-                                     self._label_template_inner,
+                                     self._label_tile_inner,
                                      rotation_angle=rotation_angle,
                                      shear_angle=shear_angle,
                                      reflect=reflect,
@@ -244,9 +244,9 @@ class Dataset(object):
         return tpl
 
 
-    def _label_template_inner(self, image_nr=None, pos=None, size=None, label_value=None):
+    def _label_tile_inner(self, image_nr=None, pos=None, size=None, label_value=None):
         '''
-        returns a 3d weight matrix template for a ceratin label with dimensions zxy.
+        returns a 3d weight matrix tile for a ceratin label with dimensions zxy.
         '''
         if not self.is_label_value_valid(label_value):
             return False
@@ -255,7 +255,7 @@ class Dataset(object):
         size_zxy = size
         label_weight = self.label_weights[label_value]
 
-        boolmat = self.pixel_connector.label_template(image_nr,
+        boolmat = self.pixel_connector.label_tile(image_nr,
                           pos_zxy, size_zxy, label_value)
 
         weight_mat = np.zeros(boolmat.shape)
@@ -484,22 +484,22 @@ def is_padding(padding_size):
     return False
 
 
-def inner_template_size(shape, pos, size):
+def inner_tile_size(shape, pos, size):
     '''
-    if a requested template is out of bounds, this function calculates
-    a transient template position size and pos. The transient template has to be padded in a
+    if a requested tile is out of bounds, this function calculates
+    a transient tile position size and pos. The transient tile has to be padded in a
     later step to extend the edges for delivering the originally requested out of
-    bounds template. The padding sizes for this step are also delivered.
+    bounds tile. The padding sizes for this step are also delivered.
     size_out and pos_out that can be used in a second step with padding.
-    pos_tpl defines the position in the transient template for cuuting out the originally
-    requested template.
+    pos_tpl defines the position in the transient tile for cuuting out the originally
+    requested tile.
 
     :param shape: shape of full size original image
-    :param pos: upper left position of template in full size original image
-    :param size: size of template
+    :param pos: upper left position of tile in full size original image
+    :param size: size of tile
     :returns pos_out, size_out, pos_tpl, padding_sizes
 
-    pos_out is the position inside the full size original image for the transient template.
+    pos_out is the position inside the full size original image for the transient tile.
     (more explanation needed)
     '''
     shape = np.array(shape)
@@ -573,67 +573,67 @@ def equalize_label_weights(label_n):
     return eq_weight
 
 
-def augment_template(shape,
+def augment_tile(shape,
                      pos,
                      size,
-                     get_template_func,
+                     get_tile_func,
                      rotation_angle=0,
                      shear_angle=0,
                      reflect=True,
                      **kwargs):
     '''
-    fixme: morph template works only in 2d.
+    fixme: morph tile works only in 2d.
     morphing has to be applied slice by slice
     '''
     if (rotation_angle == 0) and (shear_angle == 0):
-        return template_with_reflection(shape, pos, size, get_template_func,
+        return tile_with_reflection(shape, pos, size, get_tile_func,
                                             reflect=reflect, **kwargs)
 
     if (size[-2]) == 1 and (size[-1] == 1):
-        # if the requested template is only of size 1 in x and y,
+        # if the requested tile is only of size 1 in x and y,
         # augmentation can be omitted, since rotation always
         # occurs around the center axis.
-        return template_with_reflection(shape, pos, size, get_template_func,
+        return tile_with_reflection(shape, pos, size, get_tile_func,
                                             reflect=reflect, **kwargs)
 
     size = np.array(size)
     pos = np.array(pos)
 
-    size_new = size * 3 # triple template size if morphing takes place
+    size_new = size * 3 # triple tile size if morphing takes place
     pos_new = pos - size
-    tpl_large = template_with_reflection(shape, pos_new, size_new, get_template_func,
+    tpl_large = tile_with_reflection(shape, pos_new, size_new, get_tile_func,
                                              reflect=reflect, **kwargs)
     tpl_large_morphed = trafo.warp_image_2d_stack(tpl_large, rotation_angle, shear_angle)
 
-    mesh = ut.get_template_meshgrid(tpl_large_morphed.shape, size, size)
+    mesh = ut.get_tile_meshgrid(tpl_large_morphed.shape, size, size)
 
     return tpl_large_morphed[mesh]
 
 
-def template_with_reflection(shape, pos, size, get_template_func,
+def tile_with_reflection(shape, pos, size, get_tile_func,
                              reflect=True, **kwargs):
-    res = inner_template_size(shape, pos, size)
+    res = inner_tile_size(shape, pos, size)
     pos_transient, size_transient, pos_inside_transient, pad_size = res
 
     if is_padding(pad_size) and not reflect:
-        # if image has to be padded to get the template
-        logger.error('requested template out of bounds')
+        # if image has to be padded to get the tile
+        logger.error('requested tile out of bounds')
         return False
 
     if is_padding(pad_size) and reflect:
-        # if image has to be padded to get the template and reflection mode is on
-        logger.debug('requested template out of bounds')
+        # if image has to be padded to get the tile and reflection mode is on
+        logger.debug('requested tile out of bounds')
         logger.debug('image will be extended with reflection')
 
-    # get transient template
-    transient_tpl = get_template_func(pos=tuple(pos_transient),
+    # get transient tile
+    transient_tpl = get_tile_func(pos=tuple(pos_transient),
                                       size=tuple(size_transient),
                                       **kwargs)
 
-    # pad transient template with reflection
+    # pad transient tile with reflection
     transient_tpl_pad = np.pad(transient_tpl, pad_size, mode='symmetric')
 
-    mesh = ut.get_template_meshgrid(transient_tpl_pad.shape,
+    mesh = ut.get_tile_meshgrid(transient_tpl_pad.shape,
                                     pos_inside_transient, size)
 
     return transient_tpl_pad[mesh]

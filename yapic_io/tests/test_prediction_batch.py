@@ -99,8 +99,8 @@ class TestPredictionBatch(TestCase):
 
         p = PredictionBatch(d, batch_size, size)
 
-        #batch size is 2, so the first 2 templates go with the first batch
-        #(size two), the third template in in the second batch. the second
+        #batch size is 2, so the first 2 tiles go with the first batch
+        #(size two), the third tile in in the second batch. the second
         #batch has only size 1 (is smaller than the specified batch size), 
         #because it contains the rest. 
 
