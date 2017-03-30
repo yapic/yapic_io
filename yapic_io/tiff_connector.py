@@ -142,7 +142,7 @@ class TiffConnector(Connector):
         self.savepath = savepath # path for probability maps
 
         self.check_label_matrix_dimensions()
-        self.map_labelvalues()
+        self.map_label_values()
         
 
     def __repr__(self):
@@ -347,7 +347,7 @@ class TiffConnector(Connector):
 
         boolmat_3d = boolmat_4d.any(axis=0) # reduction to zxy dimension
         # comment: mapped labelvalues are unique for a channel, as they
-        # are generated with map_labelvalues(). This means, 
+        # are generated with map_label_values(). This means, 
         # a mapped labelvalue is only present in one specific channel.
         # This means: there chould be not more than one truthy value along the
         # channel dimension in boolmat_4d. this is not doublechecked here.
@@ -387,7 +387,7 @@ class TiffConnector(Connector):
         return label_image 
 
 
-    def map_labelvalues(self):
+    def map_label_values(self):
         '''
         assign unique labelvalues to original labelvalues.
         for multichannel label images it might happen, that identical
