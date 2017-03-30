@@ -249,7 +249,7 @@ class TestPredictionBatch(TestCase):
         print('labels')
         print(c.labelvalue_mapping)
         c.load_label_filenames('*')    
-        c.map_labelvalues()
+        c.map_label_values()
         print('labels')
         print(c.labelvalue_mapping)
         d = Dataset(c)
