@@ -47,28 +47,6 @@ class TestPredictionBatch(TestCase):
         self.assertEqual(p._all_tile_positions, [(0, (0, 0, 0))])
 
 
-    def test_getr_batch_index_list(self):
-
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = TiffConnector(img_path, label_path)
-        
-        
-
-        d = Dataset(c)
-
-        size = (2, 6, 4)
-        batch_size = 10
-
-        p = PredictionBatch(d, batch_size, size)
-
-        print(len(p._all_tile_positions))
-        res = p._batch_index_list
-        print(res)
-        self.assertEqual(len(res[0]), batch_size)
-        self.assertEqual(len(res[-1]), 7)
-
-
     def test_computepos_3(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
         label_path = os.path.join(base_path, '/path/to/nowhere')

@@ -73,14 +73,6 @@ class PredictionBatch(Minibatch):
         # [(image_nr, zpos, xpos, ypos), (image_nr, zpos, xpos, ypos), ...]
         self._all_tile_positions = self._compute_pos_zxy()
 
-        # indices for tile positions, organized in batches of defined size
-        self._batch_index_list = self._get_batch_index_list()
-
-
-    def _get_batch_index_list(self):
-        n = len(self._all_tile_positions) # nr of single tiles
-        return ut.nest_list(list(range(n)), self._batch_size)
-
 
     def pixels(self):
         pixfunc = self._dataset.multichannel_pixel_tile
@@ -99,14 +91,15 @@ class PredictionBatch(Minibatch):
         '''
         Return the number of batches.
         '''
-        return len(self._batch_index_list)
+        n = len(self._all_tile_positions) # nr of single tiles
+        return int(np.ceil(float(n) / self._batch_size))
 
 
     def __getitem__(self, position):
         '''
         Implements list-like operations of element selection and slicing.
         '''
-        if position >= len(self._batch_index_list):
+        if position >= len(self):
             raise StopIteration('index out of bounds')
 
         self.curr_batch_pos = position
@@ -127,7 +120,9 @@ class PredictionBatch(Minibatch):
 
 
     def get_actual_batch_size(self):
-        return len(self._batch_index_list[self.curr_batch_pos])
+        total = len(self._all_tile_positions) # nr of single tiles
+        processed = self.curr_batch_pos * self._batch_size
+        return np.minimum(self._batch_size, total - processed)
 
 
     def get_curr_tile_positions(self):
@@ -135,7 +130,9 @@ class PredictionBatch(Minibatch):
 
 
     def get_curr_tile_indices(self):
-        return self._batch_index_list[self.curr_batch_pos]
+        size = self.get_actual_batch_size()
+        start = self.curr_batch_pos * self._batch_size
+        return np.arange(start, start + size).tolist()
 
 
     def put_probmap_data(self, probmap_data):
