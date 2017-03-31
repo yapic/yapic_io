@@ -58,7 +58,7 @@ class TiffConnector(Connector):
         in nr of channels.
 
         Labels can be read from multichannel images. This is needed for networks
-        with multple output layers. Each channel is assigned one output layer.
+        with multilee output layers. Each channel is assigned one output layer.
         Different labels from different channels can overlap (can share identical
         xyz positions).
 

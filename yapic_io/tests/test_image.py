@@ -120,7 +120,7 @@ class TestImage(TestCase):
                          , [20, 21, 22, 23, 24]\
                         ])       
         
-        tpl_val = np.array([[6, 5, 6, 7, 8, 9]\
+        tile_val = np.array([[6, 5, 6, 7, 8, 9]\
                            , [1, 0, 1, 2, 3, 4]\
                            , [6, 5, 6, 7, 8, 9]\
                            , [11, 10, 11, 12, 13, 14]\
@@ -134,11 +134,11 @@ class TestImage(TestCase):
         size = (4, 2)
         padding = 2
 
-        tpl = im.get_tile(image, pos, size, padding=2)
+        tile = im.get_tile(image, pos, size, padding=2)
 
-        print(tpl)
+        print(tile)
 
-        self.assertTrue((tpl == tpl_val).all())
+        self.assertTrue((tile == tile_val).all())
 
 
     def test_init_image(self):

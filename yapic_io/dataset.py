@@ -59,16 +59,16 @@ class Dataset(object):
         return labels
 
 
-    def put_prediction_tile(self, probmap_tpl, pos_zxy, image_nr, label_value):
-        # check if pos and tpl size are 3d
+    def put_prediction_tile(self, probmap_tile, pos_zxy, image_nr, label_value):
+        # check if pos and tile size are 3d
         if not self.is_image_nr_valid(image_nr):
             raise ValueError('no valid image nr: %s' % str(image_nr))
 
-        if not _check_pos_size(pos_zxy, probmap_tpl.shape, 3):
+        if not _check_pos_size(pos_zxy, probmap_tile.shape, 3):
             raise ValueError('pos, size or shape have %s dimensions instead of 3'\
                                 % str(len(pos_zxy)))
 
-        return self.pixel_connector.put_tile(probmap_tpl, pos_zxy, image_nr, label_value)
+        return self.pixel_connector.put_tile(probmap_tile, pos_zxy, image_nr, label_value)
 
 
     def random_training_tile(self,
@@ -95,11 +95,11 @@ class Dataset(object):
         shape_zxy = self.image_dimensions(img_nr)[1:]
         pos_zxy = np.array(ut.get_random_pos_for_coordinate(coor_zxy, size_zxy, shape_zxy))
 
-        tpl_data = self.training_tile(img_nr, pos_zxy, size_zxy,
+        tile_data = self.training_tile(img_nr, pos_zxy, size_zxy,
                 channels, labels, pixel_padding=pixel_padding,
                 rotation_angle=rotation_angle, shear_angle=shear_angle)
 
-        return tpl_data
+        return tile_data
 
 
     def training_tile(self,
@@ -112,18 +112,18 @@ class Dataset(object):
                               rotation_angle=0,
                               shear_angle=0):
         # 4d pixel tile with selected channels in 1st dimension
-        pixel_tpl =  self.multichannel_pixel_tile(image_nr, pos_zxy, size_zxy, channels,
+        pixel_tile =  self.multichannel_pixel_tile(image_nr, pos_zxy, size_zxy, channels,
                       pixel_padding=pixel_padding, rotation_angle=rotation_angle, shear_angle=shear_angle)
 
-        label_tpl = []
+        label_tile = []
         for label in labels:
-            tpl = self.label_tile(image_nr, pos_zxy, size_zxy, label,
+            tile = self.label_tile(image_nr, pos_zxy, size_zxy, label,
                            rotation_angle=rotation_angle, shear_angle=shear_angle)
-            label_tpl.append(tpl)
-        label_tpl = np.array(label_tpl) # 4d label tile with selected labels in 1st dimension
+            label_tile.append(tile)
+        label_tile = np.array(label_tile) # 4d label tile with selected labels in 1st dimension
 
         augmentation = {'rotation_angle' : rotation_angle, 'shear_angle' : shear_angle}
-        return TrainingTile(pixel_tpl, channels, label_tpl, labels, augmentation)
+        return TrainingTile(pixel_tile, channels, label_tile, labels, augmentation)
 
 
     def multichannel_pixel_tile(self,
@@ -148,16 +148,16 @@ class Dataset(object):
         size_padded = size_zxy + 2 * pixel_padding
         pos_padded = pos_zxy - pixel_padding
 
-        pixel_tpl =  []
+        pixel_tile =  []
         for channel in channels:
-            tpl = self.tile_singlechannel(image_nr, tuple(pos_padded), tuple(size_padded), channel,
+            tile = self.tile_singlechannel(image_nr, tuple(pos_padded), tuple(size_padded), channel,
                              rotation_angle=rotation_angle, shear_angle=shear_angle)
-            pixel_tpl.append(tpl)
+            pixel_tile.append(tile)
 
         # 4d pixel tile with selected channels in 1st dimension
-        pixel_tpl = np.array(pixel_tpl)
+        pixel_tile = np.array(pixel_tile)
 
-        return pixel_tpl
+        return pixel_tile
 
 
     def tile_singlechannel(self,
@@ -192,7 +192,7 @@ class Dataset(object):
 
         shape_czxy = self.image_dimensions(image_nr)
 
-        tpl = augment_tile(shape_czxy,
+        tile = augment_tile(shape_czxy,
                                      pos_czxy,
                                      size_czxy,
                                      self.pixel_connector.get_tile,
@@ -201,7 +201,7 @@ class Dataset(object):
                                      reflect=reflect,
                                      **{'image_nr' : image_nr})
 
-        return np.squeeze(tpl, axis=(0, ))
+        return np.squeeze(tile, axis=(0, ))
 
 
     def label_tile(self,
@@ -232,7 +232,7 @@ class Dataset(object):
 
         shape_zxy = self.image_dimensions(image_nr)[1:]
 
-        tpl = augment_tile(shape_zxy,
+        tile = augment_tile(shape_zxy,
                                      pos_zxy,
                                      size_zxy,
                                      self._label_tile_inner,
@@ -241,7 +241,7 @@ class Dataset(object):
                                      reflect=reflect,
                                      **{'image_nr' : image_nr, 'label_value' : label_value})
 
-        return tpl
+        return tile
 
 
     def _label_tile_inner(self, image_nr=None, pos=None, size=None, label_value=None):
@@ -491,13 +491,13 @@ def inner_tile_size(shape, pos, size):
     later step to extend the edges for delivering the originally requested out of
     bounds tile. The padding sizes for this step are also delivered.
     size_out and pos_out that can be used in a second step with padding.
-    pos_tpl defines the position in the transient tile for cuuting out the originally
+    pos_tile defines the position in the transient tile for cuuting out the originally
     requested tile.
 
     :param shape: shape of full size original image
     :param pos: upper left position of tile in full size original image
     :param size: size of tile
-    :returns pos_out, size_out, pos_tpl, padding_sizes
+    :returns pos_out, size_out, pos_tile, padding_sizes
 
     pos_out is the position inside the full size original image for the transient tile.
     (more explanation needed)
@@ -515,7 +515,7 @@ def inner_tile_size(shape, pos, size):
     shift_2[shift_2 > 0] = 0
 
     shift = shift_1 + shift_2
-    pos_tpl = -shift + padding_lower
+    pos_tile = -shift + padding_lower
     pos_out = pos + shift
 
     dist_lu_s = shape - pos - shift
@@ -527,7 +527,7 @@ def inner_tile_size(shape, pos, size):
     size_new_2 = np.vstack([padding_lower, size_inmat]).max(axis=0)
     size_out = np.vstack([size_new_1, size_new_2]).min(axis=0)
 
-    return tuple(pos_out), tuple(size_out), tuple(pos_tpl), padding_sizes
+    return tuple(pos_out), tuple(size_out), tuple(pos_tile), padding_sizes
 
 
 def distance_to_upper_img_edge(shape, pos):
@@ -601,13 +601,13 @@ def augment_tile(shape,
 
     size_new = size * 3 # triple tile size if morphing takes place
     pos_new = pos - size
-    tpl_large = tile_with_reflection(shape, pos_new, size_new, get_tile_func,
+    tile_large = tile_with_reflection(shape, pos_new, size_new, get_tile_func,
                                              reflect=reflect, **kwargs)
-    tpl_large_morphed = trafo.warp_image_2d_stack(tpl_large, rotation_angle, shear_angle)
+    tile_large_morphed = trafo.warp_image_2d_stack(tile_large, rotation_angle, shear_angle)
 
-    mesh = ut.get_tile_meshgrid(tpl_large_morphed.shape, size, size)
+    mesh = ut.get_tile_meshgrid(tile_large_morphed.shape, size, size)
 
-    return tpl_large_morphed[mesh]
+    return tile_large_morphed[mesh]
 
 
 def tile_with_reflection(shape, pos, size, get_tile_func,
@@ -626,17 +626,17 @@ def tile_with_reflection(shape, pos, size, get_tile_func,
         logger.debug('image will be extended with reflection')
 
     # get transient tile
-    transient_tpl = get_tile_func(pos=tuple(pos_transient),
+    transient_tile = get_tile_func(pos=tuple(pos_transient),
                                       size=tuple(size_transient),
                                       **kwargs)
 
     # pad transient tile with reflection
-    transient_tpl_pad = np.pad(transient_tpl, pad_size, mode='symmetric')
+    transient_tile_pad = np.pad(transient_tile, pad_size, mode='symmetric')
 
-    mesh = ut.get_tile_meshgrid(transient_tpl_pad.shape,
+    mesh = ut.get_tile_meshgrid(transient_tile_pad.shape,
                                     pos_inside_transient, size)
 
-    return transient_tpl_pad[mesh]
+    return transient_tile_pad[mesh]
 
 
 def _check_pos_size(pos, size, nr_dim):

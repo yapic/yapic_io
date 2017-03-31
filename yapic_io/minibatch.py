@@ -32,9 +32,11 @@ class Minibatch(object):
 
         self.float_data_type = np.float32 #type of pixel and weight data
         self._size_zxy = None
-        self.set_tpl_size_zxy(size_zxy)
         self._padding_zxy = None
-        self.set_padding_zxy(padding_zxy)
+        if size_zxy is not None:
+            self.set_tile_size_zxy(size_zxy)
+        if padding_zxy is not None:
+            self.set_padding_zxy(padding_zxy)
         self._channels = self._dataset.channel_list() #imports all available channels by default
         self._labels = self._dataset.label_values() #imports all available labels by default
 
@@ -42,14 +44,14 @@ class Minibatch(object):
 
 
 
-    def get_tpl_size_zxy(self):
+    def get_tile_size_zxy(self):
         '''
         Returns the size in (z, x, y) of the tile. Should match the size in (z, x, y)
         of the network's output layer.
         '''
         return self._size_zxy
 
-    def set_tpl_size_zxy(self, size_zxy):
+    def set_tile_size_zxy(self, size_zxy):
         '''
         Sets the size in (z, x, y) of the tile. Should match the size in (z, x, y)
         of the network's output layer.
@@ -66,7 +68,7 @@ class Minibatch(object):
 
         #a list of all possible tile positions
         #[(image_nr, zpos, xpos, ypos), (image_nr, zpos, xpos, ypos), ...]
-        #self._tpl_pos_all = self._compute_pos_zxy()
+        #self._all_tile_positions = self._compute_pos_zxy()
 
 
     def get_padding_zxy(self):
@@ -142,9 +144,9 @@ class Minibatch(object):
         >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
         >>> savepath = 'yapic_io/test_data/tmp/'
         >>>
-        >>> tpl_size = (1, 5, 4)
+        >>> tile_size = (1, 5, 4)
         >>> # make training_batch mb and prediction interface p: upon object initialization all available image channels are set
-        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size) #upon object initialization all available image channels are set
+        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tile_size) #upon object initialization all available image channels are set
         >>>
         >>>
         >>> p.channel_list() #we have 3 channels in the prediction interface
@@ -168,9 +170,9 @@ class Minibatch(object):
         >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
         >>> savepath = 'yapic_io/test_data/tmp/'
         >>>
-        >>> tpl_size = (1, 5, 4)
+        >>> tile_size = (1, 5, 4)
         >>> #upon object initialization all available image channels are set
-        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size)
+        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tile_size)
         >>>
         >>>
         >>> p.channel_list() #we have 3 channels
@@ -236,9 +238,9 @@ class Minibatch(object):
         >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
         >>> savepath = 'yapic_io/test_data/tmp/'
         >>>
-        >>> tpl_size = (1, 5, 4)
+        >>> tile_size = (1, 5, 4)
         >>> #upon object initialization all available image channels are set
-        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size)
+        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tile_size)
         >>>
         >>>
         >>> p.get_labels() #we have 3 label classes
@@ -266,9 +268,9 @@ class Minibatch(object):
         >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
         >>> savepath = 'yapic_io/test_data/tmp/'
         >>>
-        >>> tpl_size = (1, 5, 4)
+        >>> tile_size = (1, 5, 4)
         >>> #upon object initialization all available image channels are set
-        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size)
+        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tile_size)
         >>>
         >>>
         >>> p.get_labels() #we have 3 label classes

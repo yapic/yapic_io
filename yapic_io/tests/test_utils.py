@@ -63,14 +63,14 @@ class TestUtils(TestCase):
         print(res)
         self.assertEqual(res, val)         
 
-    def test_get_mx_pos_for_tpl(self):
+    def test_get_mx_pos_for_tile(self):
 
         size = (3, 3)
         shape = (10, 10)
 
         maxpos = np.array((7, 7)) 
-        print(ut.get_max_pos_for_tpl(size, shape))
-        self.assertTrue((maxpos==ut.get_max_pos_for_tpl(size, shape)).all())    
+        print(ut.get_max_pos_for_tile(size, shape))
+        self.assertTrue((maxpos==ut.get_max_pos_for_tile(size, shape)).all())    
 
     def test_get_random_pos_for_coordinate(self):
         coor = (5, 4)

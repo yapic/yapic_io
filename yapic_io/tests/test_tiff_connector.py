@@ -97,14 +97,14 @@ class TestTiffconnector(TestCase):
         pos = (0, 0, 0, 0)
         size = (1, 1, 1, 2)
         im = c.load_image(0)
-        tpl = c.get_tile(image_nr=image_nr, pos=pos, size=size)
+        tile = c.get_tile(image_nr=image_nr, pos=pos, size=size)
         val = np.empty(shape=size)
         val[0, 0, 0, 0] = 151
         val[0, 0, 0, 1] = 151
         val = val.astype(int)
         print(val)
-        print(tpl)
-        np.testing.assert_array_equal(tpl, val)
+        print(tile)
+        np.testing.assert_array_equal(tile, val)
 
 
     def test_exists_label_for_image_nr(self):
@@ -162,7 +162,7 @@ class TestTiffconnector(TestCase):
         pos_zxy = (0, 0, 0)
         size_zxy = (1, 6, 4)
 
-        tpl = c.label_tile(2, pos_zxy, size_zxy, label_value)
+        tile = c.label_tile(2, pos_zxy, size_zxy, label_value)
 
         val_z0 = np.array(\
                 [[[False, False, False, False], 
@@ -171,12 +171,12 @@ class TestTiffconnector(TestCase):
                   [False, True, True, True], 
                   [False, False, False, False], 
                   [False, False, False, False]]])
-        assert_array_equal(val_z0, tpl)
+        assert_array_equal(val_z0, tile)
 
         pos_zxy = (1, 0, 0)
         size_zxy = (1, 6, 4)
 
-        tpl_z1 = c.label_tile(2, pos_zxy, size_zxy, label_value)
+        tile_z1 = c.label_tile(2, pos_zxy, size_zxy, label_value)
 
         val_z1 = np.array(\
         [[[False, False, False, False], 
@@ -185,7 +185,7 @@ class TestTiffconnector(TestCase):
           [False, False, False, False], 
           [False, False, False, False], 
           [ True, True, False, False]]])
-        assert_array_equal(val_z1, tpl_z1)
+        assert_array_equal(val_z1, tile_z1)
 
 
     def test_check_label_matrix_dimensions(self):

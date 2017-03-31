@@ -22,11 +22,11 @@ class TrainingBatch(Minibatch):
     >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/*.tif'
     >>> savepath = 'yapic_io/test_data/tmp/'
     >>>
-    >>> tpl_size = (1, 5, 4) # size of network output layer in zxy
+    >>> tile_size = (1, 5, 4) # size of network output layer in zxy
     >>> padding = (0, 2, 2) # padding of network input layer in zxy, in respect to output layer
     >>>
     >>> # make training_batch mb and prediction interface p with TiffConnector binding
-    >>> m, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size, padding_zxy=padding)
+    >>> m, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tile_size, padding_zxy=padding)
     >>>
     >>> counter=0
     >>> for mini in m:
@@ -78,7 +78,7 @@ class TrainingBatch(Minibatch):
         self._pixels = None
         self._weights = None
 
-        self._fetch_training_batch_data()
+        #self._fetch_training_batch_data()
 
 
     def __repr__(self):
@@ -113,10 +113,10 @@ class TrainingBatch(Minibatch):
         augmentations = []
 
         for label in self._labels:
-            tpl_data = self._random_tile(for_label=label)
-            pixels.append(tpl_data.pixels)
-            weights.append(tpl_data.weights)
-            augmentations.append(tpl_data.augmentation)
+            tile_data = self._random_tile(for_label=label)
+            pixels.append(tile_data.pixels)
+            weights.append(tile_data.weights)
+            augmentations.append(tile_data.augmentation)
 
         self._pixels = np.array(pixels)
         self._weights = np.array(weights)

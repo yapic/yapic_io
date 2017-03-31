@@ -197,7 +197,7 @@ class TestImageImports(TestCase):
 
 
     def test_add_vals_to_tiff_image(self):
-        path = os.path.join(base_path, '../test_data/tmp/tpl.tif')
+        path = os.path.join(base_path, '../test_data/tmp/tile.tif')
 
         try:
             os.remove(path)
@@ -247,7 +247,7 @@ class TestImageImports(TestCase):
 
 
     def test_add_vals_to_tiff_image_3d(self):
-        path = os.path.join(base_path, '../test_data/tmp/tpl.tif')
+        path = os.path.join(base_path, '../test_data/tmp/tile.tif')
 
         try:
             os.remove(path)

@@ -90,8 +90,8 @@ class TestDataset(TestCase):
 
         pos_val = (0, 5)
         size_val = (7, 6)
-        pos_tpl_val = (0, 3)
-        pos_out, size_out, pos_tpl, padding = \
+        pos_tile_val = (0, 3)
+        pos_out, size_out, pos_tile, padding = \
                 ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
@@ -99,7 +99,7 @@ class TestDataset(TestCase):
 
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)    
-        self.assertEqual(pos_tpl_val, pos_tpl)  
+        self.assertEqual(pos_tile_val, pos_tile)  
         self.assertEqual(padding, [(4, 5), (0, 6)])
 
     def test_inner_tile_size_2(self):
@@ -111,7 +111,7 @@ class TestDataset(TestCase):
         pos_val = (0, 0)
         size_val = (4, 7)
 
-        pos_out, size_out, pos_tpl, pd = \
+        pos_out, size_out, pos_tile, pd = \
                 ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
@@ -119,7 +119,7 @@ class TestDataset(TestCase):
 
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)        
-        self.assertEqual(pos_tpl, (0, 0))
+        self.assertEqual(pos_tile, (0, 0))
         self.assertEqual(pd, [(4, 0), (1, 0)])        
 
     def test_inner_tile_size_3(self):
@@ -131,7 +131,7 @@ class TestDataset(TestCase):
         pos_val = (0, 0)
         size_val = (2, 3)
         
-        pos_out, size_out, pos_tpl, pd = \
+        pos_out, size_out, pos_tile, pd = \
                 ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
@@ -139,7 +139,7 @@ class TestDataset(TestCase):
 
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)        
-        self.assertEqual(pos_tpl, (0, 0))
+        self.assertEqual(pos_tile, (0, 0))
         self.assertEqual(pd, [(2, 0), (3, 0)])        
 
     def test_inner_tile_size_4(self):
@@ -151,7 +151,7 @@ class TestDataset(TestCase):
         pos_val = (0, 2)
         size_val = (5, 4)
 
-        pos_out, size_out, pos_tpl, pd = \
+        pos_out, size_out, pos_tile, pd = \
                 ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
@@ -159,7 +159,7 @@ class TestDataset(TestCase):
 
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)        
-        self.assertEqual(pos_tpl, (0, 0))
+        self.assertEqual(pos_tile, (0, 0))
         self.assertEqual(pd, [(5, 0), (0, 0)])        
 
 
@@ -172,7 +172,7 @@ class TestDataset(TestCase):
         pos_val = (2, 0)
         size_val = (3, 4)
 
-        pos_out, size_out, pos_tpl, pd = \
+        pos_out, size_out, pos_tile, pd = \
                 ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
@@ -180,7 +180,7 @@ class TestDataset(TestCase):
 
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)        
-        self.assertEqual(pos_tpl, (0, 0))
+        self.assertEqual(pos_tile, (0, 0))
         self.assertEqual(pd, [(0, 0), (4, 0)])        
     def test_inner_tile_size_6(self):
 
@@ -191,7 +191,7 @@ class TestDataset(TestCase):
         pos_val = (2, 7)
         size_val = (3, 4)
 
-        pos_out, size_out, pos_tpl, pd = \
+        pos_out, size_out, pos_tile, pd = \
                 ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
@@ -199,7 +199,7 @@ class TestDataset(TestCase):
 
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)        
-        self.assertEqual(pos_tpl, (0, 2))
+        self.assertEqual(pos_tile, (0, 2))
         self.assertEqual(pd, [(0, 0), (0, 4)]) 
 
     def test_inner_tile_size_7(self):
@@ -211,7 +211,7 @@ class TestDataset(TestCase):
         pos_val = (2, 8)
         size_val = (5, 3)
 
-        pos_out, size_out, pos_tpl, pd = \
+        pos_out, size_out, pos_tile, pd = \
                 ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
@@ -219,7 +219,7 @@ class TestDataset(TestCase):
 
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)        
-        self.assertEqual(pos_tpl, (0, 1))
+        self.assertEqual(pos_tile, (0, 1))
         self.assertEqual(pd, [(0, 1), (0, 3)]) 
 
     def test_inner_tile_size_8(self):
@@ -231,7 +231,7 @@ class TestDataset(TestCase):
         pos_val = (4, 7)
         size_val = (3, 4)
 
-        pos_out, size_out, pos_tpl, pd = \
+        pos_out, size_out, pos_tile, pd = \
                 ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
@@ -239,7 +239,7 @@ class TestDataset(TestCase):
 
         self.assertEqual(tuple(pos_out), pos_val)
         self.assertEqual(tuple(size_out), size_val)        
-        self.assertEqual(tuple(pos_tpl), (1, 2))
+        self.assertEqual(tuple(pos_tile), (1, 2))
         self.assertEqual(pd, [(0, 3), (0, 4)]) 
 
 
@@ -252,7 +252,7 @@ class TestDataset(TestCase):
         pos_val = (0, 0)
         size_val = (4, 5)
 
-        pos_out, size_out, pos_tpl, pd = \
+        pos_out, size_out, pos_tile, pd = \
                 ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
@@ -260,7 +260,7 @@ class TestDataset(TestCase):
 
         self.assertEqual(tuple(pos_out), pos_val)
         self.assertEqual(tuple(size_out), size_val)        
-        self.assertEqual(tuple(pos_tpl), (0, 0))
+        self.assertEqual(tuple(pos_tile), (0, 0))
         self.assertEqual(pd, [(4, 0), (1, 0)]) 
 
     def test_inner_tile_size_10(self):
@@ -272,7 +272,7 @@ class TestDataset(TestCase):
         pos_val = (4, 7)
         size_val = (3, 3)
 
-        pos_out, size_out, pos_tpl, pd = \
+        pos_out, size_out, pos_tile, pd = \
                 ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
@@ -280,7 +280,7 @@ class TestDataset(TestCase):
 
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)        
-        self.assertEqual(pos_tpl, (2, 0))
+        self.assertEqual(pos_tile, (2, 0))
         self.assertEqual(pd, [(0, 3), (0, 0)]) 
 
 
@@ -294,7 +294,7 @@ class TestDataset(TestCase):
         pos_val = (2, 2)
         size_val = (3, 4)
 
-        pos_out, size_out, pos_tpl, pd = \
+        pos_out, size_out, pos_tile, pd = \
                 ds.inner_tile_size(shape, pos, size)
 
         print(pos_out)
@@ -302,7 +302,7 @@ class TestDataset(TestCase):
 
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)        
-        self.assertEqual(pos_tpl, (0, 0))
+        self.assertEqual(pos_tile, (0, 0))
         self.assertEqual(pd, [(0, 0), (0, 0)])                 
                       
       
@@ -321,10 +321,10 @@ class TestDataset(TestCase):
         pos = (0, 0, 0)
         size= (3, 6, 4)
         channel = 0
-        tpl = d.tile_singlechannel(image_nr, pos, size, channel, reflect=False)
+        tile = d.tile_singlechannel(image_nr, pos, size, channel, reflect=False)
 
         
-        self.assertEqual(tpl.shape, (3, 6, 4))
+        self.assertEqual(tile.shape, (3, 6, 4))
 
 
     def test_tile_singlechannel_2(self):
@@ -336,7 +336,7 @@ class TestDataset(TestCase):
         pos = (0, 0, 0)
         size= (1, 6, 4)
         channel = 0
-        tpl = d.tile_singlechannel(image_nr, pos, size, channel, reflect=False)
+        tile = d.tile_singlechannel(image_nr, pos, size, channel, reflect=False)
 
         val = \
         [[[151, 132, 154, 190], \
@@ -348,8 +348,8 @@ class TestDataset(TestCase):
 
         val = np.array(val) 
         print(val)
-        print(tpl)      
-        self.assertTrue((tpl == val).all())   
+        print(tile)      
+        self.assertTrue((tile == val).all())   
 
 
     def test_tile_singlechannel_3(self):
@@ -361,7 +361,7 @@ class TestDataset(TestCase):
         pos = (0, -1, -2)
         size= (1, 3, 3)
         channel = 0
-        tpl = d.tile_singlechannel(image_nr, pos, size, channel, reflect=True)
+        tile = d.tile_singlechannel(image_nr, pos, size, channel, reflect=True)
 
         val = \
         [[[132, 151, 151], \
@@ -370,8 +370,8 @@ class TestDataset(TestCase):
         
         val = np.array(val) 
         print(val)
-        print(tpl)   
-        self.assertTrue((tpl == val).all())
+        print(tile)   
+        self.assertTrue((tile == val).all())
 
 
 
@@ -384,7 +384,7 @@ class TestDataset(TestCase):
         pos = (0, 4, 2)
         size= (1, 2, 6)
         channel = 0
-        tpl = d.tile_singlechannel(image_nr, pos, size, channel, reflect=True)
+        tile = d.tile_singlechannel(image_nr, pos, size, channel, reflect=True)
 
         val = \
         [[[184, 161, 161, 184, 200, 175], \
@@ -392,8 +392,8 @@ class TestDataset(TestCase):
         
         val = np.array(val) 
         print(val)
-        print(tpl)   
-        self.assertTrue((tpl == val).all())
+        print(tile)   
+        self.assertTrue((tile == val).all())
 
 
     def test_get_weight_tile_for_label(self):
@@ -457,7 +457,7 @@ class TestDataset(TestCase):
         # val[0, 4, 1] = 1
         # val[0, 5, 1] = 1 
         
-        print('tpl')
+        print('tile')
         print(mat)
 
         val = [\
@@ -608,7 +608,7 @@ class TestDataset(TestCase):
 
 
          tile without augmentation
-         tpl = 
+         tile = 
           [[ 0.  0.  0.  0.  2.  0.  0.  0.  0.]
            [ 0.  0.  0.  0.  2.  0.  0.  0.  0.]
            [ 0.  0.  0.  0.  2.  0.  0.  0.  0.]
@@ -620,7 +620,7 @@ class TestDataset(TestCase):
            [ 0.  0.  0.  0.  2.  0.  0.  0.  0.]]
 
         augmented tile afer 45 degree rotation
-        tpl_rot =
+        tile_rot =
             [[ 1.  1.  0.  0.  0.  0.  0.  0.  2.]
              [ 0.  1.  1.  0.  0.  0.  0.  2.  2.]
              [ 0.  0.  1.  1.  0.  0.  2.  2.  0.]
@@ -633,7 +633,7 @@ class TestDataset(TestCase):
 
         '''
 
-        def get_tpl_func(pos=None, size=None, img=None):
+        def get_tile_func(pos=None, size=None, img=None):
             return img[get_tile_meshgrid(img.shape, pos, size)]
 
 
@@ -657,16 +657,16 @@ class TestDataset(TestCase):
 
         pos = np.array((0, 0, 3, 3))
         size=np.array((1, 1, 9, 9))
-        tpl = get_tpl_func(pos=pos, size=size, img=im)
+        tile = get_tile_func(pos=pos, size=size, img=im)
 
-        tpl_rot = ds.augment_tile(im.shape, pos, size, \
-        get_tpl_func, rotation_angle=45, shear_angle=0, **{'img': im})
+        tile_rot = ds.augment_tile(im.shape, pos, size, \
+        get_tile_func, rotation_angle=45, shear_angle=0, **{'img': im})
 
         print(im)
-        print(tpl)
-        print(tpl_rot)
+        print(tile)
+        print(tile_rot)
 
-        self.assertTrue((val==tpl_rot).all())
+        self.assertTrue((val==tile_rot).all())
 
 
 
@@ -694,7 +694,7 @@ class TestDataset(TestCase):
 
         '''
 
-        def get_tpl_func(pos=None, size=None, img=None):
+        def get_tile_func(pos=None, size=None, img=None):
             return img[get_tile_meshgrid(img.shape, pos, size)]
 
 
@@ -710,16 +710,16 @@ class TestDataset(TestCase):
 
         pos =np.array((0, 0, 7, 7))
         size=np.array((1, 1, 1, 1))
-        tpl = get_tpl_func(pos=pos, size=size, img=im)
+        tile = get_tile_func(pos=pos, size=size, img=im)
 
-        tpl_rot = ds.augment_tile(im.shape, pos, size, \
-        get_tpl_func, rotation_angle=45, shear_angle=0, **{'img': im})
+        tile_rot = ds.augment_tile(im.shape, pos, size, \
+        get_tile_func, rotation_angle=45, shear_angle=0, **{'img': im})
 
         print(im)
-        print(tpl)
-        print(tpl_rot)
+        print(tile)
+        print(tile_rot)
 
-        self.assertTrue((val==tpl_rot).all())
+        self.assertTrue((val==tile_rot).all())
 
 
     
@@ -741,11 +741,11 @@ class TestDataset(TestCase):
                , [107, 153, 125]]]]\
             )
 
-        tpl = d.multichannel_pixel_tile(img, pos_zxy, size_zxy, channels)
-        print(tpl.shape)
-        print(tpl)
+        tile = d.multichannel_pixel_tile(img, pos_zxy, size_zxy, channels)
+        print(tile.shape)
+        print(tile)
         print(val)
-        self.assertTrue((tpl==val).all())
+        self.assertTrue((tile==val).all())
 
 
     def test_multichannel_pixel_tile_2(self):
@@ -771,13 +771,13 @@ class TestDataset(TestCase):
               , [147, 143, 111, 111, 143, 147, 123, 123, 147]]]]\
             )
 
-        tpl = d.multichannel_pixel_tile(img, pos_zxy, size_zxy, channels\
+        tile = d.multichannel_pixel_tile(img, pos_zxy, size_zxy, channels\
                 , pixel_padding=pd, rotation_angle=0)
-        print(tpl.shape)
+        print(tile.shape)
         print(val.shape)
-        print(tpl)
+        print(tile)
         print(val)
-        self.assertTrue((tpl==val).all())
+        self.assertTrue((tile==val).all())
 
 
 
@@ -806,13 +806,13 @@ class TestDataset(TestCase):
                , [121, 180, 147, 123, 106, 106, 125, 68, 78]]]]
             )
 
-        tpl = d.multichannel_pixel_tile(img, pos_zxy, size_zxy, channels\
+        tile = d.multichannel_pixel_tile(img, pos_zxy, size_zxy, channels\
                 , pixel_padding=pd, rotation_angle=45)
-        print(tpl.shape)
+        print(tile.shape)
         print(val.shape)
-        print(tpl)
+        print(tile)
         print(val)
-        self.assertTrue((tpl==val).all())
+        self.assertTrue((tile==val).all())
 
 
     def test_training_tile_1(self):
@@ -870,14 +870,14 @@ class TestDataset(TestCase):
         
         #mapping [{91: 1, 109: 2, 150: 3}]
         labels_val = [1, 2, 3]
-        tpl = d.random_training_tile(\
+        tile = d.random_training_tile(\
             size, channels, pixel_padding=pad, rotation_angle=45)
 
         
-        self.assertEqual(tpl.pixels.shape, pixel_shape_val)
-        self.assertEqual(tpl.channels, channels)
-        self.assertEqual(tpl.weights.shape, weight_shape_val)
-        self.assertEqual(tpl.labels, labels_val)
+        self.assertEqual(tile.pixels.shape, pixel_shape_val)
+        self.assertEqual(tile.channels, channels)
+        self.assertEqual(tile.weights.shape, weight_shape_val)
+        self.assertEqual(tile.labels, labels_val)
 
 
     def test_random_training_tile_spec_label(self):
@@ -893,26 +893,26 @@ class TestDataset(TestCase):
         
         labels_val = [1, 2, 3]
         
-        tpl_1 = d.random_training_tile(\
+        tile_1 = d.random_training_tile(\
             size, channels, pixel_padding=pad, rotation_angle=45, label_region=1)
 
 
-        tpl_2 = d.random_training_tile(\
+        tile_2 = d.random_training_tile(\
             size, channels, pixel_padding=pad, rotation_angle=45, label_region=2)
 
-        tpl_3 = d.random_training_tile(\
+        tile_3 = d.random_training_tile(\
             size, channels, pixel_padding=pad, rotation_angle=45, label_region=3)
 
-        print(tpl_1[2])
-        self.assertEqual(tpl_1[2][0][0][0][0], 1)
-        self.assertEqual(tpl_2[2][1][0][0][0], 1)
-        self.assertEqual(tpl_3[2][2][0][0][0], 1)
-        #self.assertEqual(tpl_1['weights'][0][0][0][0], 1)
+        print(tile_1[2])
+        self.assertEqual(tile_1[2][0][0][0][0], 1)
+        self.assertEqual(tile_2[2][1][0][0][0], 1)
+        self.assertEqual(tile_3[2][2][0][0][0], 1)
+        #self.assertEqual(tile_1['weights'][0][0][0][0], 1)
 
-        # self.assertEqual(tpl.pixels.shape, pixel_shape_val)
-        # self.assertEqual(tpl.channels, channels)
-        # self.assertEqual(tpl.weights.shape, weight_shape_val)
-        # self.assertEqual(tpl.labels, labels_val)
+        # self.assertEqual(tile.pixels.shape, pixel_shape_val)
+        # self.assertEqual(tile.channels, channels)
+        # self.assertEqual(tile.weights.shape, weight_shape_val)
+        # self.assertEqual(tile.labels, labels_val)
     
 
     
