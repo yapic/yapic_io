@@ -69,10 +69,6 @@ class PredictionBatch(Minibatch):
         # self._pos_zxy = None
         self.curr_batch_pos = 0 # current bach position
 
-        # a list of all possible tile positions
-        # [(image_nr, zpos, xpos, ypos), (image_nr, zpos, xpos, ypos), ...]
-        self._all_tile_positions = self._compute_pos_zxy()
-
 
     def pixels(self):
         pixfunc = self._dataset.multichannel_pixel_tile
@@ -120,6 +116,10 @@ class PredictionBatch(Minibatch):
 
 
     def get_actual_batch_size(self):
+        '''
+        Returns the batch size (which might be smaller than `batch_size`
+        if we only have `n < batch_size` tiles left)
+        '''
         total = len(self._all_tile_positions) # nr of single tiles
         processed = self.curr_batch_pos * self._batch_size
         return np.minimum(self._batch_size, total - processed)
