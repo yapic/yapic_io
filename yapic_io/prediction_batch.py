@@ -78,7 +78,7 @@ class PredictionBatch(Minibatch):
                           self._size_zxy,
                           self._channels,
                           self._padding_zxy)
-                  for im_nr, pos_zxy in self.get_curr_tile_positions()]
+                  for im_nr, pos_zxy in self._get_curr_tile_positions()]
 
         return np.array(pixels).astype(self.float_data_type)
 
@@ -125,11 +125,11 @@ class PredictionBatch(Minibatch):
         return np.minimum(self._batch_size, total - processed)
 
 
-    def get_curr_tile_positions(self):
-        return [self._all_tile_positions[x] for x in self.get_curr_tile_indices()]
+    def _get_curr_tile_positions(self):
+        return [self._all_tile_positions[x] for x in self._get_curr_tile_indices()]
 
 
-    def get_curr_tile_indices(self):
+    def _get_curr_tile_indices(self):
         size = self.get_actual_batch_size()
         start = self.curr_batch_pos * self._batch_size
         return np.arange(start, start + size).tolist()
@@ -178,7 +178,7 @@ class PredictionBatch(Minibatch):
 
         # iterate through batch
 
-        for probmap_data_sel, tile_pos_index in zip(probmap_data, self.get_curr_tile_indices()):
+        for probmap_data_sel, tile_pos_index in zip(probmap_data, self._get_curr_tile_indices()):
             # iterate through label channels
             for data_layer, label in zip(probmap_data_sel, self.get_labels()):
                 self._put_probmap_data_for_label(data_layer, label, tile_pos_index)
