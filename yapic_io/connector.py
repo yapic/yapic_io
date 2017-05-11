@@ -73,7 +73,7 @@ class Connector(metaclass=ABCMeta):
     @abstractmethod
     def label_tile(self, image_nr, pos_zxy, size_zxy, label_value):
         '''
-        returns a 3d zxy boolean matrix where positions of the reuqested label
+        returns a 3d zxy boolean matrix where positions of the requested label
         are indicated with True. only mapped labelvalues can be requested.
 
         dimension order: (z, x, y)
