@@ -122,6 +122,7 @@ class Dataset(object):
             label_tile.append(tile)
         label_tile = np.array(label_tile) # 4d label tile with selected labels in 1st dimension
 
+        logger.debug('pixel tile dim={} label tile dim={} labels={}'.format(pixel_tile.shape, label_tile.shape, len(labels)))
         augmentation = {'rotation_angle' : rotation_angle, 'shear_angle' : shear_angle}
         return TrainingTile(pixel_tile, channels, label_tile, labels, augmentation)
 
@@ -586,8 +587,10 @@ def augment_tile(shape,
     morphing has to be applied slice by slice
     '''
     if (rotation_angle == 0) and (shear_angle == 0):
-        return tile_with_reflection(shape, pos, size, get_tile_func,
+        res = tile_with_reflection(shape, pos, size, get_tile_func,
                                             reflect=reflect, **kwargs)
+        logger.debug('tile_with_reflection dims = {}, {}'.format(res.shape, shape))
+        return res
 
     if (size[-2]) == 1 and (size[-1] == 1):
         # if the requested tile is only of size 1 in x and y,
@@ -629,12 +632,16 @@ def tile_with_reflection(shape, pos, size, get_tile_func,
     transient_tile = get_tile_func(pos=tuple(pos_transient),
                                       size=tuple(size_transient),
                                       **kwargs)
+    logger.debug('transient_tile1 dims={}'.format(transient_tile.shape))
 
     # pad transient tile with reflection
     transient_tile_pad = np.pad(transient_tile, pad_size, mode='symmetric')
 
     mesh = ut.get_tile_meshgrid(transient_tile_pad.shape,
                                     pos_inside_transient, size)
+
+    logger.debug('transient_tile2 dims={}'.format(transient_tile_pad.shape))
+    logger.debug('transient_tile3 dims={}'.format(transient_tile_pad[mesh].shape))
 
     return transient_tile_pad[mesh]
 

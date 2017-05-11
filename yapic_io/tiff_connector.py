@@ -6,6 +6,7 @@ from functools import lru_cache
 import yapic_io.utils as ut
 import numpy as np
 import itertools
+import warnings
 
 import yapic_io.image_importers as ip
 from yapic_io.utils import get_tile_meshgrid, add_to_filename, find_best_matching_pairs
@@ -194,9 +195,9 @@ class TiffConnector(Connector):
                        for m, (img, lbl) in zip(mask, self.filenames) if m == False]
 
         if len(img_fnames1) == 0:
-            warning.warn('TiffConnector.split({}): First connector is empty!'.format(fraction))
-        if len(img_fnames1) == N:
-            warning.warn('TiffConnector.split({}): Second connector is empty!'.format(fraction))
+            warnings.warn('TiffConnector.split({}): First connector is empty!'.format(fraction))
+        if len(img_fnames2) == 0:
+            warnings.warn('TiffConnector.split({}): Second connector is empty!'.format(fraction))
 
         conn1 = TiffConnector(img_fnames1, lbl_fnames1,
                               savepath=self.savepath,
@@ -308,17 +309,21 @@ class TiffConnector(Connector):
             label_dim = self.label_matrix_dimensions(image_nr)
 
             if label_dim is None:
-                logger.debug('Check image nr %s: ok (no labelmat found) ', image_nr)
+                msg = 'Check image nr {}: ok (dims={}, no labelmat found) '
+                logger.debug(msg.format(image_nr, im_dim))
             else:
                 nr_channels.append(label_dim[0])
                 logger.debug('Found %s label channel(s)', nr_channels[-1])
 
                 if label_dim[1:] == im_dim[1:]:
-                    logger.debug('Check image nr %s: ok ', image_nr)
+                    msg = 'Check image nr {}: ok (img dims={}, label dims={})'
+                    logger.debug(msg.format(image_nr, im_dim, label_dim))
                 else:
                     logger.error('Check image nr %s (%s): image dim is %s, label dim is %s '\
                         , image_nr, self.filenames[image_nr], im_dim, label_dim)
-                    raise ValueError('Check image nr %s: dims do not match ' % str(image_nr))
+                    path = os.path.join(self.img_path, self.filenames[image_nr][0])
+                    msg = 'Check image nr {} ({}): image dims ({}) do not match label dims ({})'
+                    raise ValueError(msg.format(image_nr, path, im_dim[1:], label_dim[1:]))
         if len(set(nr_channels))>1:
             raise ValueError('Nr of channels not consitent in input data, found following nr of labelmask channels: %s' % str(set(nr_channels)))
 
