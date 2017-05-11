@@ -16,7 +16,7 @@ class Connector(metaclass=ABCMeta):
 
     - Images are 4D datasets with following dimensions: (channel, z, x, y)
     
-    - All images must have the same nr of channels but can vary in z,x, and y.
+    - All images must have the same nr of channels but can vary in z, x, and y.
     
     - Time series are not supported. However, time frames can be modeled as
       individual images.  
@@ -32,21 +32,21 @@ class Connector(metaclass=ABCMeta):
     '''
     
     @abstractmethod
-    def get_image_count(self):
+    def image_count(self):
         '''
         :returns: the number of images in the dataset
         '''
         pass
 
     @abstractmethod
-    def get_labelcount_for_im(self, image_nr):
+    def label_count_for_image(self, image_nr):
         '''
         returns for each label value the number of labels for this image
         
         label_counts = {
-             label_value_1 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...],
-             label_value_2 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...],
-             label_value_3 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...],
+             label_value_1 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...], 
+             label_value_2 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...], 
+             label_value_3 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...], 
              ...
         }
 
@@ -58,7 +58,7 @@ class Connector(metaclass=ABCMeta):
 
 
     @abstractmethod
-    def get_template(self, image_nr=None, pos=None, size=None):
+    def get_tile(self, image_nr=None, pos=None, size=None):
         '''
         returns 4D subsection of one image in following dimension order:
         (channel, zslice, x, y)
@@ -71,15 +71,15 @@ class Connector(metaclass=ABCMeta):
         pass
     
     @abstractmethod
-    def get_template_for_label(self, image_nr, pos_zxy, size_zxy, label_value):
+    def label_tile(self, image_nr, pos_zxy, size_zxy, label_value):
         '''
         returns a 3d zxy boolean matrix where positions of the reuqested label
         are indicated with True. only mapped labelvalues can be requested.
 
-        dimension order: (z,x,y)
+        dimension order: (z, x, y)
 
         :param image_nr: index of image
-        :param pos_zxy: upper left position of subsection (zslice,x,y)
+        :param pos_zxy: upper left position of subsection (zslice, x, y)
         :type pos_zxy: 4 element tuple of integers (zslice, x, y)
         :param label_value: the id of the label
         :type label_value: integer
@@ -90,16 +90,16 @@ class Connector(metaclass=ABCMeta):
 
 
     @abstractmethod    
-    def put_template(self, pixels, pos_zxy, image_nr, label_value):
+    def put_tile(self, pixels, pos_zxy, image_nr, label_value):
         '''
         Puts probabilities (pixels) for a certain label to the data storage.
         These probabilities are prediction values from a classifier (i.e. the
         output of the classier)
 
         :param pixels: 3D matrix of probability values
-        :type pixels: 3D numpy array of floats with shape (z,x,y)
+        :type pixels: 3D numpy array of floats with shape (z, x, y)
         :param pos_zxy: upper left position of pixels in source image_nr
-        :type pos_zxy: tuple of length 3 (z,x,y) with integer values
+        :type pos_zxy: tuple of length 3 (z, x, y) with integer values
         :param image_nr: index of image
         :param label_value: the id of the label
         :type label_value: integer
@@ -108,7 +108,7 @@ class Connector(metaclass=ABCMeta):
 
 
     @abstractmethod
-    def load_img_dimensions(self, image_nr):
+    def image_dimensions(self, image_nr):
         '''
         returns dimensions of the dataset.
         dims is a 4-element-tuple:
@@ -119,36 +119,36 @@ class Connector(metaclass=ABCMeta):
         pass
 
     @abstractmethod
-    def get_label_coordinate(self, image_nr, label_value, label_index):
+    def label_index_to_coordinate(self, image_nr, label_value, label_index):
         '''
         returns a czxy coordinate of a specific label (specified by the
         label index) with labelvalue label_value (mapped label value).
 
         The count of labels for a specific labelvalue can be retrieved by
         
-        count = get_labelcount_for_im()
+        count = label_count_for_image()
 
         The label_index must be a value between 0 and count[label_value].
         '''      
     
     # @abstractmethod 
-    # def get_label_coordinates(self, image_nr):
+    # def label_index_to_coordinates(self, image_nr):
     #     ''''
     #     returns label coordinates as dict in following format:
     #     channel has always value 0!! This value is just kept for consitency in 
     #     dimensions with corresponding pixel data 
 
     #     {
-    #         label_nr1 : numpy.array([[c,z,x,y],
-    #                                  [c,z,x,y],
-    #                                  [c,z,x,y],
-    #                                  [c,z,x,y],
-    #                                  ...]),
-    #         label_nr2 : numpy.array([[c,z,x,y],
-    #                                  [c,z,x,y],
-    #                                  [c,z,x,y],
-    #                                  [c,z,x,y],
-    #                                  ...]),
+    #         label_nr1 : numpy.array([[c, z, x, y], 
+    #                                  [c, z, x, y], 
+    #                                  [c, z, x, y], 
+    #                                  [c, z, x, y], 
+    #                                  ...]), 
+    #         label_nr2 : numpy.array([[c, z, x, y], 
+    #                                  [c, z, x, y], 
+    #                                  [c, z, x, y], 
+    #                                  [c, z, x, y], 
+    #                                  ...]), 
     #         ...
     #     }
 

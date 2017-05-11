@@ -6,22 +6,22 @@ import yapic_io.image as im
 import yapic_io.image_importers as ip
 from yapic_io.utils import get_indices
 class TestImage(TestCase):
-    def test_get_template_value_error_size(self):
+    def test_get_tile_value_error_size(self):
         image = np.zeros((4, 5, 6)) #3 dim image
         pos = (0, 0)
         size = (3, 2)
 
         self.assertRaises(ValueError\
-            , lambda: im.get_template(image, pos, size))  
+            , lambda: im.get_tile(image, pos, size))  
         
 
-    def test_get_template_value_error_pos(self):
+    def test_get_tile_value_error_pos(self):
         image = np.zeros((4, 5, 6)) #3 dim image
         pos = (0, 0)
         size = (3, 2, 2)
         
         self.assertRaises(ValueError\
-            , lambda: im.get_template(image, pos, size))  
+            , lambda: im.get_tile(image, pos, size))  
 
 
     def test_are_all_elements_uneven(self):
@@ -32,7 +32,7 @@ class TestImage(TestCase):
         self.assertFalse(im.are_all_elements_uneven(b))
 
 
-    def test_get_template(self):
+    def test_get_tile(self):
         image = np.zeros((5, 7)).astype(int) #3 dim image
         
         image = np.array([[0, 0, 0, 0, 0]\
@@ -40,18 +40,18 @@ class TestImage(TestCase):
                         , [0, 0, 3, 4, 0]\
                         , [0, 0, 5, 6, 0]])
 
-        pos = (1,2)
+        pos = (1, 2)
         size = (3, 2)
 
-        val = np.array([[1,2]\
-                       ,[3,4]\
-                       ,[5,6]])
-        res = im.get_template(image, pos, size)
+        val = np.array([[1, 2]\
+                       , [3, 4]\
+                       , [5, 6]])
+        res = im.get_tile(image, pos, size)
         print(res)
         self.assertTrue((res == val).all())
         
 
-    def test_get_template_err_outofbounds(self):
+    def test_get_tile_err_outofbounds(self):
         image = np.zeros((5, 7)).astype(int) #3 dim image
         
         image = np.array([[0, 0, 0, 0, 0]\
@@ -59,16 +59,16 @@ class TestImage(TestCase):
                         , [0, 0, 3, 4, 0]\
                         , [0, 0, 5, 6, 0]])
 
-        pos = (1,2)
+        pos = (1, 2)
         size = (4, 2)
 
         self.assertRaises(ValueError\
-            , lambda: im.get_template(image, pos, size))  
+            , lambda: im.get_tile(image, pos, size))  
 
 
     def test_get_indices_error_dims(self):
-        pos = (1,2,3)
-        size = (1,2)
+        pos = (1, 2, 3)
+        size = (1, 2)
 
         self.assertRaises(ValueError\
             , lambda: get_indices(pos, size))  
@@ -101,44 +101,44 @@ class TestImage(TestCase):
         size = (3, 5)
 
         res = im.get_padding_size(shape, pos, size)
-        self.assertEqual([(3,0),(0,0)], res) 
+        self.assertEqual([(3, 0), (0, 0)], res) 
 
 
     def test_correct_pos_for_padding(self):
-        pos = (-1,-1)
-        padding_sizes = ((1,0), (1,0))
+        pos = (-1, -1)
+        padding_sizes = ((1, 0), (1, 0))
         res = im.correct_pos_for_padding(pos, padding_sizes)
-        val = (0,0)
+        val = (0, 0)
         self.assertEqual(val, res)       
 
 
-    def test_get_template_withpadding(self):
+    def test_get_tile_withpadding(self):
         image = np.array([[0, 1, 2, 3, 4]\
-                         ,[5, 6, 7, 8, 9]\
-                         ,[10,11,12,13,14]\
-                         ,[15,16,17,18,19]\
-                         ,[20,21,22,23,24]\
+                         , [5, 6, 7, 8, 9]\
+                         , [10, 11, 12, 13, 14]\
+                         , [15, 16, 17, 18, 19]\
+                         , [20, 21, 22, 23, 24]\
                         ])       
         
-        tpl_val = np.array([[6, 5, 6, 7, 8, 9]\
-                           ,[1, 0, 1, 2, 3, 4]\
-                           ,[6, 5, 6, 7, 8, 9]\
-                           ,[11,10,11,12,13,14]\
-                           ,[16,15,16,17,18,19]\
-                           ,[21,20,21,22,23,24]\
-                           ,[16,15,16,17,18,19]\
-                           ,[11,10,11,12,13,14]\
+        tile_val = np.array([[6, 5, 6, 7, 8, 9]\
+                           , [1, 0, 1, 2, 3, 4]\
+                           , [6, 5, 6, 7, 8, 9]\
+                           , [11, 10, 11, 12, 13, 14]\
+                           , [16, 15, 16, 17, 18, 19]\
+                           , [21, 20, 21, 22, 23, 24]\
+                           , [16, 15, 16, 17, 18, 19]\
+                           , [11, 10, 11, 12, 13, 14]\
                            ])       
 
-        pos = (1,1)
-        size = (4,2)
+        pos = (1, 1)
+        size = (4, 2)
         padding = 2
 
-        tpl = im.get_template(image, pos, size, padding=2)
+        tile = im.get_tile(image, pos, size, padding=2)
 
-        print(tpl)
+        print(tile)
 
-        self.assertTrue((tpl == tpl_val).all())
+        self.assertTrue((tile == tile_val).all())
 
 
     def test_init_image(self):
@@ -151,14 +151,14 @@ class TestImage(TestCase):
 
 
 
-    def test_get_template_meshgrid(self):
+    def test_get_tile_meshgrid(self):
         image_shape = (5, 4)
         pos = (1, 2)
         size = (3, 2)
-        m = im.get_template_meshgrid(image_shape, pos, size)
+        m = im.get_tile_meshgrid(image_shape, pos, size)
         print(m)
-        vals_x = slice(1,4)
-        vals_y = slice(2,4)
+        vals_x = slice(1, 4)
+        vals_y = slice(2, 4)
         
         self.assertTrue(m[0], vals_x)
         self.assertTrue(m[1], vals_y)
