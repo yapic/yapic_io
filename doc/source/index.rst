@@ -1,10 +1,11 @@
-.. YAPiC documentation master file, created by
-   sphinx-quickstart on Tue May  3 09:47:09 2016.
-   You can adapt this file completely to your liking, but it should at least
-   contain the root `toctree` directive.
-
-Welcome to YAPiC's documentation!
+Welcome to YAPiC Input/Output documentation!
 =================================
+
+This library provides two types of :class:`yapic_io.minibatch.Minibatch`:
+:class:`yapic_io.training_batch.TrainingBatch` and :class:`yapic_io.prediction_batch.PredictionBatch`.
+
+Each minibatch has a :class:`yapic_io.dataset.Dataset`, which in turn have a
+:class:`yapic_io.connector.Connector`.
 
 Contents:
 
