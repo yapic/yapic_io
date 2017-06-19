@@ -512,15 +512,16 @@ class TiffConnector(Connector):
         # label matrix
         mat = self.load_label_matrix(image_nr)
 
-        coors = np.array(np.where(mat==label_value))
+        coors = np.array(np.where(mat.ravel()==label_value))
 
-        n_coors = coors.shape[1]
-        if (label_index < 0)  or (label_index >= n_coors):
+        n_coors = coors.size
+        if (label_index < 0) or (label_index >= n_coors):
             raise ValueError('''Label index %s for label value %s in image %s
                 not correct. Only %s labels of that value for this image''' %\
                 (str(label_index), str(label_value), str(image_nr), str(n_coors)))
 
-        coor = coors[:, label_index]
+        coor = np.unravel_index(coors[0,label_index], mat.shape)
+        coor = np.array(coor)
         coor[0] = 0 # set channel to zero
 
         return coor
