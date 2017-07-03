@@ -1,7 +1,7 @@
 # if you change this file you should build a new docker image (see e.g. ./debian.Dockerfile)
-scipy>=0.17.0
-numpy>=1.11.0
+munkres>=1.0.8
 scikit_image>=0.12.3
 tifffile==0.9.2
-munkres>=1.0.8
 Pillow>=4.2.0
+scipy>=0.17.0
+numpy>=1.11.0

@@ -24,5 +24,5 @@ setup(name='yapic_io',
       zip_safe=False,
       install_requires=reqs,
       test_suite='nose.collector',
-      tests_require=['nose', 'coverage', 'nose-timer'])
+      tests_require=['coverage', 'nose-timer', 'nose'])
 
