@@ -1,5 +1,6 @@
 from abc import ABCMeta, abstractmethod
 
+
 class Connector(metaclass=ABCMeta):
     '''
     Interface to pixel and label data source for classifier 
@@ -15,22 +16,35 @@ class Connector(metaclass=ABCMeta):
     Prerequisites for the Image data:
 
     - Images are 4D datasets with following dimensions: (channel, z, x, y)
-    
+
     - All images must have the same nr of channels but can vary in z, x, and y.
-    
+
     - Time series are not supported. However, time frames can be modeled as
       individual images.  
-    
+
     - Images with lower dimensions can be modeled. E.g. grayscale single plane images
       have the shape (1, 1, width, height). 
 
 
 
     The Connector methods are used by the Dataset class.
-
-
     '''
-    
+
+    def __init__(self):
+        '''
+        In polling mode, the dataset will repeatedly fetch
+        tiles for training (using get_tile) until labels of a
+        certain value are present.
+        This is efficient in following situation:
+        - relatively small images
+        - dense labelling
+        
+        For very large images with sparse labelling,
+        the by_label_index mode is recommended (implemented in 
+        Coordinate_connector class)
+        '''
+        self.tile_fetching_mode = 'polling'
+
     @abstractmethod
     def image_count(self):
         '''
@@ -42,7 +56,7 @@ class Connector(metaclass=ABCMeta):
     def label_count_for_image(self, image_nr):
         '''
         returns for each label value the number of labels for this image
-        
+
         label_counts = {
              label_value_1 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...], 
              label_value_2 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...], 
@@ -52,10 +66,8 @@ class Connector(metaclass=ABCMeta):
 
         :param image_nr: index of image
         :returns label_counts: dict with counts per label and per image, see example above
-        ''' 
+        '''
         pass
-
-
 
     @abstractmethod
     def get_tile(self, image_nr=None, pos=None, size=None):
@@ -69,7 +81,7 @@ class Connector(metaclass=ABCMeta):
         :returns: 4D subsection of image as numpy array
         '''
         pass
-    
+
     @abstractmethod
     def label_tile(self, image_nr, pos_zxy, size_zxy, label_value):
         '''
@@ -84,12 +96,11 @@ class Connector(metaclass=ABCMeta):
         :param label_value: the id of the label
         :type label_value: integer
         :returns: 3D subsection of labelmatrix as boolean numpy array
-        '''    
+        '''
 
         pass
 
-
-    @abstractmethod    
+    @abstractmethod
     def put_tile(self, pixels, pos_zxy, image_nr, label_value):
         '''
         Puts probabilities (pixels) for a certain label to the data storage.
@@ -106,59 +117,13 @@ class Connector(metaclass=ABCMeta):
         :returns: bool (True if successful)
         '''
 
-
     @abstractmethod
     def image_dimensions(self, image_nr):
         '''
         returns dimensions of the dataset.
         dims is a 4-element-tuple:
-        
+
         :param image_nr: index of image
         :returns (nr_channels, nr_zslices, nr_x, nr_y)
         '''
         pass
-
-    @abstractmethod
-    def label_index_to_coordinate(self, image_nr, label_value, label_index):
-        '''
-        returns a czxy coordinate of a specific label (specified by the
-        label index) with labelvalue label_value (mapped label value).
-
-        The count of labels for a specific labelvalue can be retrieved by
-        
-        count = label_count_for_image()
-
-        The label_index must be a value between 0 and count[label_value].
-        '''      
-    
-    # @abstractmethod 
-    # def label_index_to_coordinates(self, image_nr):
-    #     ''''
-    #     returns label coordinates as dict in following format:
-    #     channel has always value 0!! This value is just kept for consitency in 
-    #     dimensions with corresponding pixel data 
-
-    #     {
-    #         label_nr1 : numpy.array([[c, z, x, y], 
-    #                                  [c, z, x, y], 
-    #                                  [c, z, x, y], 
-    #                                  [c, z, x, y], 
-    #                                  ...]), 
-    #         label_nr2 : numpy.array([[c, z, x, y], 
-    #                                  [c, z, x, y], 
-    #                                  [c, z, x, y], 
-    #                                  [c, z, x, y], 
-    #                                  ...]), 
-    #         ...
-    #     }
-
-
-    #     :param image_nr: index of image
-    #     :returns: dict of label coordinates
-    
-    #     '''
-    #     pass
-
-
-
-

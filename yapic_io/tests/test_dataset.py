@@ -878,6 +878,8 @@ class TestDataset(TestCase):
         self.assertEqual(tile.channels, channels)
         self.assertEqual(tile.weights.shape, weight_shape_val)
         self.assertEqual(tile.labels, labels_val)
+        
+        #assert False
 
 
     def test_random_training_tile_spec_label(self):
