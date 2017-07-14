@@ -83,6 +83,7 @@ class TiffConnector(Connector):
         '''
         
         super().__init__() #sets training_tile_mode
+
         self.filenames = None # list of tuples: [(imgfile_1.tif, labelfile_1.tif), (imgfile_2.tif, labelfile_2.tif), ...]
         self.labelvalue_mapping = None # list of dicts of original and assigned labelvalues
 
@@ -474,7 +475,7 @@ class TiffConnector(Connector):
         return list(values)
 
 
-    @lru_cache(maxsize = 500)
+    @lru_cache(maxsize = 1500)
     def label_count_for_image(self, image_nr):
         '''
         returns for each label value the number of labels for this image

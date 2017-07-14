@@ -882,6 +882,19 @@ class TestDataset(TestCase):
         #assert False
 
 
+    
+    def test_random_pos_izxy(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path, label_path)
+        d = Dataset(c)
+        
+        np.random.seed(42)
+        pos_izxy = d._random_pos_izxy(label_value=1)
+        print(pos_izxy)
+        assert_array_equal(pos_izxy, np.array([0, 2, 7, 20]))
+            
+
     def test_random_training_tile_spec_label(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
@@ -966,3 +979,4 @@ class TestDataset(TestCase):
         except:
             pass    
     
+
