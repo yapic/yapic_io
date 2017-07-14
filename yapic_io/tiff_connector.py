@@ -82,7 +82,7 @@ class TiffConnector(Connector):
           dimension is z or channel (RGB images will still be mapped correctly)
         '''
         
-        super().__init__() #sets training_tile_mode
+        
 
         self.filenames = None # list of tuples: [(imgfile_1.tif, labelfile_1.tif), (imgfile_2.tif, labelfile_2.tif), ...]
         self.labelvalue_mapping = None # list of dicts of original and assigned labelvalues
@@ -212,7 +212,7 @@ class TiffConnector(Connector):
                               multichannel_pixel_image=self.multichannel_pixel_image,
                               multichannel_label_image=self.multichannel_label_image,
                               zstack=self.zstack)
-
+        np.random.seed(None)
         return conn1, conn2
 
 
@@ -494,40 +494,40 @@ class TiffConnector(Connector):
         return label_value in set(labelvalues)
 
 
-    def label_index_to_coordinate(self, image_nr, label_value, label_index):
-        '''
-        returns a czxy coordinate of a specific label (specified by the
-        label index) with labelvalue label_value (mapped label value).
+    # def label_index_to_coordinate(self, image_nr, label_value, label_index):
+    #     '''
+    #     returns a czxy coordinate of a specific label (specified by the
+    #     label index) with labelvalue label_value (mapped label value).
 
-        The count of labels for a specific labelvalue can be retrieved by
+    #     The count of labels for a specific labelvalue can be retrieved by
 
-        count = label_count_for_image()
+    #     count = label_count_for_image()
 
-        The label_index must be a value between 0 and count[label_value].
-        '''
-        mat = self.load_label_matrix(image_nr)
+    #     The label_index must be a value between 0 and count[label_value].
+    #     '''
+    #     mat = self.load_label_matrix(image_nr)
 
-        # check for correct label_value
-        if not self.is_labelvalue_valid(label_value):
-            raise ValueError('Label value %s does not exist. Label value mapping: %s' %\
-                (str(label_value), str(self.labelvalue_mapping)))
+    #     # check for correct label_value
+    #     if not self.is_labelvalue_valid(label_value):
+    #         raise ValueError('Label value %s does not exist. Label value mapping: %s' %\
+    #             (str(label_value), str(self.labelvalue_mapping)))
 
-        # label matrix
-        mat = self.load_label_matrix(image_nr)
+    #     # label matrix
+    #     mat = self.load_label_matrix(image_nr)
 
-        coors = np.array(np.where(mat.ravel()==label_value))
+    #     coors = np.array(np.where(mat.ravel()==label_value))
 
-        n_coors = coors.size
-        if (label_index < 0) or (label_index >= n_coors):
-            raise ValueError('''Label index %s for label value %s in image %s
-                not correct. Only %s labels of that value for this image''' %\
-                (str(label_index), str(label_value), str(image_nr), str(n_coors)))
+    #     n_coors = coors.size
+    #     if (label_index < 0) or (label_index >= n_coors):
+    #         raise ValueError('''Label index %s for label value %s in image %s
+    #             not correct. Only %s labels of that value for this image''' %\
+    #             (str(label_index), str(label_value), str(image_nr), str(n_coors)))
 
-        coor = np.unravel_index(coors[0,label_index], mat.shape)
-        coor = np.array(coor)
-        coor[0] = 0 # set channel to zero
+    #     coor = np.unravel_index(coors[0,label_index], mat.shape)
+    #     coor = np.array(coor)
+    #     coor[0] = 0 # set channel to zero
 
-        return coor
+    #     return coor
 
 
     def is_image_nr_valid(self, image_nr):

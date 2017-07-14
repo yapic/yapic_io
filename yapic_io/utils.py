@@ -182,6 +182,7 @@ def get_max_pos_for_tile(size, shape):
     '''
     returns maxpos as np array
     '''
+    
     return np.array(shape) - np.array(size)
 
 

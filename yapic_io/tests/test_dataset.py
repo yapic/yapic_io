@@ -1,7 +1,7 @@
 from unittest import TestCase
 import os
 import numpy as np
-
+from yapic_io.coordinate_tiff_connector import CoordinateTiffConnector
 from yapic_io.tiff_connector import TiffConnector
 from yapic_io.dataset import Dataset
 from yapic_io.utils import get_tile_meshgrid
@@ -11,7 +11,7 @@ from pprint import pprint
 import logging
 from numpy.testing import assert_array_equal
 logger = logging.getLogger(os.path.basename(__file__))
-
+logger.setLevel(logging.WARNING)
 base_path = os.path.dirname(__file__)
 
 class TestDataset(TestCase):
@@ -531,7 +531,7 @@ class TestDataset(TestCase):
                         os.path.join(label_path, '40width26height3slices_rgb.tif'), ]
 
 #        c = TiffConnector(img_path, label_path)
-        c = TiffConnector(img_fnames, label_fnames)
+        c = CoordinateTiffConnector(img_fnames, label_fnames)
         d = Dataset(c)
 
         print(d.label_counts)
@@ -841,7 +841,7 @@ class TestDataset(TestCase):
     def test_random_label_coordinate(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = TiffConnector(img_path, label_path)
+        c = CoordinateTiffConnector(img_path, label_path)
         d = Dataset(c)
 
         res_1 = d.random_label_coordinate(equalized=False)
@@ -890,15 +890,71 @@ class TestDataset(TestCase):
         d = Dataset(c)
         
         np.random.seed(42)
-        pos_izxy = d._random_pos_izxy(label_value=1)
+        pos_izxy = d._random_pos_izxy(label_value=1, size_zxy=(1,2,2))
         print(pos_izxy)
         assert_array_equal(pos_izxy, np.array([0, 2, 7, 20]))
+
+        #this tile has same size as image, pos must always be 0
+        pos_izxy = d._random_pos_izxy(label_value=1, size_zxy=(3,40,26))
+        assert_array_equal(pos_izxy, np.array([0, 0, 0, 0]))
+
+        #this tile is larger than the image
+        with self.assertRaises(ValueError):
+            pos_izxy = d._random_pos_izxy(label_value=1, size_zxy=(3,40,27))
+
+        np.random.seed(None)    
+        
+
+
+
+    def test_random_training_tile_by_polling(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        
+        size = (1, 4, 3)
+        channels = [0, 1, 2]
+        labels = [1,2,3]
+        label_region = 2
+
+        c = TiffConnector(img_path, label_path)
+        d = Dataset(c)
+        
+        # weights_val = np.array(
+
+        weights_val = np.array([[[[ 0.,  0.,  0.],
+                                  [ 0.,  0.,  0.],
+                                  [ 0.,  0.,  0.],
+                                  [ 0.,  0.,  0.]]],                    
+                                [[[ 0.,  0.,  0.],
+                                  [ 0.,  0.,  0.],
+                                  [ 1.,  1.,  1.],
+                                  [ 1.,  1.,  1.]]],
+                                   
+                                   
+                                [[[ 1.,  0.,  0.],
+                                  [ 0.,  0.,  0.],
+                                  [ 0.,  0.,  0.],
+                                  [ 0.,  0.,  0.]]]])
+    
+
+        np.random.seed(43)
+        training_tile = d._random_training_tile_by_polling(size, channels,
+                                        labels,
+                                        label_region = label_region)
+        print(training_tile)
+        
+        
+        pprint(training_tile.weights)
+        assert_array_equal(training_tile.weights, weights_val)
+        np.random.seed(None)
+       
             
 
     def test_random_training_tile_spec_label(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = TiffConnector(img_path, label_path)
+        #c = TiffConnector(img_path, label_path)
+        c = CoordinateTiffConnector(img_path, label_path)
         d = Dataset(c)
 
         size = (1, 1, 1)

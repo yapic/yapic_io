@@ -43,7 +43,7 @@ class Connector(metaclass=ABCMeta):
         the by_label_index mode is recommended (implemented in 
         Coordinate_connector class)
         '''
-        self.tile_fetching_mode = 'polling'
+        
 
     @abstractmethod
     def image_count(self):

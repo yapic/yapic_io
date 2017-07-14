@@ -1,7 +1,7 @@
 from abc import ABCMeta, abstractmethod
 from yapic_io.connector import Connector
 
-class Coordinate_connector(Connector, metaclass=ABCMeta):
+class CoordinateConnector(Connector, metaclass=ABCMeta):
     '''
     Interface to pixel and label data source for classifier 
     training and prediction.
@@ -18,8 +18,7 @@ class Coordinate_connector(Connector, metaclass=ABCMeta):
     - sparse labelling where labels are stored as coordinates
     '''
 
-    def __init__(self):
-        self.tile_fetching_mode = 'by_label_index'
+    
 
 
     @abstractmethod

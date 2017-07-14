@@ -11,7 +11,7 @@ import os
 import yapic_io.transformations as trafo
 import collections
 logger = logging.getLogger(os.path.basename(__file__))
-
+logger.setLevel(logging.INFO)
 TrainingTile = collections.namedtuple('TrainingTile',
                                       ['pixels', 'channels', 'weights', 'labels', 'augmentation'])
 
@@ -33,6 +33,8 @@ class Dataset(object):
         self.n_images = pixel_connector.image_count()
         self.label_counts = self.load_label_counts()
         self.init_label_weights()
+        self.max_pollings = 30  # max nr of trials to get a
+        # random training tile in polling mode
 
     def __repr__(self):
         return 'Dataset (%s images)' % (self.n_images)
@@ -107,36 +109,104 @@ class Dataset(object):
                 rotation_angle=rotation_angle,
                 shear_angle=shear_angle,
                 label_region=label_region)
-        # #else: polling = repeated tile fetching until label_region labelvalue
-        # #is present in tile
-        # if label_region is None:
-        # # pick random labelvalue for label_region
-        #     label_region = self.random_label_value(equalized=equalized)
 
-        # tile_data = self.training_tile(img_nr, pos_zxy, size_zxy,
-        #         channels, labels, pixel_padding=pixel_padding,
-        #         rotation_angle=rotation_angle, shear_angle=shear_angle)
+        return self._random_training_tile_by_polling(
+            size_zxy,
+            channels,
+            labels,
+            pixel_padding=pixel_padding,
+            equalized=equalized,
+            rotation_angle=rotation_angle,
+            shear_angle=shear_angle,
+            label_region=label_region)
 
-    
-    
-
-    def _random_pos_izxy(self, label_value):
+    def _random_pos_izxy(self, label_value, size_zxy):
         '''
-        get a random image and a random zxy position within this image 
+        get a random image and a random zxy position 
+        (for a tile of shape size_zxy) within this image.
+        Images with more frequent labels of type label_value
+        are more likely to be selected.  
         '''
-        
 
-        #get random image by label probability
-        lbl_count = self.label_counts[label_value] #label probability per image
+        # get random image by label probability
+        # label probability per image
+        lbl_count = self.label_counts[label_value]
         label_prob = lbl_count / lbl_count.sum()
-        img_nr_sel = choice(range(0,len(label_prob)), p=label_prob) 
-        
-        #get random zxy position within selected image
-        img_size = self.image_dimensions(img_nr_sel)
-        pos_zxy_sel = randint_array((0, 0, 0), img_size[1:])
+        img_nr_sel = choice(range(0, len(label_prob)), p=label_prob)
+
+        # get random zxy position within selected image
+        img_shape_zxy = self.image_dimensions(img_nr_sel)[1:]
+        img_maxpos_zxy = ut.get_max_pos_for_tile(size_zxy, img_shape_zxy)
+
+        err_msg = 'Tile of size {} does not fit in image of size {}'.format(
+            size_zxy, img_shape_zxy)
+        if (img_maxpos_zxy < 0).any():
+            raise ValueError(err_msg)
+
+        pos_zxy_sel = randint_array((0, 0, 0), img_maxpos_zxy + 1)
         pos_izxy_sel = np.insert(pos_zxy_sel, 0, img_nr_sel)
 
         return pos_izxy_sel
+
+    def _random_training_tile_by_polling(self,
+                                         size_zxy,
+                                         channels,
+                                         labels,
+                                         pixel_padding=(0, 0, 0),
+                                         equalized=False,
+                                         rotation_angle=0,
+                                         shear_angle=0,
+                                         label_region=None):
+        ''''
+        fetches a random training tile by repeated polling until
+        the label specified in label_region is at least one time
+        represented in the tile. The number if trials is set in
+        self.max_pollings.
+        If the nr of trials exceeds max_pollings, the last fetched
+        tile is returned, although not containing the label.
+        '''
+        if label_region is None:
+            label_region = self.random_label_value(equalized=equalized)
+
+        pos_izxy = self._random_pos_izxy(label_region, size_zxy)
+
+        img_nr = pos_izxy[0]
+        pos_zxy = pos_izxy[1:]
+
+        counter = 0
+        for i in range(self.max_pollings):
+            counter += 1
+
+            pos_izxy = self._random_pos_izxy(label_region, size_zxy)
+            img_nr = pos_izxy[0]
+            pos_zxy = pos_izxy[1:]
+
+            tile_data = self.training_tile(img_nr, pos_zxy, size_zxy,
+                                           channels, labels,
+                                           pixel_padding=pixel_padding,
+                                           rotation_angle=rotation_angle,
+                                           shear_angle=shear_angle)
+
+            lblregion_index = np.where(
+                np.array(tile_data.labels) == label_region)[0]
+
+            weights_lblregion = tile_data.weights[lblregion_index]
+           
+            if weights_lblregion.any():
+                msg = 'neened {} trials to fetch random tile containing labelvalue {}'.format(
+                            counter, label_region)
+                logger.info(msg)
+                return tile_data
+        msg = 'Could not fetch random tile containing labelvalue {} within {} trials'.format(
+                            label_region, counter)
+        logger.warning(msg)
+        
+        #if no labelweights are present from any labelvalue
+        if not tile_data.weights.any():
+            logger.warning('training labelweighs do not contain any weights above 0 for any label')
+
+            
+        return tile_data    
 
     def _random_training_tile_by_coordinate(self,
                                             size_zxy,
