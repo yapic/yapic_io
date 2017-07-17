@@ -24,7 +24,7 @@ run_cpu_tests:
     - nosetests --with-doctest --with-timer --with-coverage --cover-package=yapic_io
 
 
-pages:
+docs:
   image: yapic-python
   stage: deploy
   script:
