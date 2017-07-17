@@ -1,32 +1,34 @@
-image: yapic_io-debian
-
 before_script:
   - export LANG=C.UTF-8
   - PATH=${HOME}/.local/bin/:$PATH
-  - cd /tmp
-  - ~/.local/bin/virtualenv virtenv --system-site-packages
-  - source virtenv/bin/activate
-  - pip install -e ${CI_PROJECT_DIR}
-  - cd ${CI_PROJECT_DIR}
-
 
 stages:
   - test
   - deploy
 
 
-run_cpu_tests:
+install:
+  image: yapic-nopython
   stage: test
   script:
+    - if [ ${RUN_NIGHTLY_BUILD} ]; then pip install --process-dependency-links ${CI_PROJECT_DIR}; fi
+
+
+run_cpu_tests:
+  image: yapic-python
+  stage: test
+  script:
+    - pip install -e ${CI_PROJECT_DIR}
     - pip install nose
     - cd ${CI_PROJECT_DIR}
     - nosetests --with-doctest --with-timer --with-coverage --cover-package=yapic_io
-    - sleep 5
 
 
 pages:
+  image: yapic-python
   stage: deploy
   script:
+    - pip install -e ${CI_PROJECT_DIR}
     - pip install -r requirements_doc.txt
     - cd ${CI_PROJECT_DIR}/doc
     - sphinx-apidoc -o source ../yapic_io
@@ -34,7 +36,6 @@ pages:
     - make html
     # the next line requires this volume in /etc/gitlab-runner/config.toml: '/var/www/html/yapic:/public/ml/:rw'
     - cp -R ${CI_PROJECT_DIR}/doc/build /public/io/
-    - sleep 5
   artifacts:
     paths:
     - doc/build
