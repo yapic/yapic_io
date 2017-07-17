@@ -130,8 +130,7 @@ class Dataset(object):
 
         # get random image by label probability
         # label probability per image
-        lbl_count = self.label_counts[label_value]
-        label_prob = lbl_count / lbl_count.sum()
+        label_prob = self._get_label_probs(label_value)
         img_nr_sel = choice(range(0, len(label_prob)), p=label_prob)
 
         # get random zxy position within selected image
@@ -147,6 +146,20 @@ class Dataset(object):
         pos_izxy_sel = np.insert(pos_zxy_sel, 0, img_nr_sel)
 
         return pos_izxy_sel
+
+    def _get_label_probs(self, label_value):
+        '''
+        get probabilities for labels per image
+        if label_value is None, probabilities for 
+        the sum of all label values is returned.
+        '''
+        if label_value is None:
+            #label count for all labelvalues
+            lbl_count = sum(self.label_counts.values())
+        else:
+            lbl_count = self.label_counts[label_value]
+        return lbl_count / lbl_count.sum()       
+
 
     def _random_training_tile_by_polling(self,
                                          size_zxy,
@@ -165,13 +178,8 @@ class Dataset(object):
         If the nr of trials exceeds max_pollings, the last fetched
         tile is returned, although not containing the label.
         '''
-        if label_region is None:
+        if label_region is None and equalized:
             label_region = self.random_label_value(equalized=equalized)
-
-        pos_izxy = self._random_pos_izxy(label_region, size_zxy)
-
-        img_nr = pos_izxy[0]
-        pos_zxy = pos_izxy[1:]
 
         counter = 0
         for i in range(self.max_pollings):
@@ -186,16 +194,26 @@ class Dataset(object):
                                            pixel_padding=pixel_padding,
                                            rotation_angle=rotation_angle,
                                            shear_angle=shear_angle)
-
-            lblregion_index = np.where(
-                np.array(tile_data.labels) == label_region)[0]
-
-            weights_lblregion = tile_data.weights[lblregion_index]
+            if label_region is None:
+                #check if weights for any label are present
+                are_weights_in_tile = tile_data.weights.any() 
+            else:
+                #check if weights for specified label are present    
+                lblregion_index = np.where(
+                    np.array(tile_data.labels) == label_region)[0]
+                
+                weights_lblregion = tile_data.weights[lblregion_index]
+                are_weights_in_tile = weights_lblregion.any()
            
-            if weights_lblregion.any():
-                msg = 'neened {} trials to fetch random tile containing labelvalue {}'.format(
-                            counter, label_region)
-                logger.info(msg)
+            if are_weights_in_tile:
+                if label_region:
+                    msg = 'neened {} trials to fetch random tile containing labelvalue {}'.format(
+                                counter, label_region)
+                    logger.info(msg)
+                else:
+                    msg = 'neened {} trials to fetch random tile containing any labelvalue'.format(
+                                counter)
+                    logger.info(msg)       
                 return tile_data
         msg = 'Could not fetch random tile containing labelvalue {} within {} trials'.format(
                             label_region, counter)

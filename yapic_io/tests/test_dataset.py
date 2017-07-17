@@ -9,7 +9,7 @@ import yapic_io.dataset as ds
 import yapic_io.image_importers as ip
 from pprint import pprint
 import logging
-from numpy.testing import assert_array_equal
+from numpy.testing import assert_array_equal, assert_array_almost_equal
 logger = logging.getLogger(os.path.basename(__file__))
 logger.setLevel(logging.WARNING)
 base_path = os.path.dirname(__file__)
@@ -881,6 +881,18 @@ class TestDataset(TestCase):
         
         #assert False
 
+    def test_get_label_probs(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path, label_path)
+        d = Dataset(c)
+        print(d.label_counts)
+        res = d._get_label_probs(label_value=None)
+        assert_array_almost_equal(res, [ 0.416667, 0., 0.583333])
+        
+        res = d._get_label_probs(label_value=1)
+        assert_array_almost_equal(res, [ 1., 0., 0.])
+        
 
     
     def test_random_pos_izxy(self):
@@ -942,8 +954,27 @@ class TestDataset(TestCase):
                                         labels,
                                         label_region = label_region)
         print(training_tile)
+        pprint(training_tile.weights)
+        assert_array_equal(training_tile.weights, weights_val)
         
-        
+
+        weights_val = np.array([[[[ 0.,  0.,  0.],
+                                  [ 0.,  0.,  0.],
+                                  [ 0.,  0.,  0.],
+                                  [ 0.,  0.,  0.]]],
+                                [[[ 0.,  0.,  0.],
+                                  [ 0.,  1.,  1.],
+                                  [ 0.,  1.,  1.],
+                                  [ 0.,  0.,  0.]]],
+                                [[[ 0.,  0.,  0.],
+                                  [ 0.,  0.,  0.],
+                                  [ 0.,  0.,  0.],
+                                  [ 0.,  1.,  0.]]]])
+
+        training_tile = d._random_training_tile_by_polling(size, channels,
+                                        labels,
+                                        label_region = None)
+        print(training_tile)
         pprint(training_tile.weights)
         assert_array_equal(training_tile.weights, weights_val)
         np.random.seed(None)
