@@ -212,6 +212,12 @@ class TiffConnector(Connector):
                               multichannel_pixel_image=self.multichannel_pixel_image,
                               multichannel_label_image=self.multichannel_label_image,
                               zstack=self.zstack)
+        
+        # ensures that both resulting tiff_connectors have the same
+        # labelvalue mapping (issue #1)
+        conn1.labelvalue_mapping = self.labelvalue_mapping
+        conn2.labelvalue_mapping = self.labelvalue_mapping 
+        
         np.random.seed(None)
         return conn1, conn2
 

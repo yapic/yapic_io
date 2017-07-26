@@ -52,7 +52,8 @@ class TestTiffconnector(TestCase):
     def test_split(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/together/img*.tif')
         lbl_path = os.path.join(base_path, '../test_data/tiffconnector_1/together/lbl*.tif')
-        c1, c2 = TiffConnector(img_path, lbl_path).split(0.5)
+        c = TiffConnector(img_path, lbl_path)
+        c1, c2 = c.split(0.5)
 
         expected_names1 = [('img_40width26height3slices_rgb.tif', 'lbl_40width26height3slices_rgb.tif')]
         expected_names2 = [('img_40width26height6slices_rgb.tif', None), 
@@ -60,6 +61,10 @@ class TestTiffconnector(TestCase):
 
         self.assertEqual(set(c1.filenames), set(expected_names1))
         self.assertEqual(set(c2.filenames), set(expected_names2))
+
+        #test for issue #1
+        self.assertEqual(c1.labelvalue_mapping, c.labelvalue_mapping)
+        self.assertEqual(c2.labelvalue_mapping, c.labelvalue_mapping)
 
 
     def test_load_filenames_emptyfolder(self):
