@@ -151,11 +151,13 @@ class TrainingBatch(Minibatch):
         shear_angle = self._random_shear_angle()
         rotation_angle = self._random_rotation_angle()
 
+        augment = {'shear_angle' : shear_angle,
+                   'rotation_angle' : rotation_angle}
+    
         return self._dataset.random_training_tile(self._size_zxy,
                      self._channels,
                      pixel_padding=self._padding_zxy,
                      equalized=self.equalized,
-                     rotation_angle=rotation_angle,
-                     shear_angle=shear_angle,
+                     augment_params=augment,
                      labels=self._labels,
                      label_region=for_label)

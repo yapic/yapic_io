@@ -659,8 +659,11 @@ class TestDataset(TestCase):
         size=np.array((1, 1, 9, 9))
         tile = get_tile_func(pos=pos, size=size, img=im)
 
-        tile_rot = ds.augment_tile(im.shape, pos, size, \
-        get_tile_func, rotation_angle=45, shear_angle=0, **{'img': im})
+        tile_rot = ds.augment_tile(im.shape, pos, size,
+                                   get_tile_func,
+                                   augment_params={'rotation_angle' : 45,
+                                                   'shear_angle' : 0},
+                                   **{'img': im})
 
         print(im)
         print(tile)
@@ -712,8 +715,11 @@ class TestDataset(TestCase):
         size=np.array((1, 1, 1, 1))
         tile = get_tile_func(pos=pos, size=size, img=im)
 
-        tile_rot = ds.augment_tile(im.shape, pos, size, \
-        get_tile_func, rotation_angle=45, shear_angle=0, **{'img': im})
+        tile_rot = ds.augment_tile(im.shape, pos, size,
+                                   get_tile_func,
+                                   augment_params={'rotation_angle' : 45,
+                                                   'shear_angle' : 0},
+                                   **{'img': im})
 
         print(im)
         print(tile)
@@ -721,6 +727,66 @@ class TestDataset(TestCase):
 
         self.assertTrue((val==tile_rot).all())
 
+    def test_augment_tile_simple(self):
+
+        '''
+        im = 
+        [[ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 1.  1.  1.  1.  1.  1.  1.  3.  1.  1.  1.  1.  1.  1.  1.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
+         [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]]
+
+        '''
+    
+
+
+        def get_tile_func(pos=None, size=None, img=None):
+            return img[get_tile_meshgrid(img.shape, pos, size)]
+
+
+        val_ud = \
+           np.array([[[[ 0.,  0.,  0.,  0.,  3.,  0.,  0.,  0.,  0.],
+                       [ 0.,  0.,  0.,  0.,  3.,  0.,  0.,  0.,  0.],
+                       [ 0.,  0.,  0.,  0.,  3.,  0.,  0.,  0.,  0.],
+                       [ 0.,  0.,  0.,  0.,  3.,  0.,  0.,  0.,  0.],
+                       [ 2.,  2.,  2.,  2.,  5.,  1.,  1.,  1.,  1.],
+                       [ 0.,  0.,  0.,  0.,  4.,  0.,  0.,  0.,  0.],
+                       [ 0.,  0.,  0.,  0.,  4.,  0.,  0.,  0.,  0.],
+                       [ 0.,  0.,  0.,  0.,  4.,  0.,  0.,  0.,  0.],
+                       [ 0.,  0.,  0.,  0.,  4.,  0.,  0.,  0.,  0.]]]])
+
+
+
+        im = np.zeros((1, 1, 15, 15))
+        im[0, 0, 7, :7] = 1
+        im[0, 0, 7, 8:] = 2
+        im[0, 0, :7, 7] = 3
+        im[0, 0, 8:, 7] = 4
+        im[0, 0, 7, 7] = 5
+
+        pos = np.array((0, 0, 3, 3))
+        size=np.array((1, 1, 9, 9))
+        tile = get_tile_func(pos=pos, size=size, img=im)
+
+        tile_ud = ds.augment_tile(im.shape, pos, size, \
+        get_tile_func, augment_params={'flipud':True}, **{'img': im})
+
+        pprint(tile)
+        print('')
+        pprint(tile_ud)
+        
+        assert_array_equal(tile_ud,val_ud)
 
     
     def test_multichannel_pixel_tile_1(self):
@@ -772,7 +838,7 @@ class TestDataset(TestCase):
             )
 
         tile = d.multichannel_pixel_tile(img, pos_zxy, size_zxy, channels\
-                , pixel_padding=pd, rotation_angle=0)
+                , pixel_padding=pd)
         print(tile.shape)
         print(val.shape)
         print(tile)
@@ -807,7 +873,7 @@ class TestDataset(TestCase):
             )
 
         tile = d.multichannel_pixel_tile(img, pos_zxy, size_zxy, channels\
-                , pixel_padding=pd, rotation_angle=45)
+                , pixel_padding=pd,  augment_params={'rotation_angle':45})
         print(tile.shape)
         print(val.shape)
         print(tile)
@@ -871,7 +937,8 @@ class TestDataset(TestCase):
         #mapping [{91: 1, 109: 2, 150: 3}]
         labels_val = [1, 2, 3]
         tile = d.random_training_tile(\
-            size, channels, pixel_padding=pad, rotation_angle=45)
+            size, channels, pixel_padding=pad,
+            augment_params={'rotation_angle':45})
 
         
         self.assertEqual(tile.pixels.shape, pixel_shape_val)
@@ -996,26 +1063,26 @@ class TestDataset(TestCase):
         labels_val = [1, 2, 3]
         
         tile_1 = d.random_training_tile(\
-            size, channels, pixel_padding=pad, rotation_angle=45, label_region=1)
+            size, channels, pixel_padding=pad,
+            augment_params={'rotation_angle' :45},
+            label_region=1)
 
 
         tile_2 = d.random_training_tile(\
-            size, channels, pixel_padding=pad, rotation_angle=45, label_region=2)
+            size, channels, pixel_padding=pad,
+            augment_params={'rotation_angle' :45},
+            label_region=2)
 
         tile_3 = d.random_training_tile(\
-            size, channels, pixel_padding=pad, rotation_angle=45, label_region=3)
+            size, channels, pixel_padding=pad,
+            augment_params={'rotation_angle' :45},
+            label_region=3)
 
         print(tile_1[2])
         self.assertEqual(tile_1[2][0][0][0][0], 1)
         self.assertEqual(tile_2[2][1][0][0][0], 1)
         self.assertEqual(tile_3[2][2][0][0][0], 1)
-        #self.assertEqual(tile_1['weights'][0][0][0][0], 1)
-
-        # self.assertEqual(tile.pixels.shape, pixel_shape_val)
-        # self.assertEqual(tile.channels, channels)
-        # self.assertEqual(tile.weights.shape, weight_shape_val)
-        # self.assertEqual(tile.labels, labels_val)
-    
+        
 
     
     def test_put_prediction_tile_1(self):

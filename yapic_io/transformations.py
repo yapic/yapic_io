@@ -108,6 +108,20 @@ def warp_image_2d_stack(image, rotation_angle, shear_angle):
         return np.array(out)      
 
 
+def flip_image_2d_stack(image, fliplr=False, flipud=False, rot90=0):
+    '''
+    Flips and rotates a zxy stack in xy with fast numpy operations 
+    '''
+    image = image.T
+    if fliplr:
+        image = np.fliplr(image)
+    if flipud:
+        image = np.flipud(image)
+    if rot90>0:
+        image = np.rot90(image, k=rot90)
+    return image.T            
+
+
 def calc_warping_shift(image_shape, rotation_angle, shear_angle):
 
     z = np.zeros(image_shape)

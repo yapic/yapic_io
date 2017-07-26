@@ -76,8 +76,7 @@ class Dataset(object):
                              channels,
                              pixel_padding=(0, 0, 0),
                              equalized=False,
-                             rotation_angle=0,
-                             shear_angle=0,
+                             augment_params=None,
                              labels='all',
                              label_region=None):
         '''
@@ -106,8 +105,7 @@ class Dataset(object):
                 labels,
                 pixel_padding=pixel_padding,
                 equalized=equalized,
-                rotation_angle=rotation_angle,
-                shear_angle=shear_angle,
+                augment_params=augment_params,
                 label_region=label_region)
 
         return self._random_training_tile_by_polling(
@@ -116,8 +114,7 @@ class Dataset(object):
             labels,
             pixel_padding=pixel_padding,
             equalized=equalized,
-            rotation_angle=rotation_angle,
-            shear_angle=shear_angle,
+            augment_params=augment_params,
             label_region=label_region)
 
     def _random_pos_izxy(self, label_value, size_zxy):
@@ -167,8 +164,7 @@ class Dataset(object):
                                          labels,
                                          pixel_padding=(0, 0, 0),
                                          equalized=False,
-                                         rotation_angle=0,
-                                         shear_angle=0,
+                                         augment_params=None,
                                          label_region=None):
         ''''
         fetches a random training tile by repeated polling until
@@ -192,8 +188,7 @@ class Dataset(object):
             tile_data = self.training_tile(img_nr, pos_zxy, size_zxy,
                                            channels, labels,
                                            pixel_padding=pixel_padding,
-                                           rotation_angle=rotation_angle,
-                                           shear_angle=shear_angle)
+                                           augment_params=augment_params)
             if label_region is None:
                 #check if weights for any label are present
                 are_weights_in_tile = tile_data.weights.any() 
@@ -232,8 +227,7 @@ class Dataset(object):
                                             labels,
                                             pixel_padding=(0, 0, 0),
                                             equalized=False,
-                                            rotation_angle=0,
-                                            shear_angle=0,
+                                            augment_params=None,
                                             label_region=None):
         if label_region is None:
             # pick training tile where it is assured that weights for a specified label
@@ -250,7 +244,7 @@ class Dataset(object):
 
         tile_data = self.training_tile(img_nr, pos_zxy, size_zxy,
                                        channels, labels, pixel_padding=pixel_padding,
-                                       rotation_angle=rotation_angle, shear_angle=shear_angle)
+                                       augment_params=augment_params)
 
         return tile_data
 
@@ -261,24 +255,23 @@ class Dataset(object):
                       channels,
                       labels,
                       pixel_padding=(0, 0, 0),
-                      rotation_angle=0,
-                      shear_angle=0):
+                      augment_params=None):
         # 4d pixel tile with selected channels in 1st dimension
         pixel_tile = self.multichannel_pixel_tile(image_nr, pos_zxy, size_zxy, channels,
-                                                  pixel_padding=pixel_padding, rotation_angle=rotation_angle, shear_angle=shear_angle)
+                                                  pixel_padding=pixel_padding,
+                                                  augment_params=augment_params)
 
         label_tile = []
         for label in labels:
             tile = self.label_tile(image_nr, pos_zxy, size_zxy, label,
-                                   rotation_angle=rotation_angle, shear_angle=shear_angle)
+                                   augment_params=augment_params)
             label_tile.append(tile)
         # 4d label tile with selected labels in 1st dimension
         label_tile = np.array(label_tile)
 
         logger.debug('pixel tile dim={} label tile dim={} labels={}'.format(
             pixel_tile.shape, label_tile.shape, len(labels)))
-        augmentation = {'rotation_angle': rotation_angle,
-                        'shear_angle': shear_angle}
+        augmentation = augment_params
         return TrainingTile(pixel_tile, channels, label_tile, labels, augmentation)
 
     def multichannel_pixel_tile(self,
@@ -287,8 +280,7 @@ class Dataset(object):
                                 size_zxy,
                                 channels,
                                 pixel_padding=(0, 0, 0),
-                                rotation_angle=0,
-                                shear_angle=0):
+                                augment_params=None):
         if not _check_pos_size(pos_zxy, size_zxy, 3):
             logger.debug('checked pos size in multichannel_pixel_tile')
             raise ValueError('pos and size must have length 3. pos_zxy: %s, size_zxy: %s'
@@ -306,7 +298,7 @@ class Dataset(object):
         pixel_tile = []
         for channel in channels:
             tile = self.tile_singlechannel(image_nr, tuple(pos_padded), tuple(size_padded), channel,
-                                           rotation_angle=rotation_angle, shear_angle=shear_angle)
+                                           augment_params=augment_params)
             pixel_tile.append(tile)
 
         # 4d pixel tile with selected channels in 1st dimension
@@ -320,8 +312,7 @@ class Dataset(object):
                            size_zxy,
                            channel,
                            reflect=True,
-                           rotation_angle=0,
-                           shear_angle=0):
+                           augment_params=None):
         '''
         returns a recangular subsection of an image with specified size.
         if requested tile is out of bounds, values will be added by reflection
@@ -350,8 +341,7 @@ class Dataset(object):
                             pos_czxy,
                             size_czxy,
                             self.pixel_connector.get_tile,
-                            rotation_angle=rotation_angle,
-                            shear_angle=shear_angle,
+                            augment_params=augment_params,
                             reflect=reflect,
                             **{'image_nr': image_nr})
 
@@ -363,8 +353,7 @@ class Dataset(object):
                    size_zxy,
                    label_value,
                    reflect=True,
-                   rotation_angle=0,
-                   shear_angle=0):
+                   augment_params=None):
         '''
         returns a recangular subsection of label weights with specified size.
         if requested tile is out of bounds, values will be added by reflection
@@ -389,8 +378,7 @@ class Dataset(object):
                             pos_zxy,
                             size_zxy,
                             self._label_tile_inner,
-                            rotation_angle=rotation_angle,
-                            shear_angle=shear_angle,
+                            augment_params=augment_params,
                             reflect=reflect,
                             **{'image_nr': image_nr, 'label_value': label_value})
 
@@ -753,28 +741,70 @@ def augment_tile(shape,
                  pos,
                  size,
                  get_tile_func,
-                 rotation_angle=0,
-                 shear_angle=0,
+                 augment_params=None,
                  reflect=True,
                  **kwargs):
     '''
-    fixme: morph tile works only in 2d.
-    morphing has to be applied slice by slice
+    fetch tile and augment it
+    if rotation and shear is activated, a 3 times larger tile
+    is fetched and the final tile is cut out from that after
+    rotation/shear.
     '''
+    
+    #unpack augemtation params and set default values
+    
+    if augment_params is None:
+        rotation_angle = 0
+        shear_angle = 0
+        flipud = False
+        fliplr = False
+        rot90 = 0
+    else:    
+        
+        if 'rotation_angle' in augment_params:
+            rotation_angle = augment_params['rotation_angle']
+        else:
+            rotation_angle = 0
+
+        if 'shear_angle' in augment_params:
+            shear_angle = augment_params['shear_angle']
+        else:
+            shear_angle = 0
+
+        if 'flipud' in augment_params:
+            flipud = augment_params['flipud']
+        else:
+            flipud = False
+
+        if 'fliplr' in augment_params:
+            fliplr = augment_params['fliplr']
+        else:
+            fliplr = False
+
+        if 'rot90' in augment_params:
+            rot90 = augment_params['rot90']
+        else:
+            rot90 = 0
+
+
+
+    if (size[-2]) == 1 and (size[-1] == 1):
+        # if the requested tile is only of size 1 in x and y,
+        # augmentation can be omitted, since rotation and flipping always
+        # occurs around the center axis.
+        return tile_with_reflection(shape, pos, size, get_tile_func,
+                                    reflect=reflect, **kwargs)
+ 
+
     if (rotation_angle == 0) and (shear_angle == 0):
         res = tile_with_reflection(shape, pos, size, get_tile_func,
                                    reflect=reflect, **kwargs)
         logger.debug(
             'tile_with_reflection dims = {}, {}'.format(res.shape, shape))
-        return res
+        return trafo.flip_image_2d_stack(res, fliplr=fliplr,
+                                         flipud=flipud, rot90=rot90)
 
-    if (size[-2]) == 1 and (size[-1] == 1):
-        # if the requested tile is only of size 1 in x and y,
-        # augmentation can be omitted, since rotation always
-        # occurs around the center axis.
-        return tile_with_reflection(shape, pos, size, get_tile_func,
-                                    reflect=reflect, **kwargs)
-
+    
     size = np.array(size)
     pos = np.array(pos)
 
@@ -782,8 +812,12 @@ def augment_tile(shape,
     pos_new = pos - size
     tile_large = tile_with_reflection(shape, pos_new, size_new, get_tile_func,
                                       reflect=reflect, **kwargs)
+    #simple and fast augmentation
+    tile_large_flipped = trafo.flip_image_2d_stack(tile_large, fliplr=fliplr,
+                                         flipud=flipud, rot90=rot90)
+    #slow augmentation
     tile_large_morphed = trafo.warp_image_2d_stack(
-        tile_large, rotation_angle, shear_angle)
+        tile_large_flipped, rotation_angle, shear_angle)
 
     mesh = ut.get_tile_meshgrid(tile_large_morphed.shape, size, size)
 
