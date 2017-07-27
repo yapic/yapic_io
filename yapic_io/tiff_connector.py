@@ -81,8 +81,8 @@ class TiffConnector(Connector):
           dimensional images, it throws an error, because it is not clear if the thrid
           dimension is z or channel (RGB images will still be mapped correctly)
         '''
-        
-        
+
+
 
         self.filenames = None # list of tuples: [(imgfile_1.tif, labelfile_1.tif), (imgfile_2.tif, labelfile_2.tif), ...]
         self.labelvalue_mapping = None # list of dicts of original and assigned labelvalues
@@ -212,12 +212,12 @@ class TiffConnector(Connector):
                               multichannel_pixel_image=self.multichannel_pixel_image,
                               multichannel_label_image=self.multichannel_label_image,
                               zstack=self.zstack)
-        
+
         # ensures that both resulting tiff_connectors have the same
         # labelvalue mapping (issue #1)
         conn1.labelvalue_mapping = self.labelvalue_mapping
-        conn2.labelvalue_mapping = self.labelvalue_mapping 
-        
+        conn2.labelvalue_mapping = self.labelvalue_mapping
+
         np.random.seed(None)
         return conn1, conn2
 
@@ -308,35 +308,38 @@ class TiffConnector(Connector):
 
     def check_label_matrix_dimensions(self):
         '''
-        check if label mat dimensions fit to image dimensions, i.e.
+        check if label matrix dimensions fit to image dimensions, i.e.
         everything identical except nr of channels (label mat always 1)
         '''
-        logger.debug('Checking labelmatrix dimensions...')
-        nr_channels = []
-        for image_nr in range(self.image_count()):
-            im_dim = self.image_dimensions(image_nr)
-            label_dim = self.label_matrix_dimensions(image_nr)
+        N_channels = None
 
-            if label_dim is None:
-                msg = 'Check image nr {}: ok (dims={}, no labelmat found) '
-                logger.debug(msg.format(image_nr, im_dim))
-            else:
-                nr_channels.append(label_dim[0])
-                logger.debug('Found %s label channel(s)', nr_channels[-1])
+        for i, (img_fname, lbl_fname) in enumerate(self.filenames):
+            img_dim = self.image_dimensions(i)
+            lbl_dim = self.label_matrix_dimensions(i)
 
-                if label_dim[1:] == im_dim[1:]:
-                    msg = 'Check image nr {}: ok (img dims={}, label dims={})'
-                    logger.debug(msg.format(image_nr, im_dim, label_dim))
-                else:
-                    logger.error('Check image nr %s (%s): image dim is %s, label dim is %s '\
-                        , image_nr, self.filenames[image_nr], im_dim, label_dim)
-                    path = os.path.join(self.img_path, self.filenames[image_nr][0])
-                    msg = 'Check image nr {} ({}): image dims ({}) do not match label dims ({})'
-                    raise ValueError(msg.format(image_nr, path, im_dim[1:], label_dim[1:]))
-        if len(set(nr_channels))>1:
-            raise ValueError('Nr of channels not consitent in input data, found following nr of labelmask channels: %s' % str(set(nr_channels)))
+            msg = 'Dimensions for image #{}: img.shape={}, lbl.shape={}'
+            msg = msg.format(i, img_dim, lbl_dim)
+            logger.debug(msg)
 
-        logger.debug('Labelmatrix dimensions ok')
+            if lbl_dim is None:
+                continue
+
+            _,  *img_dim = img_dim
+            ch, *lbl_dim = lbl_dim
+
+            if N_channels is None:
+                N_channels = ch
+
+            if N_channels != ch:
+                msg = 'Label channels inconsistent: (Found {} label channels but also {})'
+                msg = msg.format(N_channels, ch)
+                raise ValueError(msg)
+
+            if lbl_dim != img_dim:
+                path = os.path.join(self.img_path, lbl_fname)
+                msg = 'img.shape {} != lbl.shape {} for image #{} ({})'
+                msg = msg.format(img_dim, lbl_dim, i, path)
+                raise ValueError(msg)
 
 
     @lru_cache(maxsize = 20)
@@ -475,7 +478,7 @@ class TiffConnector(Connector):
         mat = self.load_label_matrix(image_nr)
         if mat is None:
             return None
-        values =  np.unique(mat)
+        values = np.unique(mat)
         values = values[values!=0]
         values.sort()
         return list(values)
