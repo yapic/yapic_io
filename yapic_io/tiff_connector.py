@@ -423,7 +423,7 @@ class TiffConnector(Connector):
         logger.debug('Mapping label values...')
 
         label_mappings = []
-        o_labelvals = self.original_label_values()
+        o_labelvals = self.original_label_values_for_all_images()
         new_label = 1
         for labels_per_channel in o_labelvals:
             label_mapping = {}
@@ -440,21 +440,25 @@ class TiffConnector(Connector):
         return label_mappings
 
 
-    def original_label_values(self):
+    def original_label_values_for_all_images(self):
         '''
         returns a list of sets. each set corresponds to 1 label channel.
         each set contains the label values of that channel.
         '''
         labels_per_channel = []
+
         for image_nr in range(self.image_count()):
             labels_per_im = self.original_label_values_for_image(image_nr)
 
-            if labels_per_im is not None:
-                if len(labels_per_channel) == 0:
-                    labels_per_channel = labels_per_im
-                else:
-                    labels_per_channel = [l1.union(l2) for l1, l2
-                                          in zip(labels_per_channel, labels_per_im)]
+            if labels_per_im is None:
+                continue
+
+            if len(labels_per_channel) == 0:
+                labels_per_channel = labels_per_im
+            else:
+                labels_per_channel = [l1.union(l2) for l1, l2
+                                      in zip(labels_per_channel, labels_per_im)]
+
         return labels_per_channel
 
 
