@@ -430,7 +430,7 @@ class TestTiffconnector(TestCase):
 
         c = TiffConnector(img_path, label_path)
 
-        res = c.original_label_values()
+        res = c.original_label_values_for_all_images()
         self.assertEqual(res, [{91, 109, 150}, {91, 109, 150}])
         
 
