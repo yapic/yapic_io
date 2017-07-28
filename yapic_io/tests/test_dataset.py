@@ -519,6 +519,44 @@ class TestDataset(TestCase):
         self.assertTrue(sorted(list(t.keys())), [1, 2, 3]) 
 
 
+    def test_sync_label_counts(self):
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path, label_path)
+        c1, c2 = c.split(1./3.)
+        d = Dataset(c)
+        d1 = Dataset(c1)
+        d2 = Dataset(c2)
+        d1.sync_label_counts(d2)
+
+        self.assertEqual(set(d1.label_counts.keys()), set(d2.label_counts.keys()))
+        
+        assert_array_equal(d1.label_counts[1], np.array([4]))
+        assert_array_equal(d1.label_counts[2], np.array([3]))
+        assert_array_equal(d1.label_counts[3], np.array([3]))
+
+        assert_array_equal(d2.label_counts[1], np.array([0, 0]))
+        assert_array_equal(d2.label_counts[2], np.array([0, 11]))
+        assert_array_equal(d2.label_counts[3], np.array([0, 3]))
+        
+
+        d = Dataset(c)
+        d1 = Dataset(c1)
+        d2 = Dataset(c2)
+        d2.sync_label_counts(d1)
+
+        self.assertEqual(set(d1.label_counts.keys()), set(d2.label_counts.keys()))
+        
+        assert_array_equal(d1.label_counts[1], np.array([4]))
+        assert_array_equal(d1.label_counts[2], np.array([3]))
+        assert_array_equal(d1.label_counts[3], np.array([3]))
+
+        assert_array_equal(d2.label_counts[1], np.array([0, 0]))
+        assert_array_equal(d2.label_counts[2], np.array([0, 11]))
+        assert_array_equal(d2.label_counts[3], np.array([0, 3]))
+
+
+
     def test_label_coordinate(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/')

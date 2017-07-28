@@ -486,6 +486,63 @@ class Dataset(object):
         logger.debug(label_counts)
         return label_counts
 
+    
+    def sync_label_counts(self, datset):
+        '''
+        Should be applied e.g. if two datasets were created from splitted
+        conncetors( e.g. with tiff_connector.split(). Typical use case
+        is syncing a training dataset and a validation dataset.
+
+        >>> from yapic_io.dataset import Dataset
+        >>> from yapic_io.tiff_connector import TiffConnector
+        >>>
+        >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/*.tif'
+        >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/*.tif'
+        >>> c = TiffConnector(pixel_image_dir, label_image_dir)
+        >>> c1, c2 = c.split(1./3.)
+        >>>
+        >>> d = Dataset(c)
+        >>> d1 = Dataset(c1)
+        >>> d2 = Dataset(c2)
+        >>>
+        >>> d.label_counts # full dataset has three labelvalues
+        {1: array([4, 0, 0]), 2: array([ 3,  0, 11]), 3: array([3, 0, 3])}
+        >>>
+        >>> d1.label_counts # d1 has also three labelvalues
+        {1: array([4]), 2: array([3]), 3: array([3])}
+        >>>
+        >>> d2.label_counts #d2 has only two labelvalues
+        {2: array([ 0, 11]), 3: array([0, 3])}
+        >>>
+        >>>
+        >>> d1.sync_label_counts(d2)
+        >>> d1.label_counts
+        {1: array([4]), 2: array([3]), 3: array([3])}
+        >>>
+        >>> d2.label_counts #labelvalue 1 added to d2 (with count 0)
+        {2: array([ 0, 11]), 3: array([0, 3]), 1: array([0, 0])}
+        
+        '''  
+        lc1 = self.label_counts
+        lc2 = datset.label_counts
+
+        #missing label in each dataset
+        missing_in_d1 = set(lc2.keys()) - set(lc1.keys())
+        missing_in_d2 = set(lc1.keys()) - set(lc2.keys())
+        
+
+        for lbl in missing_in_d1:
+            lc1[lbl] = np.zeros((self.n_images), dtype=np.int64)
+        for lbl in missing_in_d2:
+            lc2[lbl] = np.zeros((datset.n_images), dtype=np.int64)
+        
+
+
+
+
+
+
+
     def is_label_value_valid(self, label_value):
         '''
         check if label value is part of self.label_coordinates
