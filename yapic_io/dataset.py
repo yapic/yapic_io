@@ -495,6 +495,7 @@ class Dataset(object):
 
         >>> from yapic_io.dataset import Dataset
         >>> from yapic_io.tiff_connector import TiffConnector
+        >>> from pprint import pprint
         >>>
         >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/*.tif'
         >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/*.tif'
@@ -505,22 +506,22 @@ class Dataset(object):
         >>> d1 = Dataset(c1)
         >>> d2 = Dataset(c2)
         >>>
-        >>> d.label_counts # full dataset has three labelvalues
+        >>> pprint(d.label_counts) # full dataset has three labelvalues
         {1: array([4, 0, 0]), 2: array([ 3,  0, 11]), 3: array([3, 0, 3])}
         >>>
-        >>> d1.label_counts # d1 has also three labelvalues
+        >>> pprint(d1.label_counts) # d1 has also three labelvalues
         {1: array([4]), 2: array([3]), 3: array([3])}
         >>>
-        >>> d2.label_counts #d2 has only two labelvalues
+        >>> pprint(d2.label_counts) #d2 has only two labelvalues
         {2: array([ 0, 11]), 3: array([0, 3])}
         >>>
         >>>
         >>> d1.sync_label_counts(d2)
-        >>> d1.label_counts
+        >>> pprint(d1.label_counts)
         {1: array([4]), 2: array([3]), 3: array([3])}
         >>>
-        >>> d2.label_counts #labelvalue 1 added to d2 (with count 0)
-        {2: array([ 0, 11]), 3: array([0, 3]), 1: array([0, 0])}
+        >>> pprint(d2.label_counts) #labelvalue 1 added to d2 (with count 0)
+        {1: array([0, 0]), 2: array([ 0, 11]), 3: array([0, 3])}
         
         '''  
         lc1 = self.label_counts
