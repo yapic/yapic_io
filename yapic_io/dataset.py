@@ -65,7 +65,7 @@ class Dataset(object):
         if not self.is_image_nr_valid(image_nr):
             raise ValueError('no valid image nr: %s' % str(image_nr))
 
-        if not _check_pos_size(pos_zxy, probmap_tile.shape, 3):
+        if not _check_3dim(pos_zxy, probmap_tile.shape):
             raise ValueError('pos, size or shape have %s dimensions instead of 3'
                              % str(len(pos_zxy)))
 
@@ -281,7 +281,7 @@ class Dataset(object):
                                 channels,
                                 pixel_padding=(0, 0, 0),
                                 augment_params=None):
-        if not _check_pos_size(pos_zxy, size_zxy, 3):
+        if not _check_3dim(pos_zxy, size_zxy):
             logger.debug('checked pos size in multichannel_pixel_tile')
             raise ValueError('pos and size must have length 3. pos_zxy: %s, size_zxy: %s'
                              % (str(pos_zxy), str(size_zxy)))
@@ -328,7 +328,7 @@ class Dataset(object):
         if not self.is_image_nr_valid(image_nr):
             return False
 
-        if not _check_pos_size(pos_zxy, size_zxy, 3):
+        if not _check_3dim(pos_zxy, size_zxy):
             return False
 
         pos_czxy = np.array([channel] + list(pos_zxy))
@@ -368,7 +368,7 @@ class Dataset(object):
         :type label_value: int
         :returns: 3d tile of label weights as numpy array with dimensions zxy
         '''
-        if not _check_pos_size(pos_zxy, size_zxy, 3):
+        if not _check_3dim(pos_zxy, size_zxy):
             raise ValueError('pos, size or shape have %s dimensions instead of 3'
                              % len(pos_zxy))
 
@@ -848,12 +848,12 @@ def tile_with_reflection(shape, pos, size, get_tile_func,
     return transient_tile_pad[mesh]
 
 
-def _check_pos_size(pos, size, nr_dim):
+def _check_3dim(pos, size):
     msg = ('Wrong number of image dimensions. '
            'Nr of dimensions MUST be 3 (nr_zslices, nr_x, nr_y), but'
-           'is  %s for size and %s for pos') % (str(len(size)), str(len(pos)))
+           'is %s for size and %s for pos') % (str(len(size)), str(len(pos)))
 
-    if (len(pos) != nr_dim) or (len(size) != nr_dim):
+    if (len(pos) != 3) or (len(size) != 3):
         logger.error(msg)
         return False
     return True
