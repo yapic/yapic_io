@@ -574,16 +574,6 @@ class TestDataset(TestCase):
         self.assertEqual(d.label_weights, val)
 
 
-    def test_equalize_label_weights(self):
-        
-        label_n = {1: 10, 2 : 20}
-
-        weights = ds.equalize_label_weights(label_n)
-
-        print(weights)
-        self.assertEqual(weights[1]/2, weights[2])
-        self.assertEqual(weights[1]+weights[2], 1)
-
     def test_augment_tile(self):
         
         

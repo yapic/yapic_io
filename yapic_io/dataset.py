@@ -437,19 +437,25 @@ class Dataset(object):
         self.label_weights = weight_dict
         return True
 
+
     def equalize_label_weights(self):
         '''
         equalizes labels according to their amount.
         less frequent labels are weighted higher than more frequent labels
         '''
-        labels = self.label_weights.keys()
-        total_label_count = dict.fromkeys(labels)
+        total_label_count = { l: img_counts.sum() for l, img_counts in self.label_counts.items() }
 
-        for label in labels:
-            total_label_count[label] = self.label_counts[label].sum()
+        nn = sum(total_label_count.values())
+        weight_total_per_labelvalue = float(nn) / float(len(total_label_count))
 
-        self.label_weights = equalize_label_weights(total_label_count)
+        # equalize
+        eq_weight = { l: weight_total_per_labelvalue / float(c) for l, c in total_label_count.items() }
+        eq_weight_total = sum(eq_weight.values())
+
+        # normalize
+        self.label_weights = { l: c / eq_weight_total for l, c in eq_weight.items() }
         return True
+
 
     def load_label_counts(self):
         '''
@@ -693,38 +699,6 @@ def pos_shift_for_padding(shape, pos, size):
     dist = distance_to_upper_img_edge(shape, pos)
 
     return dist + 1 - padding_size
-
-
-def equalize_label_weights(label_n):
-    '''
-    :param label_n: dict with label numbers where keys are label_values
-    :returns dict with equalized weights for each label value
-    label_n = {
-            label_value_1 : n_labels,
-            label_value_2 : n_labels,
-            ...
-            }
-    '''
-    nn = 0
-    labels = label_n.keys()
-    for label in labels:
-        nn += label_n[label]
-
-    weight_total_per_labelvalue = float(nn) / float(len(labels))
-
-    # equalize
-    eq_weight = {}
-    eq_weight_total = 0
-    for label in labels:
-        eq_weight[label] = \
-            weight_total_per_labelvalue / float(label_n[label])
-        eq_weight_total += eq_weight[label]
-
-    # normalize
-    for label in labels:
-        eq_weight[label] = eq_weight[label] / eq_weight_total
-
-    return eq_weight
 
 
 def augment_tile(shape,
