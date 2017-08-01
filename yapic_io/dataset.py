@@ -90,7 +90,7 @@ class Dataset(object):
         :param equalized: If true, less frequent label_values are picked with same
                           probability as frequent label_values
         :param labels: list of labelvalues to be fetched
-        :param label_region: labelvalue that must be present in the fetched tile region                   
+        :param label_region: labelvalue that must be present in the fetched tile region
 
         :returns: TrainingTile (pixels and corresponding labels)
         '''
@@ -119,10 +119,10 @@ class Dataset(object):
 
     def _random_pos_izxy(self, label_value, size_zxy):
         '''
-        get a random image and a random zxy position 
+        get a random image and a random zxy position
         (for a tile of shape size_zxy) within this image.
         Images with more frequent labels of type label_value
-        are more likely to be selected.  
+        are more likely to be selected.
         '''
 
         # get random image by label probability
@@ -147,7 +147,7 @@ class Dataset(object):
     def _get_label_probs(self, label_value):
         '''
         get probabilities for labels per image
-        if label_value is None, probabilities for 
+        if label_value is None, probabilities for
         the sum of all label values is returned.
         '''
         if label_value is None:
@@ -155,7 +155,7 @@ class Dataset(object):
             lbl_count = sum(self.label_counts.values())
         else:
             lbl_count = self.label_counts[label_value]
-        return lbl_count / lbl_count.sum()       
+        return lbl_count / lbl_count.sum()
 
 
     def _random_training_tile_by_polling(self,
@@ -191,15 +191,15 @@ class Dataset(object):
                                            augment_params=augment_params)
             if label_region is None:
                 #check if weights for any label are present
-                are_weights_in_tile = tile_data.weights.any() 
+                are_weights_in_tile = tile_data.weights.any()
             else:
-                #check if weights for specified label are present    
+                #check if weights for specified label are present
                 lblregion_index = np.where(
                     np.array(tile_data.labels) == label_region)[0]
-                
+
                 weights_lblregion = tile_data.weights[lblregion_index]
                 are_weights_in_tile = weights_lblregion.any()
-           
+
             if are_weights_in_tile:
                 if label_region:
                     msg = 'neened {} trials to fetch random tile containing labelvalue {}'.format(
@@ -208,18 +208,18 @@ class Dataset(object):
                 else:
                     msg = 'neened {} trials to fetch random tile containing any labelvalue'.format(
                                 counter)
-                    logger.info(msg)       
+                    logger.info(msg)
                 return tile_data
         msg = 'Could not fetch random tile containing labelvalue {} within {} trials'.format(
                             label_region, counter)
         logger.warning(msg)
-        
+
         #if no labelweights are present from any labelvalue
         if not tile_data.weights.any():
             logger.warning('training labelweighs do not contain any weights above 0 for any label')
 
-            
-        return tile_data    
+
+        return tile_data
 
     def _random_training_tile_by_coordinate(self,
                                             size_zxy,
@@ -638,16 +638,6 @@ def get_padding_size(shape, pos, size):
     return padding_size
 
 
-def is_padding(padding_size):
-    '''
-    check if are all zero (False) or at least one is not zero (True)
-    '''
-    for dim in padding_size:
-        if np.array(dim).any():  # if any nonzero element
-            return True
-    return False
-
-
 def inner_tile_size(shape, pos, size):
     '''
     if a requested tile is out of bounds, this function calculates
@@ -750,17 +740,17 @@ def augment_tile(shape,
     is fetched and the final tile is cut out from that after
     rotation/shear.
     '''
-    
+
     #unpack augemtation params and set default values
-    
+
     if augment_params is None:
         rotation_angle = 0
         shear_angle = 0
         flipud = False
         fliplr = False
         rot90 = 0
-    else:    
-        
+    else:
+
         if 'rotation_angle' in augment_params:
             rotation_angle = augment_params['rotation_angle']
         else:
@@ -794,7 +784,7 @@ def augment_tile(shape,
         # occurs around the center axis.
         return tile_with_reflection(shape, pos, size, get_tile_func,
                                     reflect=reflect, **kwargs)
- 
+
 
     if (rotation_angle == 0) and (shear_angle == 0):
         res = tile_with_reflection(shape, pos, size, get_tile_func,
@@ -804,7 +794,7 @@ def augment_tile(shape,
         return trafo.flip_image_2d_stack(res, fliplr=fliplr,
                                          flipud=flipud, rot90=rot90)
 
-    
+
     size = np.array(size)
     pos = np.array(pos)
 
@@ -829,12 +819,12 @@ def tile_with_reflection(shape, pos, size, get_tile_func,
     res = inner_tile_size(shape, pos, size)
     pos_transient, size_transient, pos_inside_transient, pad_size = res
 
-    if is_padding(pad_size) and not reflect:
+    if np.any(pad_size) and not reflect:
         # if image has to be padded to get the tile
         logger.error('requested tile out of bounds')
         return False
 
-    if is_padding(pad_size) and reflect:
+    if np.any(pad_size) and reflect:
         # if image has to be padded to get the tile and reflection mode is on
         logger.debug('requested tile out of bounds')
         logger.debug('image will be extended with reflection')

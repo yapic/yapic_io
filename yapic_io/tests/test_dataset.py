@@ -307,10 +307,10 @@ class TestDataset(TestCase):
                       
       
     def test_is_padding(self):
-        self.assertTrue(ds.is_padding([(2, 3), (0, 0)]))
-        self.assertTrue(ds.is_padding([(2, 3), (20, 3)]))
-        self.assertTrue(ds.is_padding([(0, 0), (3, 0)]))
-        self.assertFalse(ds.is_padding([(0, 0), (0, 0)]))
+        self.assertTrue(np.any([(2, 3), (0, 0)]))
+        self.assertTrue(np.any([(2, 3), (20, 3)]))
+        self.assertTrue(np.any([(0, 0), (3, 0)]))
+        self.assertFalse(np.any([(0, 0), (0, 0)]))
 
     def test_tile_singlechannel_1(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
