@@ -28,7 +28,7 @@ class Minibatch(object):
         '''
         self._dataset = dataset
         self._batch_size = batch_size
-        self.normalize_mode = 'local_z_score'
+        self.normalize_mode = None
         self.global_norm_minmax = None
 
         self.float_data_type = np.float32  # type of pixel and weight data

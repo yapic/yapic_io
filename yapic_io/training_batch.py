@@ -47,10 +47,6 @@ class TrainingBatch(Minibatch):
                  dataset,
                  size_zxy,
                  padding_zxy=(0, 0, 0),
-                 augment=True,
-                 augment_simple=True,
-                 rotation_range=(-45, 45),
-                 shear_range=(-5, 5),
                  equalized=False):
         '''
         :param dataset: dataset object, to connect to pixels and labels weights
@@ -61,13 +57,6 @@ class TrainingBatch(Minibatch):
         :type size_zxy: tuple (with length 3)
         :param padding_zxy: growing of pixel tile in (z, x, y).
         :type padding_zxy: tuple (with length 3)
-        :param augment: if True, tiles are randomly rotatted and sheared
-        :type augment: bool
-        :param augment_simple: if True, tiles are randomly flipped (faster than augment)
-        :type augment_simple: bool
-        :param rotation_range: range of random rotation in degrees (min_angle, max_angle)
-        :type rotation_angle: tuple (with length 2)
-        :param shear_range: range of random shear in degrees (min_angle, max_angle)
         :type shear_angle: tuple (with length 2)
         :param equalized: if True, less frequent labels are favored in randomized tile selection
         :type equalized: bool
@@ -77,10 +66,10 @@ class TrainingBatch(Minibatch):
         super().__init__(dataset, batch_size, size_zxy, padding_zxy=padding_zxy)
 
         self.equalized = equalized
-        self.augment = augment
-        self.augment_simple = augment_simple
-        self.rotation_range = rotation_range
-        self.shear_range = shear_range
+        self.augment = set()
+        self.augment_by_flipping(True)
+        self.rotation_range = None
+        self.shear_range = None
         self._pixels = None
         self._weights = None
 
@@ -105,6 +94,39 @@ class TrainingBatch(Minibatch):
         return self
 
 
+    def augment_by_flipping(self, flip_on):
+        '''
+        :param flip_on: if True, tiles are randomly flipped (fast)
+        '''
+        if flip_on:
+            self.augment = self.augment.union({'flip'})
+        else:
+            self.augment = self.augment - {'flip'}
+
+    def augment_by_rotation(self, rot_on, rotation_range=(-45,45)):
+        '''
+        :param rot_on: if True, tiles are randomly rotated
+        :param rotation_range: (min, max) rotation angle in degrees
+        '''
+        if rot_on:
+            self.augment = self.augment.union({'rotate'})
+        else:
+            self.augment = self.augment - {'rotate'}
+        self.rotation_range = rotation_range
+
+    def augment_by_shear(self, shear_on, shear_range=(-5, 5)):
+        '''
+        :param shear_on: if True, tiles are randomly sheared
+        :param shear_range: (min, max) shear angle in degrees
+        '''
+        if shear_on:
+            self.augment = self.augment.union({'shear'})
+        else:
+            self.augment = self.augment - {'shear'}
+        self.shear_range = shear_range
+
+
+
     def pixels(self):
         return self._normalize(self._pixels.astype(self.float_data_type))
 
@@ -120,9 +142,11 @@ class TrainingBatch(Minibatch):
 
         for label in self._labels:
             tile_data = self._random_tile(for_label=label)
+
             pixels.append(tile_data.pixels)
             weights.append(tile_data.weights)
             augmentations.append(tile_data.augmentation)
+
 
         self._pixels = np.array(pixels)
         self._weights = np.array(weights)
@@ -133,8 +157,6 @@ class TrainingBatch(Minibatch):
         '''
         get random rotation angle within specified range
         '''
-        if not self.augment:
-            return 0
 
         return random.uniform(*self.rotation_range)
 
@@ -142,8 +164,6 @@ class TrainingBatch(Minibatch):
         '''
         get random shear angle within specified range
         '''
-        if not self.augment:
-            return 0
 
         return random.uniform(*self.shear_range)
 
@@ -156,11 +176,12 @@ class TrainingBatch(Minibatch):
         flipud = False
         rot90 = 0
 
-        if not self.augment_simple:
-            return fliplr, flipud, rot90
 
+        tilesize = self.get_tile_size_zxy()
 
-        rot90 = np.random.choice(4)
+        if tilesize[1] == tilesize[2]:
+            #rotate if tile is square in x and y
+            rot90 = np.random.choice(4)
 
         if np.random.choice(2) == 0:
             fliplr = True
@@ -177,23 +198,22 @@ class TrainingBatch(Minibatch):
         '''
         pick random tile in image regions where label data is present
         '''
-        if not self.augment:
-            return self._dataset.random_training_tile(self._size_zxy,
-                                                          self._channels,
-                                                          pixel_padding=self._padding_zxy,
-                                                          equalized=self.equalized,
-                                                          labels=self._labels,
-                                                          label_region=for_label)
 
-        shear_angle = self._random_shear_angle()
-        rotation_angle = self._random_rotation_angle()
-        fliplr, flipud, rot90 = self._random_simple_augment_params()
+        augment_params = None
 
-        augment_params = {'shear_angle' : shear_angle,
-                          'rotation_angle' : rotation_angle,
-                          'fliplr' : fliplr,
-                          'flipud' : flipud,
-                          'rot90' : rot90}
+        if 'flip' in self.augment:
+            fliplr, flipud, rot90 = self._random_simple_augment_params()
+            augment_params = {'fliplr' : fliplr,
+                              'flipud' : flipud,
+                              'rot90' : rot90}
+
+        if 'rotate' in self.augment:
+            augment_params['rotation_angle'] = self._random_rotation_angle()
+
+        if 'shear' in self.augment:
+             augment_params['shear_angle'] = self._random_shear_angle()
+
+
 
         return self._dataset.random_training_tile(self._size_zxy,
                      self._channels,
