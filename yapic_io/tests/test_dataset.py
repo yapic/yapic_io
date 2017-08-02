@@ -22,12 +22,12 @@ class TestDataset(TestCase):
         d = Dataset(c)
 
         self.assertEqual(d.n_images, 3)
-        
 
-        
-        
 
-        
+
+
+
+
     def test_get_padding_size_1(self):
 
         shape = (7, 11)
@@ -44,7 +44,7 @@ class TestDataset(TestCase):
         size = (3, 5)
 
         res = ds.get_padding_size(shape, pos, size)
-        self.assertEqual([(3, 0), (0, 0)], res) 
+        self.assertEqual([(3, 0), (0, 0)], res)
 
     def test_get_padding_size_3(self):
 
@@ -60,9 +60,9 @@ class TestDataset(TestCase):
         pos = (5, 5, 5, 0)
         size = (3, 5, 3, 1)
         res = ds.get_padding_size(shape, pos, size)
-        self.assertEqual([(0, 1), (0, 0), (0, 1), (0, 0)], res)    
+        self.assertEqual([(0, 1), (0, 0), (0, 1), (0, 0)], res)
 
-        
+
 
     def test_distance_to_upper_img_edge(self):
 
@@ -98,8 +98,8 @@ class TestDataset(TestCase):
         print(size_out)
 
         self.assertEqual(pos_out, pos_val)
-        self.assertEqual(size_out, size_val)    
-        self.assertEqual(pos_tile_val, pos_tile)  
+        self.assertEqual(size_out, size_val)
+        self.assertEqual(pos_tile_val, pos_tile)
         self.assertEqual(padding, [(4, 5), (0, 6)])
 
     def test_inner_tile_size_2(self):
@@ -118,9 +118,9 @@ class TestDataset(TestCase):
         print(size_out)
 
         self.assertEqual(pos_out, pos_val)
-        self.assertEqual(size_out, size_val)        
+        self.assertEqual(size_out, size_val)
         self.assertEqual(pos_tile, (0, 0))
-        self.assertEqual(pd, [(4, 0), (1, 0)])        
+        self.assertEqual(pd, [(4, 0), (1, 0)])
 
     def test_inner_tile_size_3(self):
 
@@ -130,7 +130,7 @@ class TestDataset(TestCase):
 
         pos_val = (0, 0)
         size_val = (2, 3)
-        
+
         pos_out, size_out, pos_tile, pd = \
                 ds.inner_tile_size(shape, pos, size)
 
@@ -138,9 +138,9 @@ class TestDataset(TestCase):
         print(size_out)
 
         self.assertEqual(pos_out, pos_val)
-        self.assertEqual(size_out, size_val)        
+        self.assertEqual(size_out, size_val)
         self.assertEqual(pos_tile, (0, 0))
-        self.assertEqual(pd, [(2, 0), (3, 0)])        
+        self.assertEqual(pd, [(2, 0), (3, 0)])
 
     def test_inner_tile_size_4(self):
 
@@ -158,9 +158,9 @@ class TestDataset(TestCase):
         print(size_out)
 
         self.assertEqual(pos_out, pos_val)
-        self.assertEqual(size_out, size_val)        
+        self.assertEqual(size_out, size_val)
         self.assertEqual(pos_tile, (0, 0))
-        self.assertEqual(pd, [(5, 0), (0, 0)])        
+        self.assertEqual(pd, [(5, 0), (0, 0)])
 
 
     def test_inner_tile_size_5(self):
@@ -179,9 +179,9 @@ class TestDataset(TestCase):
         print(size_out)
 
         self.assertEqual(pos_out, pos_val)
-        self.assertEqual(size_out, size_val)        
+        self.assertEqual(size_out, size_val)
         self.assertEqual(pos_tile, (0, 0))
-        self.assertEqual(pd, [(0, 0), (4, 0)])        
+        self.assertEqual(pd, [(0, 0), (4, 0)])
     def test_inner_tile_size_6(self):
 
         shape = (7, 11)
@@ -198,9 +198,9 @@ class TestDataset(TestCase):
         print(size_out)
 
         self.assertEqual(pos_out, pos_val)
-        self.assertEqual(size_out, size_val)        
+        self.assertEqual(size_out, size_val)
         self.assertEqual(pos_tile, (0, 2))
-        self.assertEqual(pd, [(0, 0), (0, 4)]) 
+        self.assertEqual(pd, [(0, 0), (0, 4)])
 
     def test_inner_tile_size_7(self):
 
@@ -218,9 +218,9 @@ class TestDataset(TestCase):
         print(size_out)
 
         self.assertEqual(pos_out, pos_val)
-        self.assertEqual(size_out, size_val)        
+        self.assertEqual(size_out, size_val)
         self.assertEqual(pos_tile, (0, 1))
-        self.assertEqual(pd, [(0, 1), (0, 3)]) 
+        self.assertEqual(pd, [(0, 1), (0, 3)])
 
     def test_inner_tile_size_8(self):
 
@@ -238,9 +238,9 @@ class TestDataset(TestCase):
         print(size_out)
 
         self.assertEqual(tuple(pos_out), pos_val)
-        self.assertEqual(tuple(size_out), size_val)        
+        self.assertEqual(tuple(size_out), size_val)
         self.assertEqual(tuple(pos_tile), (1, 2))
-        self.assertEqual(pd, [(0, 3), (0, 4)]) 
+        self.assertEqual(pd, [(0, 3), (0, 4)])
 
 
     def test_inner_tile_size_9(self):
@@ -259,9 +259,9 @@ class TestDataset(TestCase):
         print(size_out)
 
         self.assertEqual(tuple(pos_out), pos_val)
-        self.assertEqual(tuple(size_out), size_val)        
+        self.assertEqual(tuple(size_out), size_val)
         self.assertEqual(tuple(pos_tile), (0, 0))
-        self.assertEqual(pd, [(4, 0), (1, 0)]) 
+        self.assertEqual(pd, [(4, 0), (1, 0)])
 
     def test_inner_tile_size_10(self):
 
@@ -279,9 +279,9 @@ class TestDataset(TestCase):
         print(size_out)
 
         self.assertEqual(pos_out, pos_val)
-        self.assertEqual(size_out, size_val)        
+        self.assertEqual(size_out, size_val)
         self.assertEqual(pos_tile, (2, 0))
-        self.assertEqual(pd, [(0, 3), (0, 0)]) 
+        self.assertEqual(pd, [(0, 3), (0, 0)])
 
 
 
@@ -301,11 +301,11 @@ class TestDataset(TestCase):
         print(size_out)
 
         self.assertEqual(pos_out, pos_val)
-        self.assertEqual(size_out, size_val)        
+        self.assertEqual(size_out, size_val)
         self.assertEqual(pos_tile, (0, 0))
-        self.assertEqual(pd, [(0, 0), (0, 0)])                 
-                      
-      
+        self.assertEqual(pd, [(0, 0), (0, 0)])
+
+
     def test_is_padding(self):
         self.assertTrue(ds.is_padding([(2, 3), (0, 0)]))
         self.assertTrue(ds.is_padding([(2, 3), (20, 3)]))
@@ -323,7 +323,7 @@ class TestDataset(TestCase):
         channel = 0
         tile = d.tile_singlechannel(image_nr, pos, size, channel, reflect=False)
 
-        
+
         self.assertEqual(tile.shape, (3, 6, 4))
 
 
@@ -346,10 +346,10 @@ class TestDataset(TestCase):
            [175, 200, 184, 161], \
            [174, 180, 168, 157]]]
 
-        val = np.array(val) 
+        val = np.array(val)
         print(val)
-        print(tile)      
-        self.assertTrue((tile == val).all())   
+        print(tile)
+        self.assertTrue((tile == val).all())
 
 
     def test_tile_singlechannel_3(self):
@@ -367,10 +367,10 @@ class TestDataset(TestCase):
         [[[132, 151, 151], \
            [132, 151, 151], \
            [93, 140, 140]]]
-        
-        val = np.array(val) 
+
+        val = np.array(val)
         print(val)
-        print(tile)   
+        print(tile)
         self.assertTrue((tile == val).all())
 
 
@@ -389,10 +389,10 @@ class TestDataset(TestCase):
         val = \
         [[[184, 161, 161, 184, 200, 175], \
            [168, 157, 157, 168, 180, 174]]]
-        
-        val = np.array(val) 
+
+        val = np.array(val)
         print(val)
-        print(tile)   
+        print(tile)
         self.assertTrue((tile == val).all())
 
 
@@ -408,11 +408,11 @@ class TestDataset(TestCase):
         label_value = 3
         mat = d._label_tile_inner(img_nr, \
          pos_czxy, size_czxy, label_value)
-        
+
         val = np.zeros(size_czxy)
         val[0, 0, 1] = 1
         val[0, 4, 1] = 1
-        val[0, 5, 1] = 1 
+        val[0, 5, 1] = 1
 
         np.testing.assert_array_equal(val, mat)
 
@@ -429,13 +429,13 @@ class TestDataset(TestCase):
         label_value = 3
         mat = d.label_tile(img_nr, \
          pos_czxy, size_czxy, label_value)
-        
+
         val = np.zeros(size_czxy)
         val[0, 0, 1] = 1
         val[0, 4, 1] = 1
-        val[0, 5, 1] = 1 
+        val[0, 5, 1] = 1
 
-        self.assertTrue((val==mat).all())   
+        self.assertTrue((val==mat).all())
         self.assertEqual(len(mat.shape), 3)
 
 
@@ -451,12 +451,12 @@ class TestDataset(TestCase):
         label_value = 3
         mat = d.label_tile(img_nr, \
          pos_czxy, size_czxy, label_value)
-        
+
         val = np.zeros(size_czxy)
         # val[0, 0, 1] = 1
         # val[0, 4, 1] = 1
-        # val[0, 5, 1] = 1 
-        
+        # val[0, 5, 1] = 1
+
         print('tile')
         print(mat)
 
@@ -470,7 +470,7 @@ class TestDataset(TestCase):
             [0., 0.]\
         ]
         val = np.array(val)
-        self.assertTrue((mat==val).all())         
+        self.assertTrue((mat==val).all())
 
 
     def test_get_weight_tile_for_label_2(self):
@@ -478,26 +478,26 @@ class TestDataset(TestCase):
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
         c = TiffConnector(img_path, label_path)
         d = Dataset(c)
-        
+
         d.set_label_weight(1.2, 3)
         img_nr = 2
         pos_czxy = np.array((0, 0, 0))
         size_czxy = np.array((1, 6, 4))
         label_value = 3
-        
+
         mat = d._label_tile_inner(img_nr, \
          pos_czxy, size_czxy, label_value)
-        
+
         val = np.zeros(size_czxy)
         print('valshae')
         print(val.shape)
         val[0, 0, 1] = 1.2
         val[0, 4, 1] = 1.2
-        val[0, 5, 1] = 1.2 
+        val[0, 5, 1] = 1.2
         pprint('mat')
         pprint(mat)
         pprint(val)
-        self.assertTrue((val==mat).all())    
+        self.assertTrue((val==mat).all())
 
 
     def test_load_label_counts(self):
@@ -508,7 +508,7 @@ class TestDataset(TestCase):
 
         t = d.load_label_counts()
         print(t)
-        
+
         val_1 = np.array([4, 0, 0]) # labelcounts for each image fopr labelvalue 1
         val_2 = np.array([3, 0, 11]) # labelcounts for each image fopr labelvalue 2
         val_3 = np.array([3, 0, 3]) # labelcounts for each image fopr labelvalue 3
@@ -516,7 +516,7 @@ class TestDataset(TestCase):
         assert_array_equal(val_1, t[1])
         assert_array_equal(val_2, t[2])
         assert_array_equal(val_3, t[3])
-        self.assertTrue(sorted(list(t.keys())), [1, 2, 3]) 
+        self.assertTrue(sorted(list(t.keys())), [1, 2, 3])
 
 
     def test_sync_label_counts(self):
@@ -530,7 +530,7 @@ class TestDataset(TestCase):
         d1.sync_label_counts(d2)
 
         self.assertEqual(set(d1.label_counts.keys()), set(d2.label_counts.keys()))
-        
+
         assert_array_equal(d1.label_counts[1], np.array([4]))
         assert_array_equal(d1.label_counts[2], np.array([3]))
         assert_array_equal(d1.label_counts[3], np.array([3]))
@@ -538,7 +538,7 @@ class TestDataset(TestCase):
         assert_array_equal(d2.label_counts[1], np.array([0, 0]))
         assert_array_equal(d2.label_counts[2], np.array([0, 11]))
         assert_array_equal(d2.label_counts[3], np.array([0, 3]))
-        
+
 
         d = Dataset(c)
         d1 = Dataset(c1)
@@ -546,7 +546,7 @@ class TestDataset(TestCase):
         d2.sync_label_counts(d1)
 
         self.assertEqual(set(d1.label_counts.keys()), set(d2.label_counts.keys()))
-        
+
         assert_array_equal(d1.label_counts[1], np.array([4]))
         assert_array_equal(d1.label_counts[2], np.array([3]))
         assert_array_equal(d1.label_counts[3], np.array([3]))
@@ -561,11 +561,11 @@ class TestDataset(TestCase):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/')
 
-        img_fnames = [os.path.join(img_path, '6width4height3slices_rgb.tif'), 
-                      os.path.join(img_path, '40width26height6slices_rgb.tif'), 
+        img_fnames = [os.path.join(img_path, '6width4height3slices_rgb.tif'),
+                      os.path.join(img_path, '40width26height6slices_rgb.tif'),
                       os.path.join(img_path, '40width26height3slices_rgb.tif'), ]
-        label_fnames = [os.path.join(label_path, '6width4height3slices_rgb.tif'), 
-                        None, 
+        label_fnames = [os.path.join(label_path, '6width4height3slices_rgb.tif'),
+                        None,
                         os.path.join(label_path, '40width26height3slices_rgb.tif'), ]
 
 #        c = TiffConnector(img_path, label_path)
@@ -590,7 +590,7 @@ class TestDataset(TestCase):
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
         c = TiffConnector(img_path, label_path)
         d = Dataset(c)
-        
+
         d.set_label_weight(0.7, 3)
 
         self.assertTrue((d.label_weights[3] == np.array([0.7, 0.7, 0.7, 0.7, 0.7, 0.7])).all())
@@ -602,7 +602,7 @@ class TestDataset(TestCase):
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
         c = TiffConnector(img_path, label_path)
         d = Dataset(c)
-        
+
         d.equalize_label_weights()
 
         print(d.label_weights)
@@ -613,7 +613,7 @@ class TestDataset(TestCase):
 
 
     def test_equalize_label_weights(self):
-        
+
         label_n = {1: 10, 2 : 20}
 
         weights = ds.equalize_label_weights(label_n)
@@ -623,11 +623,11 @@ class TestDataset(TestCase):
         self.assertEqual(weights[1]+weights[2], 1)
 
     def test_augment_tile(self):
-        
-        
+
+
 
         '''
-        im = 
+        im =
         [[ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
          [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
          [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
@@ -646,7 +646,7 @@ class TestDataset(TestCase):
 
 
          tile without augmentation
-         tile = 
+         tile =
           [[ 0.  0.  0.  0.  2.  0.  0.  0.  0.]
            [ 0.  0.  0.  0.  2.  0.  0.  0.  0.]
            [ 0.  0.  0.  0.  2.  0.  0.  0.  0.]
@@ -706,17 +706,16 @@ class TestDataset(TestCase):
         print(im)
         print(tile)
         print(tile_rot)
-
-        self.assertTrue((val==tile_rot).all())
-
+        print(val)
+        assert_array_equal(val, tile_rot)
 
 
     def test_augment_tile_2(self):
-    
-    
+
+
 
         '''
-        im = 
+        im =
         [[ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
          [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
          [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
@@ -768,7 +767,7 @@ class TestDataset(TestCase):
     def test_augment_tile_simple(self):
 
         '''
-        im = 
+        im =
         [[ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
          [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
          [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]
@@ -786,7 +785,7 @@ class TestDataset(TestCase):
          [ 0.  0.  0.  0.  0.  0.  0.  2.  0.  0.  0.  0.  0.  0.  0.]]
 
         '''
-    
+
 
 
         def get_tile_func(pos=None, size=None, img=None):
@@ -823,10 +822,10 @@ class TestDataset(TestCase):
         pprint(tile)
         print('')
         pprint(tile_ud)
-        
+
         assert_array_equal(tile_ud,val_ud)
 
-    
+
     def test_multichannel_pixel_tile_1(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
@@ -930,7 +929,7 @@ class TestDataset(TestCase):
         size_zxy = (1, 4, 3)
         channels = [1]
         labels = [2, 3]
-        
+
 
         tr = d.training_tile(img, pos_zxy, size_zxy, channels, labels, \
             pixel_padding=(0, 1, 2))
@@ -952,12 +951,12 @@ class TestDataset(TestCase):
         res_2 = d.random_label_coordinate(equalized=False)
         print(res_1)
         print(res_2)
-        #self.assertTrue(False) 
+        #self.assertTrue(False)
 
-    
-        
 
-    
+
+
+
     def test_random_training_tile(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
@@ -971,19 +970,19 @@ class TestDataset(TestCase):
         pixel_shape_val = (3, 3, 7, 8)
         weight_shape_val = (3, 1, 3, 4)
         #labels_val = [91, 109, 150]
-        
+
         #mapping [{91: 1, 109: 2, 150: 3}]
         labels_val = [1, 2, 3]
         tile = d.random_training_tile(\
             size, channels, pixel_padding=pad,
             augment_params={'rotation_angle':45})
 
-        
+
         self.assertEqual(tile.pixels.shape, pixel_shape_val)
         self.assertEqual(tile.channels, channels)
         self.assertEqual(tile.weights.shape, weight_shape_val)
         self.assertEqual(tile.labels, labels_val)
-        
+
         #assert False
 
     def test_get_label_probs(self):
@@ -994,18 +993,18 @@ class TestDataset(TestCase):
         print(d.label_counts)
         res = d._get_label_probs(label_value=None)
         assert_array_almost_equal(res, [ 0.416667, 0., 0.583333])
-        
+
         res = d._get_label_probs(label_value=1)
         assert_array_almost_equal(res, [ 1., 0., 0.])
-        
 
-    
+
+
     def test_random_pos_izxy(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
         c = TiffConnector(img_path, label_path)
         d = Dataset(c)
-        
+
         np.random.seed(42)
         pos_izxy = d._random_pos_izxy(label_value=1, size_zxy=(1,2,2))
         print(pos_izxy)
@@ -1019,15 +1018,15 @@ class TestDataset(TestCase):
         with self.assertRaises(ValueError):
             pos_izxy = d._random_pos_izxy(label_value=1, size_zxy=(3,40,27))
 
-        np.random.seed(None)    
-        
+        np.random.seed(None)
+
 
 
 
     def test_random_training_tile_by_polling(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        
+
         size = (1, 4, 3)
         channels = [0, 1, 2]
         labels = [1,2,3]
@@ -1035,24 +1034,24 @@ class TestDataset(TestCase):
 
         c = TiffConnector(img_path, label_path)
         d = Dataset(c)
-        
+
         # weights_val = np.array(
 
         weights_val = np.array([[[[ 0.,  0.,  0.],
                                   [ 0.,  0.,  0.],
                                   [ 0.,  0.,  0.],
-                                  [ 0.,  0.,  0.]]],                    
+                                  [ 0.,  0.,  0.]]],
                                 [[[ 0.,  0.,  0.],
                                   [ 0.,  0.,  0.],
                                   [ 1.,  1.,  1.],
                                   [ 1.,  1.,  1.]]],
-                                   
-                                   
+
+
                                 [[[ 1.,  0.,  0.],
                                   [ 0.,  0.,  0.],
                                   [ 0.,  0.,  0.],
                                   [ 0.,  0.,  0.]]]])
-    
+
 
         np.random.seed(43)
         training_tile = d._random_training_tile_by_polling(size, channels,
@@ -1061,7 +1060,7 @@ class TestDataset(TestCase):
         print(training_tile)
         pprint(training_tile.weights)
         assert_array_equal(training_tile.weights, weights_val)
-        
+
 
         weights_val = np.array([[[[ 0.,  0.,  0.],
                                   [ 0.,  0.,  0.],
@@ -1083,8 +1082,8 @@ class TestDataset(TestCase):
         pprint(training_tile.weights)
         assert_array_equal(training_tile.weights, weights_val)
         np.random.seed(None)
-       
-            
+
+
 
     def test_random_training_tile_spec_label(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
@@ -1097,9 +1096,9 @@ class TestDataset(TestCase):
         pad = (0, 2, 2)
         channels = [0, 1, 2]
 
-        
+
         labels_val = [1, 2, 3]
-        
+
         tile_1 = d.random_training_tile(\
             size, channels, pixel_padding=pad,
             augment_params={'rotation_angle' :45},
@@ -1120,9 +1119,9 @@ class TestDataset(TestCase):
         self.assertEqual(tile_1[2][0][0][0][0], 1)
         self.assertEqual(tile_2[2][1][0][0][0], 1)
         self.assertEqual(tile_3[2][2][0][0][0], 1)
-        
 
-    
+
+
     def test_put_prediction_tile_1(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
@@ -1132,13 +1131,13 @@ class TestDataset(TestCase):
 
         pixels = np.array([[[.1, .2, .3], \
                             [.4, .5, .6]]], dtype=np.float32)
-        
+
         path = savepath + '6width4height3slices_rgb_class_2.tif'
-        
+
         try:
             os.remove(path)
         except:
-            pass    
+            pass
 
         d.put_prediction_tile(pixels, pos_zxy=(0, 1, 1), image_nr=2, label_value=2)
         probim = ip.import_tiff_image(path, zstack=True)
@@ -1163,12 +1162,12 @@ class TestDataset(TestCase):
          [ 0.        , 0.        , 0.        , 0.        ], \
          [ 0.        , 0.        , 0.        , 0.        ], \
          [ 0.        , 0.        , 0.        , 0.        ]]]], dtype=np.float32)
-        
+
         self.assertTrue((val==probim).all())
 
         try:
             os.remove(path)
         except:
-            pass    
-    
+            pass
+
 

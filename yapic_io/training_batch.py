@@ -3,6 +3,8 @@ import numpy as np
 from yapic_io.minibatch import Minibatch
 
 
+
+
 class TrainingBatch(Minibatch):
     '''
     Infinite iterator providing pixel and label data for classifier training.
@@ -104,7 +106,7 @@ class TrainingBatch(Minibatch):
 
 
     def pixels(self):
-        return self._pixels.astype(self.float_data_type)
+        return self._normalize(self._pixels.astype(self.float_data_type))
 
 
     def weights(self):
@@ -155,19 +157,19 @@ class TrainingBatch(Minibatch):
         rot90 = 0
 
         if not self.augment_simple:
-            return fliplr, flipud, rot90 
+            return fliplr, flipud, rot90
 
 
         rot90 = np.random.choice(4)
-        
+
         if np.random.choice(2) == 0:
             fliplr = True
         if np.random.choice(2) == 0:
             flipud = True
-        
-        return fliplr, flipud, rot90        
 
-            
+        return fliplr, flipud, rot90
+
+
 
 
 
@@ -186,7 +188,7 @@ class TrainingBatch(Minibatch):
         shear_angle = self._random_shear_angle()
         rotation_angle = self._random_rotation_angle()
         fliplr, flipud, rot90 = self._random_simple_augment_params()
-        
+
         augment_params = {'shear_angle' : shear_angle,
                           'rotation_angle' : rotation_angle,
                           'fliplr' : fliplr,
@@ -200,3 +202,4 @@ class TrainingBatch(Minibatch):
                      augment_params=augment_params,
                      labels=self._labels,
                      label_region=for_label)
+

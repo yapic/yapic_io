@@ -80,7 +80,9 @@ class PredictionBatch(Minibatch):
                           self._padding_zxy)
                   for im_nr, pos_zxy in self._get_curr_tile_positions()]
 
-        return np.array(pixels).astype(self.float_data_type)
+
+        pixels = np.array(pixels).astype(self.float_data_type)
+        return self._normalize(pixels)
 
 
     def __len__(self):
@@ -231,4 +233,5 @@ class PredictionBatch(Minibatch):
             tile_pos =tile_pos + [(img_nr, pos) for pos in ut.compute_pos(img_shape_zxy, self._size_zxy)]
 
         return tile_pos
+
 

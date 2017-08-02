@@ -218,7 +218,7 @@ class TiffConnector(Connector):
         conn1.labelvalue_mapping = self.labelvalue_mapping
         conn2.labelvalue_mapping = self.labelvalue_mapping
 
-        np.random.seed(None)
+        #np.random.seed(None)
         return conn1, conn2
 
 

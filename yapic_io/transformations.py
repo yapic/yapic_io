@@ -2,12 +2,12 @@
 matrix transformation functions
 '''
 
-import numpy as np 
+import numpy as np
 from skimage import transform as tf
 import logging
 from scipy.ndimage import map_coordinates
 logger = logging.getLogger('utils')
-        
+
 def mirror_edges(mat, n_pix):
     '''
     increase matrix at all edges by mirroring
@@ -15,14 +15,14 @@ def mirror_edges(mat, n_pix):
 
     :param mat: n-dimensional matrix
     :type mat: numpy.ndarray
-    :param n_pix: nr of edge pixels to be mirrored for each dimension 
+    :param n_pix: nr of edge pixels to be mirrored for each dimension
     :type n_pix: tuple of integers
     :returns:  numpy.ndarray -- the matrix with mirrored edges.
     '''
 
     n_pix = [(e, e) for e in n_pix]
-    
-    return np.pad(mat, n_pix, mode='reflect')    
+
+    return np.pad(mat, n_pix, mode='reflect')
 
 
 def get_transform(image, rotation_angle, shear_angle):
@@ -50,7 +50,7 @@ def get_transform(image, rotation_angle, shear_angle):
     tf_shift_inv = tf.AffineTransform(translation=[shift_x, shift_y])
     tf_center_rot = (tf_shift + (tf_rotate_shear + tf_shift_inv)).inverse
 
-    return tf_center_rot    
+    return tf_center_rot
 
 
 def warp_image_2d(image, rotation_angle, shear_angle):
@@ -97,20 +97,20 @@ def warp_image_2d_stack(image, rotation_angle, shear_angle):
                                 % len(image.shape))
 
     if (len(image.shape) == 3):
-        logger.debug('warp 3d image slice by slice...')
-        return np.array([warp_image_2d(z_slice, rotation_angle, shear_angle) for z_slice in image])    
-    
+
+        return np.array([warp_image_2d(z_slice, rotation_angle, shear_angle) for z_slice in image])
+
     if (len(image.shape) == 4):
-        out = []    
-        logger.debug('warp 4d image slice by slice...')
+        out = []
+
         for image_zxy in image:
             out.append([warp_image_2d(z_slice, rotation_angle, shear_angle) for z_slice in image_zxy])
-        return np.array(out)      
+        return np.array(out)
 
 
 def flip_image_2d_stack(image, fliplr=False, flipud=False, rot90=0):
     '''
-    Flips and rotates a zxy stack in xy with fast numpy operations 
+    Flips and rotates a zxy stack in xy with fast numpy operations
     '''
     image = image.T
     if fliplr:
@@ -119,7 +119,7 @@ def flip_image_2d_stack(image, fliplr=False, flipud=False, rot90=0):
         image = np.flipud(image)
     if rot90>0:
         image = np.rot90(image, k=rot90)
-    return image.T            
+    return image.T
 
 
 def calc_warping_shift(image_shape, rotation_angle, shear_angle):
@@ -127,7 +127,7 @@ def calc_warping_shift(image_shape, rotation_angle, shear_angle):
     z = np.zeros(image_shape)
     mat = np.arange(image_shape[0]*image_shape[1]).reshape((image_shape))
     center_pos = (np.array(image_shape)-1)/2
-    
+
     z[:, center_pos[1]] = 111
     z[center_pos[0], :] = 256
     z[center_pos[0], center_pos[1]-2:center_pos[1]+2] = 256

@@ -5,8 +5,8 @@ import numpy as np
 logger = logging.getLogger(os.path.basename(__file__))
 
 
-
 class Minibatch(object):
+
     def __init__(self, dataset, batch_size, size_zxy, padding_zxy=(0, 0, 0)):
         '''
         :param dataset: dataset object, to connect to pixels and labels weights
@@ -28,21 +28,38 @@ class Minibatch(object):
         '''
         self._dataset = dataset
         self._batch_size = batch_size
+        self.normalize_mode = 'local_z_score'
+        self.global_norm_minmax = None
 
-
-        self.float_data_type = np.float32 #type of pixel and weight data
+        self.float_data_type = np.float32  # type of pixel and weight data
         self._size_zxy = None
         self._padding_zxy = None
         if size_zxy is not None:
             self.set_tile_size_zxy(size_zxy)
         if padding_zxy is not None:
             self.set_padding_zxy(padding_zxy)
-        self._channels = self._dataset.channel_list() #imports all available channels by default
-        self._labels = self._dataset.label_values() #imports all available labels by default
+        # imports all available channels by default
+        self._channels = self._dataset.channel_list()
+        # imports all available labels by default
+        self._labels = self._dataset.label_values()
 
+    def set_normalize_mode(self, mode_str, minmax=None):
 
+        if mode_str in ('local_z_score', 'local'):
+            self.normalize_mode = mode_str
 
+        elif mode_str == 'global':
+            if minmax is None:
+                err_msg = 'Missing minmax for defining global minimum' + \
+                          'and maximum for normalization: (min, max)'
+                raise ValueError(err_msg)
+            self.global_norm_minmax = minmax
+            self.normalize_mode = mode_str
 
+        else:
+            err_msg = '''Wrong normalization mode argument: {}. '''.format(mode_str) + \
+                      '''choose between 'local', 'local_z_score' and 'global' '''
+            raise ValueError(err_msg)
 
     def get_tile_size_zxy(self):
         '''
@@ -59,17 +76,16 @@ class Minibatch(object):
         Must not be larger than the smallest image of the dataset!!
         '''
         if len(size_zxy) != 3:
-            raise ValueError(\
+            raise ValueError(
                 '''no valid size for probmap tile:
-                   shape is %s, len of shape should be 3: (z, x, y)'''\
-                                % str(size_zxy))
+                   shape is %s, len of shape should be 3: (z, x, y)'''
+                % str(size_zxy))
 
         self._size_zxy = size_zxy
 
-        #a list of all possible tile positions
+        # a list of all possible tile positions
         #[(image_nr, zpos, xpos, ypos), (image_nr, zpos, xpos, ypos), ...]
         #self._all_tile_positions = self._compute_pos_zxy()
-
 
     def get_padding_zxy(self):
         '''
@@ -122,12 +138,11 @@ class Minibatch(object):
 
         '''
         if len(padding_zxy) != 3:
-            raise ValueError(\
+            raise ValueError(
                 '''no valid dimension for padding:
-                   shape is %s, len of shape should be 3: (z, x, y)'''\
-                                % str(padding_zxy.shape))
+                   shape is %s, len of shape should be 3: (z, x, y)'''
+                % str(padding_zxy.shape))
         self._padding_zxy = padding_zxy
-
 
     def channel_list(self):
         '''
@@ -189,11 +204,10 @@ class Minibatch(object):
 
         '''
         if channel not in self._channels:
-            raise ValueError('not possible to remove channel %s from channel selection %s'\
-                % (str(channel), str(self._channels)))
+            raise ValueError('not possible to remove channel %s from channel selection %s'
+                             % (str(channel), str(self._channels)))
         self._channels.remove(channel)
         return True
-
 
     def add_channel(self, channel):
         '''
@@ -205,12 +219,11 @@ class Minibatch(object):
             logger.warning('channel already selected %s', channel)
             return False
         if channel not in self._dataset.channel_list():
-            raise ValueError('not possible to add channel %s from dataset channels %s'\
-                % (str(channel), str(self._dataset.channel_list())))
+            raise ValueError('not possible to add channel %s from dataset channels %s'
+                             % (str(channel), str(self._dataset.channel_list())))
 
         insort_left(self._channels, channel)
         return True
-
 
     def get_labels(self):
         '''
@@ -223,7 +236,6 @@ class Minibatch(object):
         '''
 
         return self._labels
-
 
     def remove_label(self, label):
         '''
@@ -252,11 +264,10 @@ class Minibatch(object):
 
         '''
         if label not in self._labels:
-            raise ValueError('not possible to remove label %s from label selection %s'\
-                % (str(label), str(self._labels)))
+            raise ValueError('not possible to remove label %s from label selection %s'
+                             % (str(label), str(self._labels)))
         self._labels.remove(label)
         return True
-
 
     def add_label(self, label):
         '''
@@ -298,8 +309,47 @@ class Minibatch(object):
             logger.warning('label class already selected %s', label)
             return False
         if label not in self._dataset.label_values():
-            raise ValueError('not possible to add label class %s from dataset label classes %s'\
-                % (str(label), str(self._dataset.label_values())))
+            raise ValueError('not possible to add label class %s from dataset label classes %s'
+                             % (str(label), str(self._dataset.label_values())))
 
         insort_left(self._labels, label)
         return True
+
+    def _normalize(self, pixels):
+        '''
+        to be called by the self.pixels() function
+        '''
+
+        if self.normalize_mode is None:
+            return pixels
+
+        if self.normalize_mode == 'global':
+            center_ref = np.array(self.global_norm_minmax[0])
+            scale_ref = np.array(self.global_norm_minmax[1])
+
+        if self.normalize_mode == 'local':
+            # scale between 0 and 1
+            #(data-minval)/(maxval-minval)
+            # percentiles are used for minval and maxval to be robust
+            # against outliers
+            max_ref = np.percentile(pixels, 99, axis=(0, 2, 3, 4))
+            min_ref = np.percentile(pixels, 1, axis=(0, 2, 3, 4))
+
+            center_ref = min_ref
+            scale_ref = max_ref - min_ref
+
+        if self.normalize_mode == 'local_z_score':
+             #(data-mean)/std
+            center_ref = pixels.mean(axis=(0, 2, 3, 4))
+            scale_ref = pixels.std(axis=(0, 2, 3, 4))
+
+        pixels_centered = (pixels.swapaxes(1, 4) -
+                           center_ref).swapaxes(1, 4)
+
+        if (scale_ref == 0).all():
+            # if scale_ref is zero, do not scale to avoid zero
+            # division
+            return pixels_centered
+        # scale by scale reference
+        return (pixels_centered.swapaxes(1, 4) /
+                scale_ref).swapaxes(1, 4)
