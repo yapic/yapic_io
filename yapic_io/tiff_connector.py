@@ -240,7 +240,7 @@ class TiffConnector(Connector):
 
         out_path = self.init_probmap_image(image_nr, label_value)
 
-        logger.debug('try to add new pixels to  image %s', out_path)
+        #logger.debug('try to add new pixels to  image %s', out_path)
         return ip.add_vals_to_tiff_image(out_path, pos_zxy, pixels)
 
 

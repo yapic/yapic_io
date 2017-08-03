@@ -236,7 +236,7 @@ def add_vals_to_tiff_image(path, pos_zxy, pixels):
 
     #im.save(path)
     try:
-        logger.debug('updating image %s...', path)
+        #logger.debug('updating image %s...', path)
         imsave(path, img, imagej=True)
     except:
         return False
