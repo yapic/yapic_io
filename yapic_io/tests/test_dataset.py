@@ -307,10 +307,10 @@ class TestDataset(TestCase):
 
 
     def test_is_padding(self):
-        self.assertTrue(ds.is_padding([(2, 3), (0, 0)]))
-        self.assertTrue(ds.is_padding([(2, 3), (20, 3)]))
-        self.assertTrue(ds.is_padding([(0, 0), (3, 0)]))
-        self.assertFalse(ds.is_padding([(0, 0), (0, 0)]))
+        self.assertTrue(np.any([(2, 3), (0, 0)]))
+        self.assertTrue(np.any([(2, 3), (20, 3)]))
+        self.assertTrue(np.any([(0, 0), (3, 0)]))
+        self.assertFalse(np.any([(0, 0), (0, 0)]))
 
     def test_tile_singlechannel_1(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
@@ -612,15 +612,6 @@ class TestDataset(TestCase):
         self.assertEqual(d.label_weights, val)
 
 
-    def test_equalize_label_weights(self):
-
-        label_n = {1: 10, 2 : 20}
-
-        weights = ds.equalize_label_weights(label_n)
-
-        print(weights)
-        self.assertEqual(weights[1]/2, weights[2])
-        self.assertEqual(weights[1]+weights[2], 1)
 
     def test_augment_tile(self):
 

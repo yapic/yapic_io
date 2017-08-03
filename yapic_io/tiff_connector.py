@@ -146,7 +146,7 @@ class TiffConnector(Connector):
         self.savepath = savepath # path for probability maps
 
         self.check_label_matrix_dimensions()
-        self.map_label_values()
+        self.labelvalue_mapping = self.map_label_values()
 
 
     def __repr__(self):
@@ -427,13 +427,13 @@ class TiffConnector(Connector):
         new_label = 1
         for labels_per_channel in o_labelvals:
             label_mapping = {}
-            labels_per_channel = sorted(list(labels_per_channel))
-            for label in labels_per_channel:
+            labels_per_channel = list(labels_per_channel)
+
+            for label in sorted(labels_per_channel):
                 label_mapping[label] = new_label
                 new_label += 1
-            label_mappings.append(label_mapping)
 
-        self.labelvalue_mapping = label_mappings
+            label_mappings.append(label_mapping)
 
         logger.debug('Label values are mapped to ascending values:')
         logger.debug(label_mappings)
