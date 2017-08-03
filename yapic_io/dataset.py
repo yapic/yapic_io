@@ -449,7 +449,13 @@ class Dataset(object):
         weight_total_per_labelvalue = float(nn) / float(len(total_label_count))
 
         # equalize
-        eq_weight = { l: weight_total_per_labelvalue / float(c) for l, c in total_label_count.items() }
+        eq_weight = {}
+        for l,c in total_label_count.items():
+            if c == 0:
+                eq_weight[l] = 0 #if no labels exist, set weight to 0
+            else:
+                eq_weight[l] = weight_total_per_labelvalue / float(c)
+
         eq_weight_total = sum(eq_weight.values())
 
         # normalize
@@ -492,7 +498,7 @@ class Dataset(object):
         logger.debug(label_counts)
         return label_counts
 
-    
+
     def sync_label_counts(self, datset):
         '''
         Should be applied e.g. if two datasets were created from splitted
@@ -528,21 +534,21 @@ class Dataset(object):
         >>>
         >>> pprint(d2.label_counts) #labelvalue 1 added to d2 (with count 0)
         {1: array([0, 0]), 2: array([ 0, 11]), 3: array([0, 3])}
-        
-        '''  
+
+        '''
         lc1 = self.label_counts
         lc2 = datset.label_counts
 
         #missing label in each dataset
         missing_in_d1 = set(lc2.keys()) - set(lc1.keys())
         missing_in_d2 = set(lc1.keys()) - set(lc2.keys())
-        
+
 
         for lbl in missing_in_d1:
             lc1[lbl] = np.zeros((self.n_images), dtype=np.int64)
         for lbl in missing_in_d2:
             lc2[lbl] = np.zeros((datset.n_images), dtype=np.int64)
-        
+
 
 
 
