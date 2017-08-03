@@ -44,8 +44,18 @@ class Minibatch(object):
         self._labels = self._dataset.label_values()
 
     def set_normalize_mode(self, mode_str, minmax=None):
+        '''
+        local : scale between 0 and 1 (per minibatch, each channel
+                separately)
+        local_z_score : mean to zero, scale by standard deviation
+                        (per minibatch, each channel separately)
+        global : scale minmax=(min, max) between 0 and 1
+                 whole dataset, each channel separately
+        minmax : tuple of minimum and maximum pixel value for global
+                 normalization. e.g (0, 255) for 8 bit images
+        '''
 
-        if mode_str in ('local_z_score', 'local'):
+        if mode_str in ('local_z_score', 'local', 'off'):
             self.normalize_mode = mode_str
 
         elif mode_str == 'global':
@@ -58,7 +68,7 @@ class Minibatch(object):
 
         else:
             err_msg = '''Wrong normalization mode argument: {}. '''.format(mode_str) + \
-                      '''choose between 'local', 'local_z_score' and 'global' '''
+                      '''choose between 'local', 'local_z_score', 'global' and 'off' '''
             raise ValueError(err_msg)
 
     def get_tile_size_zxy(self):
@@ -321,6 +331,9 @@ class Minibatch(object):
         '''
 
         if self.normalize_mode is None:
+            return pixels
+
+        if self.normalize_mode == 'off':
             return pixels
 
         if self.normalize_mode == 'global':

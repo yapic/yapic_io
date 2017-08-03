@@ -81,8 +81,9 @@ class PredictionBatch(Minibatch):
                   for im_nr, pos_zxy in self._get_curr_tile_positions()]
 
 
-        pixels = np.array(pixels).astype(self.float_data_type)
-        return self._normalize(pixels)
+        pixels = np.array(pixels)
+
+        return self._normalize(pixels).astype(self.float_data_type)
 
 
     def __len__(self):

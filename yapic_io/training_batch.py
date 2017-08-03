@@ -93,6 +93,8 @@ class TrainingBatch(Minibatch):
         self._fetch_training_batch_data()
         return self
 
+    def get_augmentation_settings(self):
+        return self.augment
 
     def augment_by_flipping(self, flip_on):
         '''
@@ -128,7 +130,7 @@ class TrainingBatch(Minibatch):
 
 
     def pixels(self):
-        return self._normalize(self._pixels.astype(self.float_data_type))
+        return self._normalize(self._pixels).astype(self.float_data_type)
 
 
     def weights(self):
