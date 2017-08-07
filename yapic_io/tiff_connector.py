@@ -543,10 +543,6 @@ class TiffConnector(Connector):
     #     return coor
 
 
-    def is_image_nr_valid(self, image_nr):
-        return -1 < image_nr < self.image_count()
-
-
     def load_label_filenames(self, filemask):
         label_filenames = sorted(glob.glob(os.path.join(self.label_path, filemask)))
         label_filenames = [os.path.split(fname)[1] for fname in label_filenames]
