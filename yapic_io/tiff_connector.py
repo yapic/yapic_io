@@ -435,18 +435,21 @@ class TiffConnector(Connector):
         return label_mappings
 
 
+    @lru_cache(maxsize = 1)
     def original_label_values_for_all_images(self):
         '''
         returns a list of sets. each set corresponds to 1 label channel.
         each set contains the label values of that channel.
+        E.g. `[{91, 109, 150}, {90, 100}]` for two label channels
         '''
         labels_per_channel = []
 
         for image_nr in range(self.image_count()):
-            labels_per_im = self.original_label_values_for_image(image_nr)
-
-            if labels_per_im is None:
+            mat = self.load_label_matrix(image_nr, original_labelvalues=True)
+            if mat is None:
                 continue
+
+            labels_per_im = self.unique_labels_per_channel(mat)
 
             if len(labels_per_channel) == 0:
                 labels_per_channel = labels_per_im
@@ -457,19 +460,18 @@ class TiffConnector(Connector):
         return labels_per_channel
 
 
-    @lru_cache(maxsize = 5000)
-    def original_label_values_for_image(self, image_nr):
-        mat = self.load_label_matrix(image_nr, original_labelvalues=True)
-        if mat is None:
-            return None
+    @staticmethod
+    def unique_labels_per_channel(mat):
+        '''
+        Unique list of label ids per channel for a single label matrix
+        E.g. `[{91, 109, 150}, {90, 100}]` for two label channels
+        '''
+        C = mat.shape[0]
 
-        out = []
-        nr_channels = mat.shape[0]
-        for channel in range(nr_channels):
-            values =  np.unique(mat[channel, :, :, :])
-            values = values[values!=0]
-            out.append(set(values))
-        return out
+        label_per_ch = [ np.unique(mat[ch]) for ch in range(C) ]
+        label_per_ch = [ set(labels) - {0} for labels in label_per_ch ]
+
+        return label_per_ch
 
 
     @lru_cache(maxsize = 500)
