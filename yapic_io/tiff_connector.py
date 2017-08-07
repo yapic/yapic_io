@@ -143,7 +143,9 @@ class TiffConnector(Connector):
         self.savepath = savepath # path for probability maps
 
         self.check_label_matrix_dimensions()
-        self.labelvalue_mapping = self.map_label_values()
+
+        original_labels = self.original_label_values_for_all_images()
+        self.labelvalue_mapping = self.map_label_values(original_labels)
 
 
     def __repr__(self):
@@ -399,7 +401,8 @@ class TiffConnector(Connector):
         return label_image
 
 
-    def map_label_values(self):
+    @staticmethod
+    def map_label_values(original_labels):
         '''
         assign unique labelvalues to original labelvalues.
         for multichannel label images it might happen, that identical
@@ -417,18 +420,12 @@ class TiffConnector(Connector):
         '''
         logger.debug('Mapping label values...')
 
-        label_mappings = []
-        o_labelvals = self.original_label_values_for_all_images()
-        new_label = 1
-        for labels_per_channel in o_labelvals:
-            label_mapping = {}
-            labels_per_channel = list(labels_per_channel)
+        new_labels = itertools.count(1)
 
-            for label in sorted(labels_per_channel):
-                label_mapping[label] = new_label
-                new_label += 1
-
-            label_mappings.append(label_mapping)
+        label_mappings = [
+            { l: next(new_labels) for l in sorted(labels_per_channel) }
+            for labels_per_channel in original_labels
+        ]
 
         logger.debug('Label values are mapped to ascending values:')
         logger.debug(label_mappings)
