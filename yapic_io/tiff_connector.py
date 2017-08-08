@@ -471,28 +471,19 @@ class TiffConnector(Connector):
         return label_per_ch
 
 
-    @lru_cache(maxsize = 500)
-    def label_values_for_image(self, image_nr):
-        mat = self.load_label_matrix(image_nr)
-        if mat is None:
-            return None
-        values = np.unique(mat)
-        values = values[values!=0]
-        values.sort()
-        return list(values)
-
-
     @lru_cache(maxsize = 1500)
     def label_count_for_image(self, image_nr):
         '''
         returns for each label value the number of labels for this image
         '''
-        labels = self.label_values_for_image(image_nr)
-        if labels is None:
-            return None # if no labelmatrix available
-
         mat = self.load_label_matrix(image_nr)
-        label_count = { l: np.count_nonzero(mat==l) for l in labels }
+        if mat is None:
+            return None
+
+        labels = np.unique(mat)
+        labels.sort()
+
+        label_count = { l: np.count_nonzero(mat==l) for l in labels if l > 0 }
         return label_count
 
 
