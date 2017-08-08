@@ -535,7 +535,7 @@ class TiffConnector(Connector):
 
     def load_label_filenames(self, filemask):
         label_filenames = sorted(glob.glob(os.path.join(self.label_path, filemask)))
-        label_filenames = [os.path.split(fname)[1] for fname in label_filenames]
+        label_filenames = [os.path.basename(fname) for fname in label_filenames]
         return label_filenames
 
 
@@ -544,7 +544,7 @@ class TiffConnector(Connector):
         find all tiff images in specified folder (self.img_path, filemask)
         '''
         filenames = sorted(glob.glob(os.path.join(self.img_path, filemask)))
-        filenames = [os.path.split(fname)[1] for fname in filenames]
+        filenames = [os.path.basename(fname) for fname in filenames]
 
         logger.info('{} pixel image files detected.'.format(len(filenames)))
         logger.debug('Pixel image files:')
