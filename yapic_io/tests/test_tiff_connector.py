@@ -112,23 +112,12 @@ class TestTiffconnector(TestCase):
         np.testing.assert_array_equal(tile, val)
 
 
-    def test_exists_label_for_image_nr(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
-
-        c = TiffConnector(img_path, label_path)
-        
-        self.assertTrue(c.exists_label_for_image(0))
-        self.assertFalse(c.exists_label_for_image(1))
-        self.assertTrue(c.exists_label_for_image(2))
-
-
     def test_load_label_filenames(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
 
         c = TiffConnector(img_path, label_path)
-        
+
         self.assertEqual(c.filenames[0][1], '40width26height3slices_rgb.tif')
         self.assertIsNone(c.filenames[1][1])
         self.assertEqual(c.filenames[2][1], '6width4height3slices_rgb.tif')

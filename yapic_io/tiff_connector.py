@@ -302,10 +302,12 @@ class TiffConnector(Connector):
         :param image_nr: index of image
         :returns (nr_channels, nr_zslices, nr_x, nr_y)
         '''
-        if self.exists_label_for_image(image_nr):
-            path = os.path.join(self.label_path, self.filenames[image_nr].lbl)
-            return ip.get_tiff_image_dimensions(path, \
-                zstack=self.zstack, multichannel=self.multichannel_label_image)
+        if self.filenames[image_nr].lbl is None:
+            return None
+
+        path = os.path.join(self.label_path, self.filenames[image_nr].lbl)
+        return ip.get_tiff_image_dimensions(path, \
+            zstack=self.zstack, multichannel=self.multichannel_label_image)
 
 
     def check_label_matrix_dimensions(self):
@@ -348,12 +350,6 @@ class TiffConnector(Connector):
     def load_image(self, image_nr):
         path = os.path.join(self.img_path, self.filenames[image_nr].img)
         return ip.import_tiff_image(path)
-
-
-    def exists_label_for_image(self, image_nr):
-        if self.filenames[image_nr].lbl is None:
-            return False
-        return True
 
 
     def label_tile(self, image_nr, pos_zxy, size_zxy, label_value):
