@@ -30,9 +30,9 @@ class TestTiffconnector(TestCase):
         c = TiffConnector(img_path, lbl_path)
         
         expected_names = \
-            [['img_40width26height3slices_rgb.tif', 'lbl_40width26height3slices_rgb.tif']\
-           , ['img_40width26height6slices_rgb.tif', None]\
-           , ['img_6width4height3slices_rgb.tif', 'lbl_6width4height3slices_rgb.tif']]
+            [('img_40width26height3slices_rgb.tif', 'lbl_40width26height3slices_rgb.tif')\
+           , ('img_40width26height6slices_rgb.tif', None)\
+           , ('img_6width4height3slices_rgb.tif', 'lbl_6width4height3slices_rgb.tif')]
 
         self.assertEqual(c.filenames, expected_names)   
 

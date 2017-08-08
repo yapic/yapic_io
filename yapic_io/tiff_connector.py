@@ -2,6 +2,7 @@ import logging
 import os
 import glob
 import itertools
+import collections
 from functools import lru_cache
 import yapic_io.utils as ut
 import numpy as np
@@ -18,6 +19,9 @@ logger = logging.getLogger(os.path.basename(__file__))
 def flatten(listOfLists):
     "Flatten one level of nesting"
     return itertools.chain.from_iterable(listOfLists)
+
+
+FilePair = collections.namedtuple('FilePair', ['img', 'lbl'])
 
 
 class TiffConnector(Connector):
@@ -81,7 +85,7 @@ class TiffConnector(Connector):
           dimensional images, it throws an error, because it is not clear if the thrid
           dimension is z or channel (RGB images will still be mapped correctly)
         '''
-        self.filenames = None # list of tuples: [(imgfile_1.tif, labelfile_1.tif), (imgfile_2.tif, labelfile_2.tif), ...]
+        self.filenames = None # list of FilePairs: [(imgfile_1.tif, labelfile_1.tif), (imgfile_2.tif, labelfile_2.tif), ...]
         self.labelvalue_mapping = None # list of dicts of original and assigned labelvalues
 
         # reason: assign unique labelvalues
@@ -108,7 +112,8 @@ class TiffConnector(Connector):
             img_filenames = self.load_image_filenames(img_filemask)
             lbl_filenames = self.load_label_filenames(label_filemask)
 
-            self.filenames = find_best_matching_pairs(img_filenames, lbl_filenames)
+            pairs = find_best_matching_pairs(img_filenames, lbl_filenames)
+            self.filenames = [FilePair(img, lbl) for img, lbl in pairs]
         else:
             assert type(img_filepath)
             assert type(label_filepath)
@@ -129,7 +134,7 @@ class TiffConnector(Connector):
             else:
                 self.label_path = None
 
-            self.filenames = list(zip(img_filenames, lbl_filenames))
+            self.filenames = [FilePair(img, lbl) for img, lbl in zip(img_filenames, lbl_filenames)]
 
         assert img_filenames is not None
         assert lbl_filenames is not None
@@ -138,7 +143,7 @@ class TiffConnector(Connector):
             logger.warning(msg.format(len(img_filenames), len(lbl_filenames)))
 
         logger.debug('Pixel and label files are assigned as follows:')
-        logger.debug('\n'.join('{} <-> {}'.format(img, lbl) for img, lbl in  self.filenames))
+        logger.debug('\n'.join('{p.img} <-> {p.lbl}'.format(p=pair) for pair in self.filenames))
 
         self.savepath = savepath # path for probability maps
 
@@ -254,7 +259,7 @@ class TiffConnector(Connector):
     def get_probmap_path(self, image_nr, label_value):
         if self.savepath is None:
             raise ValueError('savepath not set')
-        image_filename = self.filenames[image_nr][0]
+        image_filename = self.filenames[image_nr].img
         probmap_filename = add_to_filename(image_filename, \
                      'class_' + str(label_value))
         return os.path.join(self.savepath, probmap_filename)
@@ -284,7 +289,7 @@ class TiffConnector(Connector):
         :param image_nr: index of image
         :returns (nr_channels, nr_zslices, nr_x, nr_y)
         '''
-        path = os.path.join(self.img_path, self.filenames[image_nr][0])
+        path = os.path.join(self.img_path, self.filenames[image_nr].img)
         return ip.get_tiff_image_dimensions(path, \
             zstack=self.zstack, multichannel=self.multichannel_pixel_image)
 
@@ -298,7 +303,7 @@ class TiffConnector(Connector):
         :returns (nr_channels, nr_zslices, nr_x, nr_y)
         '''
         if self.exists_label_for_image(image_nr):
-            path = os.path.join(self.label_path, self.filenames[image_nr][1])
+            path = os.path.join(self.label_path, self.filenames[image_nr].lbl)
             return ip.get_tiff_image_dimensions(path, \
                 zstack=self.zstack, multichannel=self.multichannel_label_image)
 
@@ -341,12 +346,12 @@ class TiffConnector(Connector):
 
     @lru_cache(maxsize = 20)
     def load_image(self, image_nr):
-        path = os.path.join(self.img_path, self.filenames[image_nr][0])
+        path = os.path.join(self.img_path, self.filenames[image_nr].img)
         return ip.import_tiff_image(path)
 
 
     def exists_label_for_image(self, image_nr):
-        if self.filenames[image_nr][1] is None:
+        if self.filenames[image_nr].lbl is None:
             return False
         return True
 
@@ -381,7 +386,7 @@ class TiffConnector(Connector):
         if original_labelvalues is False, the mapped label values are returned,
         otherwise the original labelvalues.
         '''
-        label_filename = self.filenames[image_nr][1]
+        label_filename = self.filenames[image_nr].lbl
 
         if label_filename is None:
             logger.warning('no label matrix file found for image file %s', str(image_nr))
