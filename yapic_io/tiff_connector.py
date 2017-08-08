@@ -192,14 +192,14 @@ class TiffConnector(Connector):
         np.random.set_state(state)
 
         img_fnames1 = [os.path.join(self.img_path, img)
-                      for m, (img, lbl) in zip(mask, self.filenames) if m == True]
+                       for img, lbl in itertools.compress(self.filenames, mask)]
         lbl_fnames1 = [os.path.join(self.label_path, lbl) if lbl is not None else None
-                       for m, (img, lbl) in zip(mask, self.filenames) if m == True]
+                       for img, lbl in itertools.compress(self.filenames, mask)]
 
         img_fnames2 = [os.path.join(self.img_path, img)
-                      for m, (img, lbl) in zip(mask, self.filenames) if m == False]
+                       for img, lbl in itertools.compress(self.filenames, ~mask)]
         lbl_fnames2 = [os.path.join(self.label_path, lbl) if lbl is not None else None
-                       for m, (img, lbl) in zip(mask, self.filenames) if m == False]
+                       for img, lbl in itertools.compress(self.filenames, ~mask)]
 
         if len(img_fnames1) == 0:
             warnings.warn('TiffConnector.split({}): First connector is empty!'.format(fraction))
