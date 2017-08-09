@@ -4,7 +4,7 @@ import logging
 import os
 import numpy as np
 import yapic_io.utils as ut
-from tifffile import imsave, imread
+from tifffile import imsave, imread, TiffFile
 from functools import lru_cache
 
 
@@ -12,13 +12,10 @@ logger = logging.getLogger(os.path.basename(__file__))
 
 @lru_cache(maxsize = 5000)
 def is_rgb_image(path):
-    try:
-        im = Image.open(path)
-    except OSError:
-        return True
-    if im.mode == 'RGB':
-        return True
-    return False
+    with TiffFile(path) as tiff:
+        tag = next(page.tags['photometric'] for page in tiff)
+        return tag.value == 2
+
 
 @lru_cache(maxsize = 5000)
 def get_tiff_image_dimensions(path, multichannel=None, zstack=None):
@@ -33,40 +30,66 @@ def get_tiff_image_dimensions(path, multichannel=None, zstack=None):
     :param nr_channels: nr of channels (to allow correct mapping for z and channels)
     :returns tuple with integers (nr_channels, nr_zslices, nr_x, nr_y)
     '''
+    with TiffFile(path) as tiff:
+        series = tiff.series[0]
+        series_shape = np.array(series.shape)
 
-    #return import_tiff_image_2(path, third_dim_as_z=third_dim_as_z).shape
-    # im = Image.open(path)
+        shape = [ series_shape[src] if src is not None else 1
+                  for src in axes_order(series.axes)]
 
-    # z = im.n_frames
-    # x = im.width
-    # y = im.height
-    # print(im.mode)
-    # if im.mode == '1' \
-    #     or im.mode == 'L' \
-    #     or im.mode == 'P' \
-    #     or im.mode == 'I' \
-    #     or im.mode == 'F':
-    #     c = 1
-    #     if nr_channels:
-    #         c = nr_channels
-    #         z = z/nr_channels
+    return tuple(shape)
 
-    # if im.mode == 'RGB':
-    #     c = 3
-    # if im.mode == 'RGBA':
-    #     c = 4
-    # if im.mode == 'CMYK':
-    #     c = 4
-    # if im.mode == 'YCbCr':
-    #     c = 3
 
-    img = import_tiff_image(path, multichannel=multichannel, zstack=zstack)
+def index(array, value):
+    '''
+    Like `array.index(value)` but returns None if value not found.
+    (`array.index(value)` would otherwise raise a ValueError)
+    '''
+    try:
+        return array.index(value)
+    except ValueError:
+        return None
 
-    if img is None:
-        raise ValueError('Image dimensions could not be detected')
 
-    return img.shape
+def axes_order(input_axes):
+    '''
+    Determines how to reorder the axes to get the standardized 'CZXY' format.
+    Returns a 4-tuple with None if the dimension does not exist in the input_axes
+    '''
+    # tifffile.AXES_LABELS = {
+    #     'X': 'width',
+    #     'Y': 'height',
+    #     'Z': 'depth',
+    #     'S': 'sample',  # rgb(a)
+    #     'I': 'series',  # general sequence, plane, page, IFD
+    #     'T': 'time',
+    #     'C': 'channel',  # color, emission wavelength
+    #     'A': 'angle',
+    #     'P': 'phase',  # formerly F    # P is Position in LSM!
+    #     'R': 'tile',  # region, point, mosaic
+    #     'H': 'lifetime',  # histogram
+    #     'E': 'lambda',  # excitation wavelength
+    #     'L': 'exposure',  # lux
+    #     'V': 'event',
+    #     'Q': 'other',
+    #     'M': 'mosaic',  # LSM 6
+    # }
 
+    C = index(input_axes, 'C')
+    if C is None:
+        C = index(input_axes, 'S')
+
+    Z = index(input_axes, 'Z')
+    if Z is None:
+        Z = index(input_axes, 'I')
+
+    Y = index(input_axes, 'Y')
+    X = index(input_axes, 'X')
+
+    assert Y is not None
+    assert X is not None
+
+    return (C,Z,X,Y)
 
 
 def import_tiff_image(path, multichannel=None, zstack=None):
@@ -95,97 +118,20 @@ def import_tiff_image(path, multichannel=None, zstack=None):
       dimension is z or channel (RGB images will still be mapped correctly)
 
     '''
+    with TiffFile(path) as tiff:
+        series = tiff.series[0]
+        img = series.asarray()
 
-    img = imread(path)
+        new_order = np.array(axes_order(series.axes))
 
-    n_dims = len(img.shape)
-    if n_dims>4:
-        return IOError('can not read images with more than 4 dimensions (czxy)')
+        img = np.transpose(img, [d for d in new_order if d is not None])
 
-    if n_dims == 2: #case one z, one channel
-        img = np.swapaxes(img, 0, 1) # (y, x) -> (x, y)
-        img = np.expand_dims(img, axis=0) # (x, y) -> (z, x, y)
-        img = np.expand_dims(img, axis=0) # (z, x, y) -> (c, z, x, y)
-        return img
+        for i, dim in enumerate(new_order):
+            if dim is None:
+                img = np.expand_dims(img, i)
 
-    rgb = is_rgb_image(path)
-
-    if n_dims == 3 and rgb: #case one z, three channels in rgb mode
-        img = np.swapaxes(img, 0, 2) # (y, x, c) -> (c, x, y)
-        img = np.expand_dims(img, axis=1) # (c, x, y) -> (c, z, x, y)
-        return img
-
-    #try to determine multichannel or multi_z automatically in case of 3 dims
-    if n_dims == 3 and not rgb and multichannel is None and zstack==False: #case one z, >1 channels in grayscale mode
-        multichannel = True
-    if n_dims == 3 and not rgb and multichannel==False and zstack is None: #case >1z, one channelsin grayscale mode
-        zstack = True
-
-    if n_dims == 3 and not rgb and multichannel and zstack:
-        raise ValueError('Either multichannel or zstack has to be set to False')
-
-    if n_dims == 3 and not rgb and not multichannel and not zstack:
-        raise ValueError('Either multichannel or zstack has to be set to True')
-
-
-
-    if n_dims == 3 and not rgb and multichannel and not zstack: #case one z, >1 channels in grayscale mode
-        img = np.swapaxes(img, 1, 2) # (c, y, x) -> (c, x, y)
-        img = np.expand_dims(img, axis=1) # (c, x, y) -> (c, z, x, y)
-        return img
-
-    if n_dims == 3 and not rgb and zstack and not multichannel: #case >1 z, 1 channel in grayscale mode
-        img = np.swapaxes(img, 1, 2) # (z, y, x) -> (z, x, y)
-        img = np.expand_dims(img, axis=0) # (z, x, y) -> (c, z, x, y)
-        return img
-
-
-    if n_dims == 4 and rgb: #case >1 z, three channel in rgb mode
-        img = np.swapaxes(img, 1, 3) # (z, y, x, c) -> (z, c, x, y)
-        img = np.swapaxes(img, 0, 1) # (z, c, x, y) -> (c, z, x, y)
-        return img
-
-    if n_dims == 4 and not rgb: #case >1 z, >1 channel in grayscale mode
-        img = np.swapaxes(img, 2, 3) # (z, c, y, x) -> (z, c, x, y)
-        img = np.swapaxes(img, 0, 1) # (z, c, x, y) -> (c, z, x, y)
-        return img
-
-
-
-# def import_tiff_image(path, nr_channels=None):
-#     '''
-#     imports image file as numpy array
-#     in following dimension order:
-#     (channel, zslice, x, y)
-
-
-
-#     :param  path: path to image file
-#     :type path: str
-#     :returns 4 dimensional numpy array (channel, zslice, x, y)
-#     '''
-
-#     dims = get_tiff_image_dimensions(path)
-
-#     im = Image.open(path)
-
-#     image = np.array([np.array(frame) for frame in ImageSequence.Iterator(im)])
-#     # image = imread(path)
-#     # print(path)
-#     # print('shape')
-#     # print(image.shape)
-#     # print('dims')
-#     # print(dims)
-#     # add dimension for channel
-#     if dims[0] == 1:
-#         image = np.expand_dims(image, axis=-1)
-
-#     # bring dimensions in right order
-#     # (z, y, x, c) -> (c, z, x, y)
-#     image = np.swapaxes(image, 3, 0) # (z, y, x, c) -> (c, y, x, z)
-#     image = np.swapaxes(image, 1, 3) # (c, y, x, z) -> (c, z, x, y)
-
-#     return image
+    assert len(img.shape) == 4
+    return img
 
 
 def init_empty_tiff_image(path, x_size, y_size, z_size=1):
@@ -196,15 +142,11 @@ def init_empty_tiff_image(path, x_size, y_size, z_size=1):
     path = autocomplete_filename_extension(path)
     check_filename_extension(path)
 
+    data = np.zeros((z_size, x_size, y_size), dtype=np.float32)
+    logger.info('write empty tiff image with %s values to %s', data.dtype, path)
 
-
-    data = np.zeros((z_size, y_size, x_size), dtype=np.float32)
-    logger.info('write empty tiff image with %s values to %s'\
-        , type(data[0, 0, 0]), path)
-    #print(type(data[0, 0]))
-    #img = Image.fromarray(data)
-    #img.save(path)
-    imsave(path, data, imagej=True)
+    assert len(data.shape) == 3
+    imsave(path, data, metadata={'axes': 'ZXY'})
 
 
 def add_vals_to_tiff_image(path, pos_zxy, pixels):
@@ -213,7 +155,6 @@ def add_vals_to_tiff_image(path, pos_zxy, pixels):
     with pixels at pos_zxy
     and overwrites the input tiff image with the new pixels.
     pixels and pos_zxy are in order (z, x, y)
-
     '''
 
     pixels = np.array(pixels, dtype=np.float32)
@@ -222,34 +163,24 @@ def add_vals_to_tiff_image(path, pos_zxy, pixels):
     check_filename_extension(path)
 
     img = import_tiff_image(path, zstack=True)
+    assert len(img.shape) == 4
 
     pos_czxy = (0, ) + pos_zxy
     size_czxy = (1, ) + pixels.shape
     mesh = ut.get_tile_meshgrid(img.shape, pos_czxy, size_czxy)
 
     img[mesh] = pixels
-    img = np.squeeze(img, axis=0) #remove channel axis, which should be 1
-    img = np.swapaxes(img, 2, 1) # (z, x, y) -> (z, y, x)
 
-    #imsave(path, img)
-    #im = Image.fromarray(img)
-
-    #im.save(path)
-    try:
-        #logger.debug('updating image %s...', path)
-        imsave(path, img, imagej=True)
-    except:
-        return False
-
-
+    assert len(img.shape) == 4
+    imsave(path, img[0,...], metadata={'axes': 'ZXY'})
 
 
 def check_filename_extension(path, format_str='.tif'):
     ext = os.path.splitext(path)[1]
 
-
     if ext != format_str:
         raise ValueError('extension must be %s, but is %s', (format_str, ext))
+
 
 def autocomplete_filename_extension(path, format_str='.tif'):
     ext = os.path.splitext(path)[1]
