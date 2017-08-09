@@ -2,6 +2,7 @@ import logging
 import os
 import glob
 import itertools
+import collections
 from functools import lru_cache
 import yapic_io.utils as ut
 import numpy as np
@@ -18,6 +19,9 @@ logger = logging.getLogger(os.path.basename(__file__))
 def flatten(listOfLists):
     "Flatten one level of nesting"
     return itertools.chain.from_iterable(listOfLists)
+
+
+FilePair = collections.namedtuple('FilePair', ['img', 'lbl'])
 
 
 class TiffConnector(Connector):
@@ -81,10 +85,7 @@ class TiffConnector(Connector):
           dimensional images, it throws an error, because it is not clear if the thrid
           dimension is z or channel (RGB images will still be mapped correctly)
         '''
-
-
-
-        self.filenames = None # list of tuples: [(imgfile_1.tif, labelfile_1.tif), (imgfile_2.tif, labelfile_2.tif), ...]
+        self.filenames = None # list of FilePairs: [(imgfile_1.tif, labelfile_1.tif), (imgfile_2.tif, labelfile_2.tif), ...]
         self.labelvalue_mapping = None # list of dicts of original and assigned labelvalues
 
         # reason: assign unique labelvalues
@@ -111,7 +112,8 @@ class TiffConnector(Connector):
             img_filenames = self.load_image_filenames(img_filemask)
             lbl_filenames = self.load_label_filenames(label_filemask)
 
-            self.filenames = find_best_matching_pairs(img_filenames, lbl_filenames)
+            pairs = find_best_matching_pairs(img_filenames, lbl_filenames)
+            self.filenames = [FilePair(img, lbl) for img, lbl in pairs]
         else:
             assert type(img_filepath)
             assert type(label_filepath)
@@ -132,7 +134,7 @@ class TiffConnector(Connector):
             else:
                 self.label_path = None
 
-            self.filenames = list(zip(img_filenames, lbl_filenames))
+            self.filenames = [FilePair(img, lbl) for img, lbl in zip(img_filenames, lbl_filenames)]
 
         assert img_filenames is not None
         assert lbl_filenames is not None
@@ -141,12 +143,14 @@ class TiffConnector(Connector):
             logger.warning(msg.format(len(img_filenames), len(lbl_filenames)))
 
         logger.debug('Pixel and label files are assigned as follows:')
-        logger.debug('\n'.join('{} <-> {}'.format(img, lbl) for img, lbl in  self.filenames))
+        logger.debug('\n'.join('{p.img} <-> {p.lbl}'.format(p=pair) for pair in self.filenames))
 
         self.savepath = savepath # path for probability maps
 
         self.check_label_matrix_dimensions()
-        self.labelvalue_mapping = self.map_label_values()
+
+        original_labels = self.original_label_values_for_all_images()
+        self.labelvalue_mapping = self.map_label_values(original_labels)
 
 
     def __repr__(self):
@@ -188,14 +192,14 @@ class TiffConnector(Connector):
         np.random.set_state(state)
 
         img_fnames1 = [os.path.join(self.img_path, img)
-                      for m, (img, lbl) in zip(mask, self.filenames) if m == True]
+                       for img, lbl in itertools.compress(self.filenames, mask)]
         lbl_fnames1 = [os.path.join(self.label_path, lbl) if lbl is not None else None
-                       for m, (img, lbl) in zip(mask, self.filenames) if m == True]
+                       for img, lbl in itertools.compress(self.filenames, mask)]
 
         img_fnames2 = [os.path.join(self.img_path, img)
-                      for m, (img, lbl) in zip(mask, self.filenames) if m == False]
+                       for img, lbl in itertools.compress(self.filenames, ~mask)]
         lbl_fnames2 = [os.path.join(self.label_path, lbl) if lbl is not None else None
-                       for m, (img, lbl) in zip(mask, self.filenames) if m == False]
+                       for img, lbl in itertools.compress(self.filenames, ~mask)]
 
         if len(img_fnames1) == 0:
             warnings.warn('TiffConnector.split({}): First connector is empty!'.format(fraction))
@@ -223,8 +227,6 @@ class TiffConnector(Connector):
 
 
     def image_count(self):
-        if self.filenames is None:
-            return 0
         return len(self.filenames)
 
 
@@ -257,7 +259,7 @@ class TiffConnector(Connector):
     def get_probmap_path(self, image_nr, label_value):
         if self.savepath is None:
             raise ValueError('savepath not set')
-        image_filename = self.filenames[image_nr][0]
+        image_filename = self.filenames[image_nr].img
         probmap_filename = add_to_filename(image_filename, \
                      'class_' + str(label_value))
         return os.path.join(self.savepath, probmap_filename)
@@ -287,7 +289,7 @@ class TiffConnector(Connector):
         :param image_nr: index of image
         :returns (nr_channels, nr_zslices, nr_x, nr_y)
         '''
-        path = os.path.join(self.img_path, self.filenames[image_nr][0])
+        path = os.path.join(self.img_path, self.filenames[image_nr].img)
         return ip.get_tiff_image_dimensions(path, \
             zstack=self.zstack, multichannel=self.multichannel_pixel_image)
 
@@ -300,10 +302,12 @@ class TiffConnector(Connector):
         :param image_nr: index of image
         :returns (nr_channels, nr_zslices, nr_x, nr_y)
         '''
-        if self.exists_label_for_image(image_nr):
-            path = os.path.join(self.label_path, self.filenames[image_nr][1])
-            return ip.get_tiff_image_dimensions(path, \
-                zstack=self.zstack, multichannel=self.multichannel_label_image)
+        if self.filenames[image_nr].lbl is None:
+            return None
+
+        path = os.path.join(self.label_path, self.filenames[image_nr].lbl)
+        return ip.get_tiff_image_dimensions(path, \
+            zstack=self.zstack, multichannel=self.multichannel_label_image)
 
 
     def check_label_matrix_dimensions(self):
@@ -344,14 +348,8 @@ class TiffConnector(Connector):
 
     @lru_cache(maxsize = 20)
     def load_image(self, image_nr):
-        path = os.path.join(self.img_path, self.filenames[image_nr][0])
+        path = os.path.join(self.img_path, self.filenames[image_nr].img)
         return ip.import_tiff_image(path)
-
-
-    def exists_label_for_image(self, image_nr):
-        if self.filenames[image_nr][1] is None:
-            return False
-        return True
 
 
     def label_tile(self, image_nr, pos_zxy, size_zxy, label_value):
@@ -384,7 +382,7 @@ class TiffConnector(Connector):
         if original_labelvalues is False, the mapped label values are returned,
         otherwise the original labelvalues.
         '''
-        label_filename = self.filenames[image_nr][1]
+        label_filename = self.filenames[image_nr].lbl
 
         if label_filename is None:
             logger.warning('no label matrix file found for image file %s', str(image_nr))
@@ -404,7 +402,8 @@ class TiffConnector(Connector):
         return label_image
 
 
-    def map_label_values(self):
+    @staticmethod
+    def map_label_values(original_labels):
         '''
         assign unique labelvalues to original labelvalues.
         for multichannel label images it might happen, that identical
@@ -422,36 +421,33 @@ class TiffConnector(Connector):
         '''
         logger.debug('Mapping label values...')
 
-        label_mappings = []
-        o_labelvals = self.original_label_values_for_all_images()
-        new_label = 1
-        for labels_per_channel in o_labelvals:
-            label_mapping = {}
-            labels_per_channel = list(labels_per_channel)
+        new_labels = itertools.count(1)
 
-            for label in sorted(labels_per_channel):
-                label_mapping[label] = new_label
-                new_label += 1
-
-            label_mappings.append(label_mapping)
+        label_mappings = [
+            { l: next(new_labels) for l in sorted(labels_per_channel) }
+            for labels_per_channel in original_labels
+        ]
 
         logger.debug('Label values are mapped to ascending values:')
         logger.debug(label_mappings)
         return label_mappings
 
 
+    @lru_cache(maxsize = 1)
     def original_label_values_for_all_images(self):
         '''
         returns a list of sets. each set corresponds to 1 label channel.
         each set contains the label values of that channel.
+        E.g. `[{91, 109, 150}, {90, 100}]` for two label channels
         '''
         labels_per_channel = []
 
         for image_nr in range(self.image_count()):
-            labels_per_im = self.original_label_values_for_image(image_nr)
-
-            if labels_per_im is None:
+            mat = self.load_label_matrix(image_nr, original_labelvalues=True)
+            if mat is None:
                 continue
+
+            labels_per_im = self.unique_labels_per_channel(mat)
 
             if len(labels_per_channel) == 0:
                 labels_per_channel = labels_per_im
@@ -462,30 +458,18 @@ class TiffConnector(Connector):
         return labels_per_channel
 
 
-    @lru_cache(maxsize = 5000)
-    def original_label_values_for_image(self, image_nr):
-        mat = self.load_label_matrix(image_nr, original_labelvalues=True)
-        if mat is None:
-            return None
+    @staticmethod
+    def unique_labels_per_channel(mat):
+        '''
+        Unique list of label ids per channel for a single label matrix
+        E.g. `[{91, 109, 150}, {90, 100}]` for two label channels
+        '''
+        C = mat.shape[0]
 
-        out = []
-        nr_channels = mat.shape[0]
-        for channel in range(nr_channels):
-            values =  np.unique(mat[channel, :, :, :])
-            values = values[values!=0]
-            out.append(set(values))
-        return out
+        label_per_ch = [ np.unique(mat[ch]) for ch in range(C) ]
+        label_per_ch = [ set(labels) - {0} for labels in label_per_ch ]
 
-
-    @lru_cache(maxsize = 500)
-    def label_values_for_image(self, image_nr):
-        mat = self.load_label_matrix(image_nr)
-        if mat is None:
-            return None
-        values = np.unique(mat)
-        values = values[values!=0]
-        values.sort()
-        return list(values)
+        return label_per_ch
 
 
     @lru_cache(maxsize = 1500)
@@ -493,12 +477,14 @@ class TiffConnector(Connector):
         '''
         returns for each label value the number of labels for this image
         '''
-        labels = self.label_values_for_image(image_nr)
-        if labels is None:
-            return None # if no labelmatrix available
-
         mat = self.load_label_matrix(image_nr)
-        label_count = { l: np.count_nonzero(mat==l) for l in labels }
+        if mat is None:
+            return None
+
+        labels = np.unique(mat)
+        labels.sort()
+
+        label_count = { l: np.count_nonzero(mat==l) for l in labels if l > 0 }
         return label_count
 
 
@@ -543,13 +529,9 @@ class TiffConnector(Connector):
     #     return coor
 
 
-    def is_image_nr_valid(self, image_nr):
-        return -1 < image_nr < self.image_count()
-
-
     def load_label_filenames(self, filemask):
         label_filenames = sorted(glob.glob(os.path.join(self.label_path, filemask)))
-        label_filenames = [os.path.split(fname)[1] for fname in label_filenames]
+        label_filenames = [os.path.basename(fname) for fname in label_filenames]
         return label_filenames
 
 
@@ -558,7 +540,7 @@ class TiffConnector(Connector):
         find all tiff images in specified folder (self.img_path, filemask)
         '''
         filenames = sorted(glob.glob(os.path.join(self.img_path, filemask)))
-        filenames = [os.path.split(fname)[1] for fname in filenames]
+        filenames = [os.path.basename(fname) for fname in filenames]
 
         logger.info('{} pixel image files detected.'.format(len(filenames)))
         logger.debug('Pixel image files:')

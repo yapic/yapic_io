@@ -173,21 +173,15 @@ class TestImageImports(TestCase):
 
         img2 = ip.import_tiff_image(path, zstack=True)
 
-        print(img2)
-        print(img2.shape)
         self.assertEqual(img2.shape, (1, 5, 70, 50))
         print(np.unique(img2[:]))
         print (type(np.unique(img2[:])[0]))
         self.assertTrue(isinstance(np.unique(img2[:])[0], np.float32))
 
-
         try:
             os.remove(path)
         except:
             pass
-
-
-                
 
 
     def test_autocomplete(self):
@@ -233,9 +227,9 @@ class TestImageImports(TestCase):
         #r_img = np.around(img, decimals=2)
         print(type(val[0, 0, 0, 0]))
         print(type(img[0, 0, 0, 0]))
-        print(val==img)
-
-        self.assertTrue((val==img).all())
+        print(type(val))
+        print(type(img))
+        print(np.testing.assert_equal(img, val))
 
         #img = ip.import_tiff_image(path)
         #print img 
@@ -252,9 +246,8 @@ class TestImageImports(TestCase):
         try:
             os.remove(path)
         except:
-            pass  
+            pass
         
-
         xsize = 5
         ysize = 7
         zsize = 2
@@ -263,39 +256,41 @@ class TestImageImports(TestCase):
 
         pos = (0, 1, 2)
 
-        pixels = np.array([[[0.1, 0.2, 0.3, 0.4], \
-                            [0.5, 0.6, 0.7, 0.8]], \
-                           [[1.1, 1.2, 1.3, 1.4], \
-                            [1.5, 1.6, 1.7, 1.8]]\
+        pixels = np.array([[[0.1, 0.2, 0.3, 0.4],
+                            [0.5, 0.6, 0.7, 0.8]],
+                           [[1.1, 1.2, 1.3, 1.4],
+                            [1.5, 1.6, 1.7, 1.8]]
                            ])
 
         
-        val = np.array(\
-         [[[[0, 0, 0, 0, 0, 0, 0], \
-            [0, 0, .1, .2, .3, .4, 0], \
-            [0, 0, .5, .6, .7, .8, 0], \
-            [0, 0, 0, 0, 0, 0, 0], \
-            [0, 0, 0, 0, 0, 0, 0]], \
-           [[0, 0, 0, 0, 0, 0, 0], \
-            [0, 0, 1.1, 1.2, 1.3, 1.4, 0], \
-            [0, 0, 1.5, 1.6, 1.7, 1.8, 0], \
-            [0, 0, 0, 0, 0, 0, 0], \
-            [0, 0, 0, 0, 0, 0, 0]]\
+        val = np.array(
+             [[[[0, 0, 0, 0, 0, 0, 0],
+                [0, 0, .1, .2, .3, .4, 0],
+                [0, 0, .5, .6, .7, .8, 0],
+                [0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0]],
+               [[0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 1.1, 1.2, 1.3, 1.4, 0],
+                [0, 0, 1.5, 1.6, 1.7, 1.8, 0],
+                [0, 0, 0, 0, 0, 0, 0],
+                [0, 0, 0, 0, 0, 0, 0]]
          ]], dtype=np.float32)
 
         ip.add_vals_to_tiff_image(path, pos, pixels)
         img = ip.import_tiff_image(path, zstack=True)
-        
+
         print(val)
         print(img)
-        print(val.shape)
-        print(img.shape)
         #r_img = np.around(img, decimals=2)
         print(type(val[0, 0, 0, 0]))
         print(type(img[0, 0, 0, 0]))
+        print(type(val))
+        print(type(img))
         print(val==img)
 
-        self.assertTrue((val==img).all())
+        print(pixels.shape)
+
+        np.testing.assert_equal(img, val)
 
         #img = ip.import_tiff_image(path)
         #print img 
@@ -304,5 +299,4 @@ class TestImageImports(TestCase):
             os.remove(path)
         except:
             pass        
-
 
