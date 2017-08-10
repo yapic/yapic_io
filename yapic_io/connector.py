@@ -1,6 +1,21 @@
 from abc import ABCMeta, abstractmethod
 
 
+def io_connector(image_path, label_path, *args, **kwds):
+    from yapic_io.tiff_connector import TiffConnector
+    from yapic_io.ilastik_connector import IlastikConnector
+
+    try:
+        image_path, label_path, *args = args
+    except ValueError:
+        raise ValueError('Unable to determine type of input data!')
+
+    if label_path.endswith('.ilp'):
+        return IlastikConnector(image_path, label_path, *args, **kwds)
+    else:
+        return TiffConnector(image_path, label_path, *args, **kwds)
+
+
 class Connector(metaclass=ABCMeta):
     '''
     Interface to pixel and label data source for classifier 

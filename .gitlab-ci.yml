@@ -18,17 +18,23 @@ run_cpu_tests:
   image: yapic-python
   stage: test
   script:
-    - pip install -e ${CI_PROJECT_DIR}
+    - pip install -e ${CI_PROJECT_DIR} --process-dependency-links
     - pip install nose
     - cd ${CI_PROJECT_DIR}
     - nosetests --with-doctest --with-timer --with-coverage --cover-package=yapic_io
 
 
+trigger_yapic_cli:
+  image: yapic-python
+  stage: deploy
+  script:
+    - curl -X POST -F token=2d3b6e8a9681ea863cf90e6ec5d021 -F ref=master http://animate-x3.dzne.ds/api/v4/projects/12/trigger/pipeline
+
 docs:
   image: yapic-python
   stage: deploy
   script:
-    - pip install -e ${CI_PROJECT_DIR}
+    - pip install -e ${CI_PROJECT_DIR} --process-dependency-links
     - pip install -r requirements_doc.txt
     - cd ${CI_PROJECT_DIR}/doc
     - sphinx-apidoc -o source ../yapic_io
