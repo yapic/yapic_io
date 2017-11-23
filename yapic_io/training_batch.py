@@ -219,10 +219,10 @@ class TrainingBatch(Minibatch):
 
 
         return self._dataset.random_training_tile(self._size_zxy,
-                     self._channels,
-                     pixel_padding=self._padding_zxy,
-                     equalized=self.equalized,
-                     augment_params=augment_params,
-                     labels=self.labels,
-                     label_region=for_label)
+                                                  self.channel_list,
+                                                  pixel_padding=self._padding_zxy,
+                                                  equalized=self.equalized,
+                                                  augment_params=augment_params,
+                                                  labels=self.labels,
+                                                  label_region=for_label)
 

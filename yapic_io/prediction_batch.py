@@ -76,7 +76,7 @@ class PredictionBatch(Minibatch):
         pixels = [pixfunc(im_nr,
                           pos_zxy,
                           self._size_zxy,
-                          self._channels,
+                          self.channel_list,
                           self._padding_zxy)
                   for im_nr, pos_zxy in self._get_curr_tile_positions()]
 
