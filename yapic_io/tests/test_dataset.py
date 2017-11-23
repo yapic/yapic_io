@@ -25,10 +25,6 @@ class TestDataset(TestCase):
         self.assertEqual(d.n_images, 3)
 
 
-
-
-
-
     def test_get_padding_size_1(self):
 
         shape = (7, 11)

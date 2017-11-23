@@ -76,7 +76,7 @@ class Dataset(object):
                              channels,
                              pixel_padding=(0, 0, 0),
                              equalized=False,
-                             augment_params=None,
+                             augment_params={},
                              labels='all',
                              label_region=None):
         '''
@@ -164,7 +164,7 @@ class Dataset(object):
                                          labels,
                                          pixel_padding=(0, 0, 0),
                                          equalized=False,
-                                         augment_params=None,
+                                         augment_params={},
                                          label_region=None):
         ''''
         fetches a random training tile by repeated polling until
@@ -227,7 +227,7 @@ class Dataset(object):
                                             labels,
                                             pixel_padding=(0, 0, 0),
                                             equalized=False,
-                                            augment_params=None,
+                                            augment_params={},
                                             label_region=None):
         if label_region is None:
             # pick training tile where it is assured that weights for a specified label
@@ -255,7 +255,7 @@ class Dataset(object):
                       channels,
                       labels,
                       pixel_padding=(0, 0, 0),
-                      augment_params=None):
+                      augment_params={}):
         # 4d pixel tile with selected channels in 1st dimension
         pixel_tile = self.multichannel_pixel_tile(image_nr, pos_zxy, size_zxy, channels,
                                                   pixel_padding=pixel_padding,
@@ -280,7 +280,7 @@ class Dataset(object):
                                 size_zxy,
                                 channels,
                                 pixel_padding=(0, 0, 0),
-                                augment_params=None):
+                                augment_params={}):
         if not _check_3dim(pos_zxy, size_zxy):
             logger.debug('checked pos size in multichannel_pixel_tile')
             raise ValueError('pos and size must have length 3. pos_zxy: %s, size_zxy: %s'
@@ -312,7 +312,7 @@ class Dataset(object):
                            size_zxy,
                            channel,
                            reflect=True,
-                           augment_params=None):
+                           augment_params={}):
         '''
         returns a recangular subsection of an image with specified size.
         if requested tile is out of bounds, values will be added by reflection
@@ -347,13 +347,14 @@ class Dataset(object):
 
         return np.squeeze(tile, axis=(0, ))
 
+
     def label_tile(self,
                    image_nr,
                    pos_zxy,
                    size_zxy,
                    label_value,
                    reflect=True,
-                   augment_params=None):
+                   augment_params={}):
         '''
         returns a recangular subsection of label weights with specified size.
         if requested tile is out of bounds, values will be added by reflection
@@ -769,7 +770,7 @@ def augment_tile(shape,
                  pos,
                  size,
                  get_tile_func,
-                 augment_params=None,
+                 augment_params={},
                  reflect=True,
                  **kwargs):
     '''
@@ -780,39 +781,11 @@ def augment_tile(shape,
     '''
 
     #unpack augemtation params and set default values
-
-    if augment_params is None:
-        rotation_angle = 0
-        shear_angle = 0
-        flipud = False
-        fliplr = False
-        rot90 = 0
-    else:
-
-        if 'rotation_angle' in augment_params:
-            rotation_angle = augment_params['rotation_angle']
-        else:
-            rotation_angle = 0
-
-        if 'shear_angle' in augment_params:
-            shear_angle = augment_params['shear_angle']
-        else:
-            shear_angle = 0
-
-        if 'flipud' in augment_params:
-            flipud = augment_params['flipud']
-        else:
-            flipud = False
-
-        if 'fliplr' in augment_params:
-            fliplr = augment_params['fliplr']
-        else:
-            fliplr = False
-
-        if 'rot90' in augment_params:
-            rot90 = augment_params['rot90']
-        else:
-            rot90 = 0
+    rotation_angle = augment_params.get('rotation_angle', 0)
+    shear_angle = augment_params.get('shear_angle', 0)
+    flipud = augment_params.get('flipud', False)
+    fliplr = augment_params.get('fliplr', False)
+    rot90 = augment_params.get('rot90', 0)
 
 
 

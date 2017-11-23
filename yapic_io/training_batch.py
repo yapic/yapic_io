@@ -67,7 +67,7 @@ class TrainingBatch(Minibatch):
         super().__init__(dataset, batch_size, size_zxy, padding_zxy=padding_zxy)
 
         self.equalized = equalized
-        self.augment = set()
+        self.augmentation = set()
         self.augment_by_flipping(True)
         self.rotation_range = None
         self.shear_range = None
@@ -78,12 +78,8 @@ class TrainingBatch(Minibatch):
 
 
     def __repr__(self):
-        infostring = ('TrainingBatch\n'
-                      '  batch_size: {}\n'
-                      '  tile size (size_zxy): {}\n'
-                      '  augment: {}\n').format(
-             self._batch_size, self._size_zxy, self.augment)
-        return infostring
+        info = 'TrainingBatch (batch_size: {}, tile_size (zxy): {}, augment: {}'
+        return info.format(self._batch_size, self._size_zxy, self.augmentation)
 
 
     def __iter__(self):
@@ -94,40 +90,36 @@ class TrainingBatch(Minibatch):
         self._fetch_training_batch_data()
         return self
 
-    def get_augmentation_settings(self):
-        return self.augment
-
     def augment_by_flipping(self, flip_on):
         '''
         :param flip_on: if True, tiles are randomly flipped (fast)
         '''
         if flip_on:
-            self.augment = self.augment.union({'flip'})
+            self.augmentation.add('flip')
         else:
-            self.augment = self.augment - {'flip'}
+            self.augmentation.discard('flip')
 
     def augment_by_rotation(self, rot_on, rotation_range=(-45,45)):
         '''
         :param rot_on: if True, tiles are randomly rotated
         :param rotation_range: (min, max) rotation angle in degrees
         '''
-        if rot_on:
-            self.augment = self.augment.union({'rotate'})
-        else:
-            self.augment = self.augment - {'rotate'}
         self.rotation_range = rotation_range
+        if rot_on:
+            self.augmentation.add('rotate')
+        else:
+            self.augmentation.discard('rotate')
 
     def augment_by_shear(self, shear_on, shear_range=(-5, 5)):
         '''
         :param shear_on: if True, tiles are randomly sheared
         :param shear_range: (min, max) shear angle in degrees
         '''
-        if shear_on:
-            self.augment = self.augment.union({'shear'})
-        else:
-            self.augment = self.augment - {'shear'}
         self.shear_range = shear_range
-
+        if shear_on:
+            self.augmentation.add('shear')
+        else:
+            self.augmentation.discard('shear')
 
 
     def pixels(self):
@@ -150,73 +142,30 @@ class TrainingBatch(Minibatch):
             weights.append(tile_data.weights)
             augmentations.append(tile_data.augmentation)
 
-
         self._pixels = np.array(pixels)
         self._weights = np.array(weights)
         self.augmentations = augmentations
-
-
-    def _random_rotation_angle(self):
-        '''
-        get random rotation angle within specified range
-        '''
-
-        return random.uniform(*self.rotation_range)
-
-    def _random_shear_angle(self):
-        '''
-        get random shear angle within specified range
-        '''
-
-        return random.uniform(*self.shear_range)
-
-
-    def _random_simple_augment_params(self):
-        '''
-        get random parameters for simple augmentation
-        '''
-        fliplr = False
-        flipud = False
-        rot90 = 0
-
-
-        tilesize = self.get_tile_size_zxy()
-
-        if tilesize[1] == tilesize[2]:
-            #rotate if tile is square in x and y
-            rot90 = np.random.choice(4)
-
-        if np.random.choice(2) == 0:
-            fliplr = True
-        if np.random.choice(2) == 0:
-            flipud = True
-
-        return fliplr, flipud, rot90
-
-
-
 
 
     def _random_tile(self, for_label=None):
         '''
         pick random tile in image regions where label data is present
         '''
+        augment_params = {}
 
-        augment_params = None
+        if 'flip' in self.augmentation:
+            _, x, y = self.get_tile_size_zxy()
+            is_square_tile = (x == y)
 
-        if 'flip' in self.augment:
-            fliplr, flipud, rot90 = self._random_simple_augment_params()
-            augment_params = {'fliplr' : fliplr,
-                              'flipud' : flipud,
-                              'rot90' : rot90}
+            augment_params = {'fliplr' : np.random.choice([True, False]),
+                              'flipud' : np.random.choice([True, False]),
+                              'rot90' : np.random.choice(4) if is_square_tile else 0}
 
-        if 'rotate' in self.augment:
-            augment_params['rotation_angle'] = self._random_rotation_angle()
+        if 'rotate' in self.augmentation:
+            augment_params['rotation_angle'] = random.uniform(*self.rotation_range)
 
-        if 'shear' in self.augment:
-             augment_params['shear_angle'] = self._random_shear_angle()
-
-
+        if 'shear' in self.augmentation:
+             augment_params['shear_angle'] = random.uniform(*self.shear_range)
 
         return self._dataset.random_training_tile(self._size_zxy,
                                                   self.channel_list,
@@ -225,4 +174,3 @@ class TrainingBatch(Minibatch):
                                                   augment_params=augment_params,
                                                   labels=self.labels,
                                                   label_region=for_label)
-

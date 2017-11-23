@@ -3,13 +3,13 @@ import os
 from yapic_io.tiff_connector import TiffConnector
 from yapic_io.dataset import Dataset
 
-import yapic_io.training_batch as mb
 from yapic_io.training_batch import TrainingBatch
-base_path = os.path.dirname(__file__)
 from pprint import pprint
 import numpy as np
 import tempfile
 from numpy.testing import assert_array_equal, assert_array_almost_equal
+
+base_path = os.path.dirname(__file__)
 
 class TestTrainingBatch(TestCase):
     def test_random_tile(self):
@@ -225,19 +225,19 @@ class TestTrainingBatch(TestCase):
         m = TrainingBatch(d, size, padding_zxy=pad)
 
 
-        print(m.augment)
-        self.assertEqual(m.augment, {'flip'})
+        print(m.augmentation)
+        self.assertEqual(m.augmentation, {'flip'})
 
         m.augment_by_rotation(True)
-        print(m.augment)
-        self.assertEqual(m.augment, {'flip', 'rotate'})
+        print(m.augmentation)
+        self.assertEqual(m.augmentation, {'flip', 'rotate'})
         self.assertEqual(m.rotation_range,(-45,45))
 
         m.augment_by_shear(True)
-        print(m.augment)
-        self.assertEqual(m.augment, {'flip', 'rotate', 'shear'})
+        print(m.augmentation)
+        self.assertEqual(m.augmentation, {'flip', 'rotate', 'shear'})
         self.assertEqual(m.shear_range,(-5,5))
 
         m.augment_by_flipping(False)
-        print(m.augment)
-        self.assertEqual(m.augment, {'rotate', 'shear'})
+        print(m.augmentation)
+        self.assertEqual(m.augmentation, {'rotate', 'shear'})
