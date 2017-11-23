@@ -266,14 +266,6 @@ class TiffConnector(Connector):
 
 
     @lru_cache(maxsize=5000)
-    def get_label_tile(self, image_nr=None, pos=None, size=None):
-        labelmat = self.load_label_matrix(self, image_nr)
-        mesh = get_tile_meshgrid(labelmat.shape, pos, size)
-
-        return labelmat[mesh]
-
-
-    @lru_cache(maxsize=5000)
     def get_tile(self, image_nr=None, pos=None, size=None):
         im = self.load_image(image_nr)
         mesh = get_tile_meshgrid(im.shape, pos, size)
