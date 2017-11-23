@@ -6,6 +6,15 @@ logger = logging.getLogger(os.path.basename(__file__))
 
 
 class Minibatch(object):
+    '''
+    The selected labels (i.e. classes for prediction).
+    Per default, all available labels are selected.
+
+    The order of the labels list defines the order of the
+    labels layer in the probability map (i.e. the classification result
+    matrix) that can be exported with put_probmap_data().
+    '''
+    labels = []
 
     def __init__(self, dataset, batch_size, size_zxy, padding_zxy=(0, 0, 0)):
         '''
@@ -41,7 +50,7 @@ class Minibatch(object):
         # imports all available channels by default
         self._channels = self._dataset.channel_list()
         # imports all available labels by default
-        self._labels = self._dataset.label_values()
+        self.labels = self._dataset.label_values()
 
     def set_normalize_mode(self, mode_str, minmax=None):
         '''
@@ -224,8 +233,6 @@ class Minibatch(object):
     def add_channel(self, channel):
         '''
         Adds a pixel-channel to the selection.
-
-
         '''
         if channel in self._channels:
             logger.warning('channel already selected %s', channel)
@@ -236,18 +243,6 @@ class Minibatch(object):
 
         insort_left(self._channels, channel)
         return True
-
-    def get_labels(self):
-        '''
-        Returns the selected labels (i.e. classes for prediction).
-        Per default, all available labels are selected.
-
-        The order of the labels list defines the order of the
-        labels layer in the probability map (i.e. the classification result
-        matrix) that can be exported with put_probmap_data().
-        '''
-
-        return self._labels
 
     def remove_label(self, label):
         '''
@@ -268,18 +263,18 @@ class Minibatch(object):
         >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath.name, tile_size)
         >>>
         >>>
-        >>> p.get_labels() #we have 3 label classes
+        >>> p.labels #we have 3 label classes
         [1, 2, 3]
         >>> p.remove_label(2) #remove label class 109
         True
-        >>> p.get_labels() #only 2 classes remain selected
+        >>> p.labels #only 2 classes remain selected
         [1, 3]
 
         '''
-        if label not in self._labels:
+        if label not in self.labels:
             raise ValueError('not possible to remove label %s from label selection %s'
-                             % (str(label), str(self._labels)))
-        self._labels.remove(label)
+                             % (str(label), str(self.labels)))
+        self.labels.remove(label)
         return True
 
     def add_label(self, label):
@@ -298,35 +293,35 @@ class Minibatch(object):
         >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath.name, tile_size)
         >>>
         >>>
-        >>> p.get_labels() #we have 3 label classes
+        >>> p.labels #we have 3 label classes
         [1, 2, 3]
         >>> p.remove_label(2) #remove label class 2
         True
-        >>> p.get_labels() #only 2 classes remain selected
+        >>> p.labels #only 2 classes remain selected
         [1, 3]
         >>> p.remove_label(1) #remove label class 1
         True
-        >>> p.get_labels() #only 1 class remains selected
+        >>> p.labels #only 1 class remains selected
         [3]
         >>> p.add_label(1)
         True
-        >>> p.get_labels()
+        >>> p.labels
         [1, 3]
         >>> p.add_label(2)
         True
-        >>> p.get_labels()
+        >>> p.labels
         [1, 2, 3]
 
 
         '''
-        if label in self._labels:
+        if label in self.labels:
             logger.warning('label class already selected %s', label)
             return False
         if label not in self._dataset.label_values():
             raise ValueError('not possible to add label class %s from dataset label classes %s'
                              % (str(label), str(self._dataset.label_values())))
 
-        insort_left(self._labels, label)
+        insort_left(self.labels, label)
         return True
 
     def _normalize(self, pixels):

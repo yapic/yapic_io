@@ -237,8 +237,8 @@ class TestPredictionBatch(TestCase):
         batch_size = 1
 
         p = PredictionBatch(d, batch_size, size)
-        print('_labels')
-        print(p._labels)
+        print('labels')
+        print(p.labels)
 
         data = np.ones((1, 6, 1, 3, 4))
         p[0].put_probmap_data(data)
@@ -262,7 +262,7 @@ class TestPredictionBatch(TestCase):
             _, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tile_size, padding_zxy=padding, training_batch_size=2) 
 
             self.assertEqual(len(p), 255)
-            self.assertEqual(p.get_labels(), [1, 2, 3])
+            self.assertEqual(p.labels, [1, 2, 3])
 
             #classify the whole bound dataset
             for counter, item in enumerate(p):

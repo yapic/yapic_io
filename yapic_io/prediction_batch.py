@@ -42,7 +42,7 @@ class PredictionBatch(Minibatch):
         >>> _, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath.name, tile_size, padding_zxy=padding, training_batch_size=2)
         >>> len(p)
         255
-        >>> p.get_labels()
+        >>> p.labels
         [1, 2, 3]
         >>> # classify the whole bound dataset
         >>> counter = 0 # needed for mock data
@@ -142,7 +142,7 @@ class PredictionBatch(Minibatch):
         '''
         Put classification results to the data source.
 
-        The order of the labels list (accesed with self.get_labels())defines
+        The order of the labels list (accesed with self.labels)defines
         the order of the labels layer in the probability map.
 
         To pass 3D probmaps for a certain label, use put_probmap_data_for_label()
@@ -164,14 +164,14 @@ class PredictionBatch(Minibatch):
                 '''batch size is %s, but must be %s'''\
                                 % (str(n_b), str(self.get_actual_batch_size())))
 
-        if len(self.get_labels()) == 0:
-            self._labels = np.arange(n_c)+1
+        if len(self.labels) == 0:
+            self.labels = np.arange(n_c)+1
 
-        if n_c != len(self._labels):
+        if n_c != len(self.labels):
             raise ValueError(\
                 '''tile must have %s channels, one channel for each
                    label in follwoing label order: %s'''\
-                                % (str(len(self._labels)), str(self._labels)))
+                                % (str(len(self.labels)), str(self.labels)))
 
         if (n_z, n_x, n_y) != self._size_zxy:
             raise ValueError(\
@@ -183,7 +183,7 @@ class PredictionBatch(Minibatch):
 
         for probmap_data_sel, tile_pos_index in zip(probmap_data, self._get_curr_tile_indices()):
             # iterate through label channels
-            for data_layer, label in zip(probmap_data_sel, self.get_labels()):
+            for data_layer, label in zip(probmap_data_sel, self.labels):
                 self._put_probmap_data_for_label(data_layer, label, tile_pos_index)
 
 
@@ -207,8 +207,8 @@ class PredictionBatch(Minibatch):
                    is %s, should be %s''' \
                    % ((str((n_z, n_x, n_y)), str(self._size_zxy))))
 
-        if label not in self._labels:
-            raise ValueError('label %s not found in labels %s' % (str(label), str(self._labels)))
+        if label not in self.labels:
+            raise ValueError('label %s not found in labels %s' % (str(label), str(self.labels)))
 
         image_nr, pos_zxy = self._all_tile_positions[tile_pos_index]
 

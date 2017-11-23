@@ -143,7 +143,7 @@ class TrainingBatch(Minibatch):
         weights = []
         augmentations = []
 
-        for label in self._labels:
+        for label in self.labels:
             tile_data = self._random_tile(for_label=label)
 
             pixels.append(tile_data.pixels)
@@ -223,6 +223,6 @@ class TrainingBatch(Minibatch):
                      pixel_padding=self._padding_zxy,
                      equalized=self.equalized,
                      augment_params=augment_params,
-                     labels=self._labels,
+                     labels=self.labels,
                      label_region=for_label)
 
