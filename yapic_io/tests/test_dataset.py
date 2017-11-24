@@ -31,7 +31,7 @@ class TestDataset(TestCase):
         pos = (5, 5)
         size = (3, 5)
         res = ds.get_padding_size(shape, pos, size)
-        self.assertEqual([(0, 1), (0, 0)], res)
+        np.testing.assert_array_equal([(0, 1), (0, 0)], res)
 
 
     def test_get_padding_size_2(self):
@@ -41,7 +41,7 @@ class TestDataset(TestCase):
         size = (3, 5)
 
         res = ds.get_padding_size(shape, pos, size)
-        self.assertEqual([(3, 0), (0, 0)], res)
+        np.testing.assert_array_equal([(3, 0), (0, 0)], res)
 
     def test_get_padding_size_3(self):
 
@@ -49,7 +49,7 @@ class TestDataset(TestCase):
         pos = (5, 5, 5)
         size = (3, 5, 3)
         res = ds.get_padding_size(shape, pos, size)
-        self.assertEqual([(0, 1), (0, 0), (0, 1)], res)
+        np.testing.assert_array_equal([(0, 1), (0, 0), (0, 1)], res)
 
     def test_get_padding_size_3(self):
 
@@ -57,26 +57,7 @@ class TestDataset(TestCase):
         pos = (5, 5, 5, 0)
         size = (3, 5, 3, 1)
         res = ds.get_padding_size(shape, pos, size)
-        self.assertEqual([(0, 1), (0, 0), (0, 1), (0, 0)], res)
-
-
-
-    def test_distance_to_upper_img_edge(self):
-
-
-        pos = (3, 1)
-        shape = (5, 4)
-        val = np.array([1, 2])
-        res = ds.distance_to_upper_img_edge(shape, pos)
-        self.assertTrue((val == res).all())
-
-
-        pos = (4, 3)
-        shape = (5, 4)
-        val = np.array([0, 0])
-        res = ds.distance_to_upper_img_edge(shape, pos)
-        self.assertTrue((val == res).all())
-
+        np.testing.assert_array_equal([(0, 1), (0, 0), (0, 1), (0, 0)], res)
 
 
     def test_inner_tile_size_1(self):
@@ -88,8 +69,8 @@ class TestDataset(TestCase):
         pos_val = (0, 5)
         size_val = (7, 6)
         pos_tile_val = (0, 3)
-        pos_out, size_out, pos_tile, padding = \
-                ds.inner_tile_size(shape, pos, size)
+        padding = ds.get_padding_size(shape, pos, size)
+        pos_out, size_out, pos_tile = ds.inner_tile_size(shape, pos, size, padding)
 
         print(pos_out)
         print(size_out)
@@ -97,7 +78,7 @@ class TestDataset(TestCase):
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)
         self.assertEqual(pos_tile_val, pos_tile)
-        self.assertEqual(padding, [(4, 5), (0, 6)])
+        np.testing.assert_array_equal(padding, [(4, 5), (0, 6)])
 
     def test_inner_tile_size_2(self):
 
@@ -108,8 +89,8 @@ class TestDataset(TestCase):
         pos_val = (0, 0)
         size_val = (4, 7)
 
-        pos_out, size_out, pos_tile, pd = \
-                ds.inner_tile_size(shape, pos, size)
+        pd = ds.get_padding_size(shape, pos, size)
+        pos_out, size_out, pos_tile = ds.inner_tile_size(shape, pos, size, pd)
 
         print(pos_out)
         print(size_out)
@@ -117,7 +98,7 @@ class TestDataset(TestCase):
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)
         self.assertEqual(pos_tile, (0, 0))
-        self.assertEqual(pd, [(4, 0), (1, 0)])
+        np.testing.assert_array_equal(pd, [(4, 0), (1, 0)])
 
     def test_inner_tile_size_3(self):
 
@@ -128,8 +109,9 @@ class TestDataset(TestCase):
         pos_val = (0, 0)
         size_val = (2, 3)
 
-        pos_out, size_out, pos_tile, pd = \
-                ds.inner_tile_size(shape, pos, size)
+        pd = ds.get_padding_size(shape, pos, size)
+        pos_out, size_out, pos_tile = \
+                ds.inner_tile_size(shape, pos, size, pd)
 
         print(pos_out)
         print(size_out)
@@ -137,7 +119,7 @@ class TestDataset(TestCase):
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)
         self.assertEqual(pos_tile, (0, 0))
-        self.assertEqual(pd, [(2, 0), (3, 0)])
+        np.testing.assert_array_equal(pd, [(2, 0), (3, 0)])
 
     def test_inner_tile_size_4(self):
 
@@ -148,8 +130,9 @@ class TestDataset(TestCase):
         pos_val = (0, 2)
         size_val = (5, 4)
 
-        pos_out, size_out, pos_tile, pd = \
-                ds.inner_tile_size(shape, pos, size)
+        pd = ds.get_padding_size(shape, pos, size)
+        pos_out, size_out, pos_tile = \
+                ds.inner_tile_size(shape, pos, size, pd)
 
         print(pos_out)
         print(size_out)
@@ -157,7 +140,7 @@ class TestDataset(TestCase):
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)
         self.assertEqual(pos_tile, (0, 0))
-        self.assertEqual(pd, [(5, 0), (0, 0)])
+        np.testing.assert_array_equal(pd, [(5, 0), (0, 0)])
 
 
     def test_inner_tile_size_5(self):
@@ -169,8 +152,9 @@ class TestDataset(TestCase):
         pos_val = (2, 0)
         size_val = (3, 4)
 
-        pos_out, size_out, pos_tile, pd = \
-                ds.inner_tile_size(shape, pos, size)
+        pd = ds.get_padding_size(shape, pos, size)
+        pos_out, size_out, pos_tile = \
+                ds.inner_tile_size(shape, pos, size, pd)
 
         print(pos_out)
         print(size_out)
@@ -178,7 +162,8 @@ class TestDataset(TestCase):
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)
         self.assertEqual(pos_tile, (0, 0))
-        self.assertEqual(pd, [(0, 0), (4, 0)])
+        np.testing.assert_array_equal(pd, [(0, 0), (4, 0)])
+
     def test_inner_tile_size_6(self):
 
         shape = (7, 11)
@@ -188,8 +173,9 @@ class TestDataset(TestCase):
         pos_val = (2, 7)
         size_val = (3, 4)
 
-        pos_out, size_out, pos_tile, pd = \
-                ds.inner_tile_size(shape, pos, size)
+        pd = ds.get_padding_size(shape, pos, size)
+        pos_out, size_out, pos_tile = \
+                ds.inner_tile_size(shape, pos, size, pd)
 
         print(pos_out)
         print(size_out)
@@ -197,7 +183,7 @@ class TestDataset(TestCase):
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)
         self.assertEqual(pos_tile, (0, 2))
-        self.assertEqual(pd, [(0, 0), (0, 4)])
+        np.testing.assert_array_equal(pd, [(0, 0), (0, 4)])
 
     def test_inner_tile_size_7(self):
 
@@ -208,8 +194,9 @@ class TestDataset(TestCase):
         pos_val = (2, 8)
         size_val = (5, 3)
 
-        pos_out, size_out, pos_tile, pd = \
-                ds.inner_tile_size(shape, pos, size)
+        pd = ds.get_padding_size(shape, pos, size)
+        pos_out, size_out, pos_tile = \
+                ds.inner_tile_size(shape, pos, size, pd)
 
         print(pos_out)
         print(size_out)
@@ -217,7 +204,7 @@ class TestDataset(TestCase):
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)
         self.assertEqual(pos_tile, (0, 1))
-        self.assertEqual(pd, [(0, 1), (0, 3)])
+        np.testing.assert_array_equal(pd, [(0, 1), (0, 3)])
 
     def test_inner_tile_size_8(self):
 
@@ -228,8 +215,9 @@ class TestDataset(TestCase):
         pos_val = (4, 7)
         size_val = (3, 4)
 
-        pos_out, size_out, pos_tile, pd = \
-                ds.inner_tile_size(shape, pos, size)
+        pd = ds.get_padding_size(shape, pos, size)
+        pos_out, size_out, pos_tile = \
+                ds.inner_tile_size(shape, pos, size, pd)
 
         print(pos_out)
         print(size_out)
@@ -237,7 +225,7 @@ class TestDataset(TestCase):
         self.assertEqual(tuple(pos_out), pos_val)
         self.assertEqual(tuple(size_out), size_val)
         self.assertEqual(tuple(pos_tile), (1, 2))
-        self.assertEqual(pd, [(0, 3), (0, 4)])
+        np.testing.assert_array_equal(pd, [(0, 3), (0, 4)])
 
 
     def test_inner_tile_size_9(self):
@@ -249,8 +237,9 @@ class TestDataset(TestCase):
         pos_val = (0, 0)
         size_val = (4, 5)
 
-        pos_out, size_out, pos_tile, pd = \
-                ds.inner_tile_size(shape, pos, size)
+        pd = ds.get_padding_size(shape, pos, size)
+        pos_out, size_out, pos_tile = \
+                ds.inner_tile_size(shape, pos, size, pd)
 
         print(pos_out)
         print(size_out)
@@ -258,7 +247,7 @@ class TestDataset(TestCase):
         self.assertEqual(tuple(pos_out), pos_val)
         self.assertEqual(tuple(size_out), size_val)
         self.assertEqual(tuple(pos_tile), (0, 0))
-        self.assertEqual(pd, [(4, 0), (1, 0)])
+        np.testing.assert_array_equal(pd, [(4, 0), (1, 0)])
 
     def test_inner_tile_size_10(self):
 
@@ -269,8 +258,9 @@ class TestDataset(TestCase):
         pos_val = (4, 7)
         size_val = (3, 3)
 
-        pos_out, size_out, pos_tile, pd = \
-                ds.inner_tile_size(shape, pos, size)
+        pd = ds.get_padding_size(shape, pos, size)
+        pos_out, size_out, pos_tile = \
+                ds.inner_tile_size(shape, pos, size, pd)
 
         print(pos_out)
         print(size_out)
@@ -278,7 +268,7 @@ class TestDataset(TestCase):
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)
         self.assertEqual(pos_tile, (2, 0))
-        self.assertEqual(pd, [(0, 3), (0, 0)])
+        np.testing.assert_array_equal(pd, [(0, 3), (0, 0)])
 
 
 
@@ -291,8 +281,9 @@ class TestDataset(TestCase):
         pos_val = (2, 2)
         size_val = (3, 4)
 
-        pos_out, size_out, pos_tile, pd = \
-                ds.inner_tile_size(shape, pos, size)
+        pd = ds.get_padding_size(shape, pos, size)
+        pos_out, size_out, pos_tile = \
+                ds.inner_tile_size(shape, pos, size, pd)
 
         print(pos_out)
         print(size_out)
@@ -300,7 +291,7 @@ class TestDataset(TestCase):
         self.assertEqual(pos_out, pos_val)
         self.assertEqual(size_out, size_val)
         self.assertEqual(pos_tile, (0, 0))
-        self.assertEqual(pd, [(0, 0), (0, 0)])
+        np.testing.assert_array_equal(pd, [(0, 0), (0, 0)])
 
 
     def test_is_padding(self):
@@ -309,7 +300,7 @@ class TestDataset(TestCase):
         self.assertTrue(np.any([(0, 0), (3, 0)]))
         self.assertFalse(np.any([(0, 0), (0, 0)]))
 
-    def test_tile_singlechannel_1(self):
+    def test_singlechannel_pixel_tile_1(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         c = TiffConnector(img_path, 'path/to/nowhere/')
         d = Dataset(c)
@@ -318,13 +309,13 @@ class TestDataset(TestCase):
         pos = (0, 0, 0)
         size= (3, 6, 4)
         channel = 0
-        tile = d.tile_singlechannel(image_nr, pos, size, channel, reflect=False)
+        tile = d.singlechannel_pixel_tile(image_nr, pos, size, channel, reflect=False)
 
 
         self.assertEqual(tile.shape, (3, 6, 4))
 
 
-    def test_tile_singlechannel_2(self):
+    def test_singlechannel_pixel_tile_2(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         c = TiffConnector(img_path, 'path/to/nowhere/')
         d = Dataset(c)
@@ -333,7 +324,7 @@ class TestDataset(TestCase):
         pos = (0, 0, 0)
         size= (1, 6, 4)
         channel = 0
-        tile = d.tile_singlechannel(image_nr, pos, size, channel, reflect=False)
+        tile = d.singlechannel_pixel_tile(image_nr, pos, size, channel, reflect=False)
 
         val = \
         [[[151, 132, 154, 190], \
@@ -349,7 +340,7 @@ class TestDataset(TestCase):
         self.assertTrue((tile == val).all())
 
 
-    def test_tile_singlechannel_3(self):
+    def test_singlechannel_pixel_tile_3(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         c = TiffConnector(img_path, 'path/to/nowhere/')
         d = Dataset(c)
@@ -358,7 +349,7 @@ class TestDataset(TestCase):
         pos = (0, -1, -2)
         size= (1, 3, 3)
         channel = 0
-        tile = d.tile_singlechannel(image_nr, pos, size, channel, reflect=True)
+        tile = d.singlechannel_pixel_tile(image_nr, pos, size, channel, reflect=True)
 
         val = \
         [[[132, 151, 151], \
@@ -372,7 +363,7 @@ class TestDataset(TestCase):
 
 
 
-    def test_tile_singlechannel_4(self):
+    def test_singlechannel_pixel_tile_4(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         c = TiffConnector(img_path, 'path/to/nowhere/')
         d = Dataset(c)
@@ -381,7 +372,7 @@ class TestDataset(TestCase):
         pos = (0, 4, 2)
         size= (1, 2, 6)
         channel = 0
-        tile = d.tile_singlechannel(image_nr, pos, size, channel, reflect=True)
+        tile = d.singlechannel_pixel_tile(image_nr, pos, size, channel, reflect=True)
 
         val = \
         [[[184, 161, 161, 184, 200, 175], \
@@ -403,8 +394,8 @@ class TestDataset(TestCase):
         pos_czxy = (0, 0, 0)
         size_czxy = (1, 6, 4)
         label_value = 3
-        mat = d._label_tile_inner(img_nr, \
-         pos_czxy, size_czxy, label_value)
+        mat = d._get_weights_tile(img_nr, \
+                                  pos_czxy, size_czxy, label_value)
 
         val = np.zeros(size_czxy)
         val[0, 0, 1] = 1
@@ -482,8 +473,8 @@ class TestDataset(TestCase):
         size_czxy = np.array((1, 6, 4))
         label_value = 3
 
-        mat = d._label_tile_inner(img_nr, \
-         pos_czxy, size_czxy, label_value)
+        mat = d._get_weights_tile(img_nr, \
+                                  pos_czxy, size_czxy, label_value)
 
         val = np.zeros(size_czxy)
         print('valshae')
@@ -994,17 +985,19 @@ class TestDataset(TestCase):
         d = Dataset(c)
 
         np.random.seed(42)
-        pos_izxy = d._random_pos_izxy(label_value=1, size_zxy=(1,2,2))
-        print(pos_izxy)
-        assert_array_equal(pos_izxy, np.array([0, 2, 7, 20]))
+        img_nr, pos_zxy = d._random_pos_izxy(label_value=1, tile_size_zxy=(1, 2, 2))
+        print(img_nr, pos_zxy)
+        assert_array_equal(img_nr, 0)
+        assert_array_equal(pos_zxy, [2, 7, 20])
 
         #this tile has same size as image, pos must always be 0
-        pos_izxy = d._random_pos_izxy(label_value=1, size_zxy=(3,40,26))
-        assert_array_equal(pos_izxy, np.array([0, 0, 0, 0]))
+        img_nr, pos_zxy = d._random_pos_izxy(label_value=1, tile_size_zxy=(3, 40, 26))
+        assert_array_equal(img_nr, 0)
+        assert_array_equal(pos_zxy, [0, 0, 0])
 
         #this tile is larger than the image
-        with self.assertRaises(ValueError):
-            pos_izxy = d._random_pos_izxy(label_value=1, size_zxy=(3,40,27))
+        with self.assertRaises(AssertionError):
+            pos_izxy = d._random_pos_izxy(label_value=1, tile_size_zxy=(3, 40, 27))
 
         np.random.seed(None)
 
