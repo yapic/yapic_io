@@ -164,14 +164,15 @@ class Minibatch(object):
         Pixels have the dimensionality (channels, z, x, y)
 
         >>> from yapic_io.factories import make_tiff_interface
+        >>> import tempfile
         >>>
         >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/'
         >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
-        >>> savepath = 'yapic_io/test_data/tmp/'
+        >>> savepath = tempfile.TemporaryDirectory()
         >>>
         >>> tile_size = (1, 5, 4)
         >>> # make training_batch mb and prediction interface p: upon object initialization all available image channels are set
-        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tile_size) #upon object initialization all available image channels are set
+        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath.name, tile_size) #upon object initialization all available image channels are set
         >>>
         >>>
         >>> p.channel_list() #we have 3 channels in the prediction interface
@@ -190,14 +191,15 @@ class Minibatch(object):
         :returns: bool, True if channel was removed from selection
 
         >>> from yapic_io.factories import make_tiff_interface
+        >>> import tempfile
         >>>
         >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/'
         >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
-        >>> savepath = 'yapic_io/test_data/tmp/'
+        >>> savepath = tempfile.TemporaryDirectory()
         >>>
         >>> tile_size = (1, 5, 4)
         >>> #upon object initialization all available image channels are set
-        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tile_size)
+        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath.name, tile_size)
         >>>
         >>>
         >>> p.channel_list() #we have 3 channels
@@ -255,14 +257,15 @@ class Minibatch(object):
         :returns: bool, True if label was removed from selection
 
         >>> from yapic_io.factories import make_tiff_interface
+        >>> import tempfile
         >>>
         >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/'
         >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
-        >>> savepath = 'yapic_io/test_data/tmp/'
+        >>> savepath = tempfile.TemporaryDirectory()
         >>>
         >>> tile_size = (1, 5, 4)
         >>> #upon object initialization all available image channels are set
-        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tile_size)
+        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath.name, tile_size)
         >>>
         >>>
         >>> p.get_labels() #we have 3 label classes
@@ -284,14 +287,15 @@ class Minibatch(object):
         Adds a label class to the selection.
 
         >>> from yapic_io.factories import make_tiff_interface
+        >>> import tempfile
         >>>
         >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/'
         >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
-        >>> savepath = 'yapic_io/test_data/tmp/'
+        >>> savepath = tempfile.TemporaryDirectory()
         >>>
         >>> tile_size = (1, 5, 4)
         >>> #upon object initialization all available image channels are set
-        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tile_size)
+        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath.name, tile_size)
         >>>
         >>>
         >>> p.get_labels() #we have 3 label classes

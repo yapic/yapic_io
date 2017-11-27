@@ -1,5 +1,6 @@
 from unittest import TestCase
 import os
+import tempfile
 
 import numpy as np
 import yapic_io.image_importers as ip
@@ -138,7 +139,8 @@ class TestImageImports(TestCase):
         self.assertEqual((2, 3, 6, 4), im.shape)
 
     def test_init_empty_tiff_image(self):
-        path = os.path.join(base_path, '../test_data/tmp/empty.tif')
+        tmp = tempfile.TemporaryDirectory()
+        path = os.path.join(tmp.name, 'empty.tif')
         
         
         
@@ -164,7 +166,8 @@ class TestImageImports(TestCase):
 
     
     def test_init_empty_tiff_image_3d(self):
-        path = os.path.join(base_path, '../test_data/tmp/empty_2.tif')
+        tmp = tempfile.TemporaryDirectory()
+        path = os.path.join(tmp.name, 'empty_2.tif')
 
         xsize = 70
         ysize = 50
@@ -191,7 +194,8 @@ class TestImageImports(TestCase):
 
 
     def test_add_vals_to_tiff_image(self):
-        path = os.path.join(base_path, '../test_data/tmp/tile.tif')
+        tmp = tempfile.TemporaryDirectory()
+        path = os.path.join(tmp.name, 'tile.tif')
 
         try:
             os.remove(path)
@@ -241,7 +245,8 @@ class TestImageImports(TestCase):
 
 
     def test_add_vals_to_tiff_image_3d(self):
-        path = os.path.join(base_path, '../test_data/tmp/tile.tif')
+        tmp = tempfile.TemporaryDirectory()
+        path = os.path.join(tmp.name, 'tile.tif')
 
         try:
             os.remove(path)

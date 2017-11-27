@@ -10,6 +10,7 @@ import yapic_io.image_importers as ip
 from pprint import pprint
 import logging
 from numpy.testing import assert_array_equal, assert_array_almost_equal
+import tempfile
 logger = logging.getLogger(os.path.basename(__file__))
 logger.setLevel(logging.WARNING)
 base_path = os.path.dirname(__file__)
@@ -1116,14 +1117,14 @@ class TestDataset(TestCase):
     def test_put_prediction_tile_1(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        savepath = os.path.join(base_path, '../test_data/tmp/')
-        c = TiffConnector(img_path, label_path, savepath=savepath)
+        savepath = tempfile.TemporaryDirectory()
+        c = TiffConnector(img_path, label_path, savepath=savepath.name)
         d = Dataset(c)
 
         pixels = np.array([[[.1, .2, .3], \
                             [.4, .5, .6]]], dtype=np.float32)
 
-        path = savepath + '6width4height3slices_rgb_class_2.tif'
+        path = os.path.join(savepath.name, '6width4height3slices_rgb_class_2.tif')
 
         try:
             os.remove(path)
@@ -1160,5 +1161,3 @@ class TestDataset(TestCase):
             os.remove(path)
         except:
             pass
-
-

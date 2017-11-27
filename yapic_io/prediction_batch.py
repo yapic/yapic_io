@@ -24,7 +24,7 @@ class PredictionBatch(Minibatch):
 
 
         >>> from yapic_io.factories import make_tiff_interface
-        >>>
+        >>> import tempfile
         >>> # mock classification function
         >>> def classify(pixels, value):
         ...     return np.ones(pixels.shape) * value
@@ -33,13 +33,13 @@ class PredictionBatch(Minibatch):
         >>> # define data loacations
         >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/*.tif'
         >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/*.tif'
-        >>> savepath = 'yapic_io/test_data/tmp/'
+        >>> savepath = tempfile.TemporaryDirectory()
         >>>
         >>> tile_size = (1, 5, 4) # size of network output layer in zxy
         >>> padding = (0, 0, 0) # padding of network input layer in zxy, in respect to output layer
         >>>
         >>> # make training_batch mb and prediction interface p with TiffConnector binding
-        >>> _, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tile_size, padding_zxy=padding, training_batch_size=2)
+        >>> _, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath.name, tile_size, padding_zxy=padding, training_batch_size=2)
         >>> len(p)
         255
         >>> p.get_labels()

@@ -159,8 +159,8 @@ class TestPredictionBatch(TestCase):
     def test_put_probmap_data(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
         label_path = os.path.join(base_path, '/path/to/nowhere')
-        savepath = os.path.join(base_path, '../test_data/tmp/')
-        c = TiffConnector(img_path, label_path, savepath=savepath)
+        savepath = tempfile.TemporaryDirectory()
+        c = TiffConnector(img_path, label_path, savepath=savepath.name)
         
         d = Dataset(c)
 
@@ -177,8 +177,8 @@ class TestPredictionBatch(TestCase):
     def test_put_probmap_data_2(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
         label_path = os.path.join(base_path, '/path/to/nowhere')
-        savepath = os.path.join(base_path, '../test_data/tmp/')
-        c = TiffConnector(img_path, label_path, savepath=savepath)
+        savepath = tempfile.TemporaryDirectory()
+        c = TiffConnector(img_path, label_path, savepath=savepath.name)
 
         d = Dataset(c)
 
@@ -197,8 +197,8 @@ class TestPredictionBatch(TestCase):
     def test_put_probmap_data_3(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*')
-        savepath = os.path.join(base_path, '../test_data/tmp/')
-        c = TiffConnector(img_path, label_path, savepath=savepath)
+        savepath = tempfile.TemporaryDirectory()
+        c = TiffConnector(img_path, label_path, savepath=savepath.name)
         d = Dataset(c)
 
         size = (1, 3, 4)
@@ -220,8 +220,8 @@ class TestPredictionBatch(TestCase):
     def test_put_probmap_data_multichannel_label(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/*')
-        savepath = os.path.join(base_path, '../test_data/tmp/')
-        c = TiffConnector(img_path, label_path, savepath=savepath)
+        savepath = tempfile.TemporaryDirectory()
+        c = TiffConnector(img_path, label_path, savepath=savepath.name)
         d = Dataset(c)
 
         print('labels')
@@ -275,8 +275,8 @@ class TestPredictionBatch(TestCase):
     def test_put_probmap_data_for_label(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*')
-        savepath = os.path.join(base_path, '../test_data/tmp/')
-        c = TiffConnector(img_path, label_path, savepath=savepath)
+        savepath = tempfile.TemporaryDirectory()
+        c = TiffConnector(img_path, label_path, savepath=savepath.name)
         d = Dataset(c)
 
         d = Dataset(c)
@@ -288,9 +288,9 @@ class TestPredictionBatch(TestCase):
 
         data = np.ones((3, 3, 3))
         
-        path1 = savepath + '40width26height3slices_rgb_class_109.tif'
-        path2 = savepath + '40width26height6slices_rgb_class_109.tif'
-        path3 = savepath + '6width4height3slices_rgb_class_109.tif'
+        path1 = savepath.name + '40width26height3slices_rgb_class_109.tif'
+        path2 = savepath.name + '40width26height6slices_rgb_class_109.tif'
+        path3 = savepath.name + '6width4height3slices_rgb_class_109.tif'
         
         try:
             os.remove(path1)

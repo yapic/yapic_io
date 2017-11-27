@@ -7,6 +7,7 @@ from yapic_io.tiff_connector import TiffConnector
 import yapic_io.image_importers as ip
 import logging
 from pprint import pprint
+import tempfile
 logger = logging.getLogger(os.path.basename(__file__))
 
 base_path = os.path.dirname(__file__)
@@ -222,12 +223,13 @@ class TestTiffconnector(TestCase):
     def test_init_probmap_image(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
-        savepath = os.path.join(base_path, '../test_data/tmp/')
 
-        c = TiffConnector(img_path, label_path, savepath = savepath)
+        savepath = tempfile.TemporaryDirectory()
+
+        c = TiffConnector(img_path, label_path, savepath = savepath.name)
 
         fnames = ['6width4height3slices_rgb_class_1.tif', '6width4height3slices_rgb_class_2.tif']
-        path1, path2 = [os.path.join(savepath, f) for f in fnames]
+        path1, path2 = [os.path.join(savepath.name, f) for f in fnames]
 
         for p in [path1, path2]:
             try:
@@ -252,14 +254,14 @@ class TestTiffconnector(TestCase):
     def test_put_tile_1(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
-        savepath = os.path.join(base_path, '../test_data/tmp/')
+        savepath = tempfile.TemporaryDirectory()
 
-        c = TiffConnector(img_path, label_path, savepath=savepath)
+        c = TiffConnector(img_path, label_path, savepath=savepath.name)
 
         pixels = np.array([[[.1, .2, .3], \
                             [.4, .5, .6]]], dtype=np.float32)
         
-        path = os.path.join(savepath, '6width4height3slices_rgb_class_3.tif')
+        path = os.path.join(savepath.name, '6width4height3slices_rgb_class_3.tif')
         
         try:
             os.remove(path)
@@ -293,21 +295,21 @@ class TestTiffconnector(TestCase):
 
         try:
             os.remove(path)
-        except: pass    
+        except: pass
 
         
 
     def test_put_tile_2(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
-        savepath = os.path.join(base_path, '../test_data/tmp/')
+        savepath = tempfile.TemporaryDirectory()
 
-        c = TiffConnector(img_path, label_path, savepath=savepath)
+        c = TiffConnector(img_path, label_path, savepath=savepath.name)
 
         pixels = np.array([[[.1, .2, .3], \
                             [.4, .5, .6]]], dtype=np.float32)
         
-        path = os.path.join(savepath, '6width4height3slices_rgb_class_3.tif')
+        path = os.path.join(savepath.name, '6width4height3slices_rgb_class_3.tif')
         
         try:
             os.remove(path)
@@ -368,7 +370,7 @@ class TestTiffconnector(TestCase):
 
         try:
             os.remove(path)
-        except: pass    
+        except: pass
 
 
     def test_original_label_values_for_image(self):
