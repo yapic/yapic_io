@@ -1,6 +1,7 @@
 from unittest import TestCase
 import os
 from yapic_io.tiff_connector import TiffConnector
+from yapic_io.ilastik_connector import IlastikConnector
 from yapic_io.dataset import Dataset
 
 import yapic_io.training_batch as mb
@@ -10,6 +11,38 @@ from pprint import pprint
 import numpy as np
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 class TestTrainingBatch(TestCase):
+
+    def test_get_ilastik_weights(self):
+        img_path = os.path.join(base_path, '../test_data/ilastik')
+        lbl_path = os.path.join(base_path, '../test_data/ilastik/ilastik-1.2.ilp')
+
+        c = IlastikConnector(img_path, lbl_path)
+
+        d = Dataset(c)
+
+        size = (8, 2, 4)
+        pad = (0, 0, 0)
+
+        batch_size = 1
+
+        m = TrainingBatch(d, size, padding_zxy=pad)
+        m.augment_by_flipping(False)
+        mini = next(m)
+        weights = mini.weights()
+
+        #label 1 at position (4,1,3)
+        self.assertTrue(weights[0, 0, 4, 1, 3] == 1)
+
+        #label 2 at position (1,1,1)
+        self.assertTrue(weights[0, 1, 1, 1, 1] == 1)
+
+        #label 3 at position (1,1,1)
+        self.assertTrue(weights[0, 2, 7, 1, 1] == 1)
+
+
+
+
+
     def test_random_tile(self):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
