@@ -1,19 +1,23 @@
 from abc import ABCMeta, abstractmethod
-
+import logging
+import os
+logger = logging.getLogger(os.path.basename(__file__))
 
 def io_connector(image_path, label_path, *args, **kwds):
     from yapic_io.tiff_connector import TiffConnector
     from yapic_io.ilastik_connector import IlastikConnector
 
     if label_path.endswith('.ilp'):
+        logger.info('Ilastik project file detected')
         return IlastikConnector(image_path, label_path, *args, **kwds)
     else:
+        logger.info('Tiff files detected.')
         return TiffConnector(image_path, label_path, *args, **kwds)
 
 
 class Connector(metaclass=ABCMeta):
     '''
-    Interface to pixel and label data source for classifier 
+    Interface to pixel and label data source for classifier
     training and prediction.
 
     - Connects to a fixed collection of images and corresponding labels
@@ -30,10 +34,10 @@ class Connector(metaclass=ABCMeta):
     - All images must have the same nr of channels but can vary in z, x, and y.
 
     - Time series are not supported. However, time frames can be modeled as
-      individual images.  
+      individual images.
 
     - Images with lower dimensions can be modeled. E.g. grayscale single plane images
-      have the shape (1, 1, width, height). 
+      have the shape (1, 1, width, height).
 
 
 
@@ -48,12 +52,12 @@ class Connector(metaclass=ABCMeta):
         This is efficient in following situation:
         - relatively small images
         - dense labelling
-        
+
         For very large images with sparse labelling,
-        the by_label_index mode is recommended (implemented in 
+        the by_label_index mode is recommended (implemented in
         Coordinate_connector class)
         '''
-        
+
 
     @abstractmethod
     def image_count(self):
@@ -68,9 +72,9 @@ class Connector(metaclass=ABCMeta):
         returns for each label value the number of labels for this image
 
         label_counts = {
-             label_value_1 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...], 
-             label_value_2 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...], 
-             label_value_3 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...], 
+             label_value_1 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...],
+             label_value_2 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...],
+             label_value_3 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...],
              ...
         }
 

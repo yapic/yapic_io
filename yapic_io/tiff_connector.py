@@ -82,6 +82,7 @@ class TiffConnector(Connector):
         self.multichannel_pixel_image = multichannel_pixel_image
         self.multichannel_label_image = multichannel_label_image
 
+
         if type(img_filepath) in (str, Path):
             assert type(label_filepath) in (str, Path)
             img_path = Path(img_filepath).expanduser()
@@ -411,3 +412,4 @@ class TiffConnector(Connector):
 
         label_count = { l: np.count_nonzero(mat==l) for l in labels if l > 0 }
         return label_count
+

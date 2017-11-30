@@ -79,4 +79,15 @@ class TestIlastikConnector(TestCase):
         self.assertEqual(actual_counts, expected_counts)
 
 
+    def test_constructor(self):
+        img_path = os.path.join(base_path, '../test_data/ilastik/pixels_ilastik-multiim-1.2')
+        lbl_path = os.path.join(base_path, '../test_data/ilastik/ilastik-multiim-1.2.ilp')
+        c = IlastikConnector(img_path, lbl_path)
+        print(c.filenames)
+        assert False
+
+
+
+
+
 

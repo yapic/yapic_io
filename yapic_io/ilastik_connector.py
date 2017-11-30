@@ -18,20 +18,34 @@ class IlastikConnector(TiffConnector):
     Currently only works with files from Ilastik v1.2 (storage version 0.1)
     '''
     def __init__(self, img_filepath, label_filepath, *args, **kwds):
+
         self.ilp = pyilastik.read_project(label_filepath, skip_image=True)
 
-        if not img_filepath.endswith('.tif'):
-            img_filepath = os.path.join(img_filepath, '*.tif')
+        original_tif_paths = self.ilp.image_path_list() #these are important to get the labels
+        new_tif_path = img_filepath #these are important to get the pixels
 
-        img_path_list = glob.glob(img_filepath)
+        super().__init__(new_tif_path, new_tif_path, *args, **kwds)
 
-        # map from (potentially) paths from another machine to current machine
-        lbl_path_list = self.ilp.image_path_list()
-        lbl_path_list = [ img_path for lbl_path, img_path in zip(lbl_path_list, img_path_list)
-                          if os.path.basename(lbl_path) == os.path.basename(img_path)]
 
-        super().__init__(img_path_list, lbl_path_list, *args, **kwds)
+        # if not img_filepath.endswith('.tif'):
+        #     img_filepath = os.path.join(img_filepath, '*.tif')
 
+        # img_path_list = glob.glob(img_filepath)
+
+        # # map from (potentially) paths from another machine to current machine
+        # lbl_path_list = self.ilp.image_path_list()
+        # lbl_path_list = [ img_path for lbl_path, img_path in zip(lbl_path_list, img_path_list)
+        #                   if os.path.basename(lbl_path) == os.path.basename(img_path)]
+        # logger.info('lbl path list %s', lbl_path_list)
+        # logger.info('img path list %s', img_path_list)
+        # super().__init__(img_path_list, lbl_path_list, *args, **kwds)
+
+
+    def filter_labeled(self):
+        '''
+        Overwrites filter_labeled from TiffConnector
+        '''
+        return self
 
     def label_dimensions(self, image_nr):
         '''
@@ -63,7 +77,7 @@ class IlastikConnector(TiffConnector):
             msg = 'no label matrix file found for image file #{}'.format(image_nr)
             logger.warning(msg)
             return None
-
+        print(self.ilp)
         filename, (img, lbl, prediction) = self.ilp[label_filename]
         lbl = np.transpose(lbl, (3, 0, 2, 1))
 
