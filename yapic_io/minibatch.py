@@ -6,6 +6,43 @@ logger = logging.getLogger(os.path.basename(__file__))
 
 
 class Minibatch(object):
+    '''
+    The selected labels (i.e. classes for prediction).
+    Per default, all available labels are selected.
+
+    The order of the labels list defines the order of the
+    labels layer in the probability map (i.e. the classification result
+    matrix) that can be exported with put_probmap_data().
+    '''
+    labels = []
+
+    '''
+    Returns the selected image channels.
+    Per default, all available channels are selected.
+
+    The order of the channels list defines the order of the
+    channels layer in the pixels (accessed with get_pixels()).
+    Pixels have the dimensionality (channels, z, x, y)
+
+    >>> from yapic_io.factories import make_tiff_interface
+    >>>
+    >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/'
+    >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
+    >>> savepath = 'yapic_io/test_data/tmp/'
+    >>>
+    >>> tile_size = (1, 5, 4)
+    >>> # make training_batch mb and prediction interface p: upon object initialization all available image channels are set
+    >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tile_size) #upon object initialization all available image channels are set
+    >>>
+    >>>
+    >>> p.channel_list # we have 3 channels in the prediction interface
+    [0, 1, 2]
+    >>>
+    >>> p[0].pixels().shape # accordingly, we have 3 channels in the 5D pixels tile (n, c, z, x, y)
+    (10, 3, 1, 5, 4)
+    >>>
+    '''
+    channel_list = []
 
     def __init__(self, dataset, batch_size, size_zxy, padding_zxy=(0, 0, 0)):
         '''
@@ -39,9 +76,9 @@ class Minibatch(object):
         if padding_zxy is not None:
             self.set_padding_zxy(padding_zxy)
         # imports all available channels by default
-        self._channels = self._dataset.channel_list()
+        self.channel_list = self._dataset.channel_list()
         # imports all available labels by default
-        self._labels = self._dataset.label_values()
+        self.labels = self._dataset.label_values()
 
     def set_normalize_mode(self, mode_str, minmax=None):
         '''
@@ -154,35 +191,6 @@ class Minibatch(object):
                 % str(padding_zxy.shape))
         self._padding_zxy = padding_zxy
 
-    def channel_list(self):
-        '''
-        Returns the selected image channels.
-        Per default, all available channels are selected.
-
-        The order of the channels list defines the order of the
-        channels layer in the pixels (accessed with get_pixels()).
-        Pixels have the dimensionality (channels, z, x, y)
-
-        >>> from yapic_io.factories import make_tiff_interface
-        >>>
-        >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/'
-        >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
-        >>> savepath = 'yapic_io/test_data/tmp/'
-        >>>
-        >>> tile_size = (1, 5, 4)
-        >>> # make training_batch mb and prediction interface p: upon object initialization all available image channels are set
-        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tile_size) #upon object initialization all available image channels are set
-        >>>
-        >>>
-        >>> p.channel_list() #we have 3 channels in the prediction interface
-        [0, 1, 2]
-        >>>
-        >>> p[0].pixels().shape #accordingly, we have 3 channels in the 5D pixels tile (n, c, z, x, y)
-        (10, 3, 1, 5, 4)
-        >>>
-        '''
-        return self._channels
-
     def remove_channel(self, channel):
         '''
         Removes a pixel channel from the selection.
@@ -190,62 +198,48 @@ class Minibatch(object):
         :returns: bool, True if channel was removed from selection
 
         >>> from yapic_io.factories import make_tiff_interface
+        >>> import tempfile
         >>>
         >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/'
         >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
-        >>> savepath = 'yapic_io/test_data/tmp/'
+        >>> savepath = tempfile.TemporaryDirectory()
         >>>
         >>> tile_size = (1, 5, 4)
         >>> #upon object initialization all available image channels are set
-        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tile_size)
+        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath.name, tile_size)
         >>>
         >>>
-        >>> p.channel_list() #we have 3 channels
+        >>> p.channel_list #we have 3 channels
         [0, 1, 2]
         >>> p[0].pixels().shape #accordingly, we have 3 channels in the 5D pixels tile (n, c, z, x, y)
         (10, 3, 1, 5, 4)
         >>>
         >>> p.remove_channel(1) #remove channel 1
-        True
-        >>> p.channel_list() #only 2 channels selected
+        >>> p.channel_list #only 2 channels selected
         [0, 2]
         >>> p[0].pixels().shape #only 2 channels left in the pixel tile
         (10, 2, 1, 5, 4)
 
         '''
-        if channel not in self._channels:
+        if channel not in self.channel_list:
             raise ValueError('not possible to remove channel %s from channel selection %s'
-                             % (str(channel), str(self._channels)))
-        self._channels.remove(channel)
-        return True
+                             % (str(channel), str(self.channel_list)))
+        self.channel_list.remove(channel)
 
     def add_channel(self, channel):
         '''
         Adds a pixel-channel to the selection.
-
-
         '''
-        if channel in self._channels:
-            logger.warning('channel already selected %s', channel)
+        if channel in self.channel_list:
+            logger.info('channel already selected %s', channel)
             return False
+
         if channel not in self._dataset.channel_list():
-            raise ValueError('not possible to add channel %s from dataset channels %s'
-                             % (str(channel), str(self._dataset.channel_list())))
+            msg = 'Not possible to add channel {} from dataset channels {}'
+            raise ValueError(msg.format(channel, self._dataset.channel_list()))
 
-        insort_left(self._channels, channel)
+        insort_left(self.channel_list, channel)
         return True
-
-    def get_labels(self):
-        '''
-        Returns the selected labels (i.e. classes for prediction).
-        Per default, all available labels are selected.
-
-        The order of the labels list defines the order of the
-        labels layer in the probability map (i.e. the classification result
-        matrix) that can be exported with put_probmap_data().
-        '''
-
-        return self._labels
 
     def remove_label(self, label):
         '''
@@ -255,74 +249,74 @@ class Minibatch(object):
         :returns: bool, True if label was removed from selection
 
         >>> from yapic_io.factories import make_tiff_interface
+        >>> import tempfile
         >>>
         >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/'
         >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
-        >>> savepath = 'yapic_io/test_data/tmp/'
+        >>> savepath = tempfile.TemporaryDirectory()
         >>>
         >>> tile_size = (1, 5, 4)
         >>> #upon object initialization all available image channels are set
-        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tile_size)
+        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath.name, tile_size)
         >>>
         >>>
-        >>> p.get_labels() #we have 3 label classes
+        >>> p.labels #we have 3 label classes
         [1, 2, 3]
         >>> p.remove_label(2) #remove label class 109
-        True
-        >>> p.get_labels() #only 2 classes remain selected
+        >>> p.labels #only 2 classes remain selected
         [1, 3]
 
         '''
-        if label not in self._labels:
-            raise ValueError('not possible to remove label %s from label selection %s'
-                             % (str(label), str(self._labels)))
-        self._labels.remove(label)
-        return True
+        if label not in self.labels:
+            msg = 'Not possible to remove label {} from label selection {}'
+            raise ValueError(msg.format(label, self.labels))
+
+        self.labels.remove(label)
 
     def add_label(self, label):
         '''
         Adds a label class to the selection.
 
         >>> from yapic_io.factories import make_tiff_interface
+        >>> import tempfile
         >>>
         >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/'
         >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
-        >>> savepath = 'yapic_io/test_data/tmp/'
+        >>> savepath = tempfile.TemporaryDirectory()
         >>>
         >>> tile_size = (1, 5, 4)
         >>> #upon object initialization all available image channels are set
-        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tile_size)
+        >>> mb, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath.name, tile_size)
         >>>
         >>>
-        >>> p.get_labels() #we have 3 label classes
+        >>> p.labels #we have 3 label classes
         [1, 2, 3]
         >>> p.remove_label(2) #remove label class 2
-        True
-        >>> p.get_labels() #only 2 classes remain selected
+        >>> p.labels #only 2 classes remain selected
         [1, 3]
         >>> p.remove_label(1) #remove label class 1
-        True
-        >>> p.get_labels() #only 1 class remains selected
+        >>> p.labels #only 1 class remains selected
         [3]
         >>> p.add_label(1)
         True
-        >>> p.get_labels()
+        >>> p.labels
         [1, 3]
         >>> p.add_label(2)
         True
-        >>> p.get_labels()
+        >>> p.labels
         [1, 2, 3]
 
 
         '''
-        if label in self._labels:
-            logger.warning('label class already selected %s', label)
+        if label in self.labels:
+            logger.info('Label class already selected {}', label)
             return False
-        if label not in self._dataset.label_values():
-            raise ValueError('not possible to add label class %s from dataset label classes %s'
-                             % (str(label), str(self._dataset.label_values())))
 
-        insort_left(self._labels, label)
+        if label not in self._dataset.label_values():
+            msg = 'Not possible to add label class {} from dataset label classes {}'
+            raise ValueError(msg.format(label, self._dataset.label_values()))
+
+        insort_left(self.labels, label)
         return True
 
     def _normalize(self, pixels):

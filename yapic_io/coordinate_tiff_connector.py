@@ -40,9 +40,6 @@ class CoordinateTiffConnector(TiffConnector, CoordinateConnector):
             raise ValueError('Label value %s does not exist. Label value mapping: %s' %
                              (str(label_value), str(self.labelvalue_mapping)))
 
-        # label matrix
-        mat = self.load_label_matrix(image_nr)
-
         coors = np.array(np.where(mat.ravel() == label_value))
 
         n_coors = coors.size

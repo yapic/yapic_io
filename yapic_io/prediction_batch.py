@@ -1,5 +1,6 @@
 import yapic_io.utils as ut
 import numpy as np
+from numpy.testing import assert_equal, assert_array_less
 from bisect import insort_left
 import os
 import logging
@@ -24,7 +25,7 @@ class PredictionBatch(Minibatch):
 
 
         >>> from yapic_io.factories import make_tiff_interface
-        >>>
+        >>> import tempfile
         >>> # mock classification function
         >>> def classify(pixels, value):
         ...     return np.ones(pixels.shape) * value
@@ -33,16 +34,16 @@ class PredictionBatch(Minibatch):
         >>> # define data loacations
         >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/*.tif'
         >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/*.tif'
-        >>> savepath = 'yapic_io/test_data/tmp/'
+        >>> savepath = tempfile.TemporaryDirectory()
         >>>
         >>> tile_size = (1, 5, 4) # size of network output layer in zxy
         >>> padding = (0, 0, 0) # padding of network input layer in zxy, in respect to output layer
         >>>
         >>> # make training_batch mb and prediction interface p with TiffConnector binding
-        >>> _, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tile_size, padding_zxy=padding, training_batch_size=2)
+        >>> _, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath.name, tile_size, padding_zxy=padding, training_batch_size=2)
         >>> len(p)
         255
-        >>> p.get_labels()
+        >>> p.labels
         [1, 2, 3]
         >>> # classify the whole bound dataset
         >>> counter = 0 # needed for mock data
@@ -66,7 +67,6 @@ class PredictionBatch(Minibatch):
         '''
         super().__init__(dataset, batch_size, size_zxy, padding_zxy=padding_zxy)
 
-        # self._pos_zxy = None
         self.curr_batch_pos = 0 # current bach position
 
 
@@ -76,10 +76,9 @@ class PredictionBatch(Minibatch):
         pixels = [pixfunc(im_nr,
                           pos_zxy,
                           self._size_zxy,
-                          self._channels,
+                          self.channel_list,
                           self._padding_zxy)
                   for im_nr, pos_zxy in self._get_curr_tile_positions()]
-
 
         pixels = np.array(pixels)
 
@@ -142,7 +141,7 @@ class PredictionBatch(Minibatch):
         '''
         Put classification results to the data source.
 
-        The order of the labels list (accesed with self.get_labels())defines
+        The order of the labels list (accesed with self.labels)defines
         the order of the labels layer in the probability map.
 
         To pass 3D probmaps for a certain label, use put_probmap_data_for_label()
@@ -151,64 +150,32 @@ class PredictionBatch(Minibatch):
         :type probmap_data: numpy.array.
         :returns: bool (True if successful).
         '''
-        if len(probmap_data.shape) != 5:
-            raise ValueError(\
-                '''no valid dimension for probmap tile:
-                   shape is %s, but nr of dimesnions must be 5: (n, c, z, x, y)'''\
-                                % str(probmap_data.shape))
+        assert_equal(len(probmap_data.shape), 5, 'no valid dimension for probmap tile: 5-dim (B,L,Z,X,Y) expected')
 
-        n_b, n_c, n_z, n_x, n_y = probmap_data.shape
+        B, L, *ZXY= probmap_data.shape
 
-        if n_b != self.get_actual_batch_size():
-            raise ValueError(\
-                '''batch size is %s, but must be %s'''\
-                                % (str(n_b), str(self.get_actual_batch_size())))
+        if len(self.labels) == 0:
+            self.labels = np.arange(L)+1
 
-        if len(self.get_labels()) == 0:
-            self._labels = np.arange(n_c)+1
-
-        if n_c != len(self._labels):
-            raise ValueError(\
-                '''tile must have %s channels, one channel for each
-                   label in follwoing label order: %s'''\
-                                % (str(len(self._labels)), str(self._labels)))
-
-        if (n_z, n_x, n_y) != self._size_zxy:
-            raise ValueError(\
-                '''zxy shape of probmap tile is not valid:
-                   is %s, should be %s''' \
-                   % ((str((n_z, n_x, n_y)), str(self._size_zxy))))
+        assert_equal(B, self.get_actual_batch_size(), 'Invalid batch size given')
+        assert_equal(L, len(self.labels), 'Invalid number of labels given')
+        assert_equal(ZXY, self._size_zxy, 'zxy shape of probmap tile is not valid')
 
         # iterate through batch
-
         for probmap_data_sel, tile_pos_index in zip(probmap_data, self._get_curr_tile_indices()):
             # iterate through label channels
-            for data_layer, label in zip(probmap_data_sel, self.get_labels()):
+            for data_layer, label in zip(probmap_data_sel, self.labels):
                 self._put_probmap_data_for_label(data_layer, label, tile_pos_index)
 
 
     def _put_probmap_data_for_label(self, probmap_data, label, tile_pos_index):
-        if len(self._all_tile_positions) < tile_pos_index:
-            raise ValueError(\
-                '''tile_pos_index too large:
-                   is %s, only %s tile positions available in dataset'''\
-                                % (str(tile_pos_index), str(len(self._all_tile_positions))))
+        assert_array_less(tile_pos_index, len(self._all_tile_positions))
 
-        if len(probmap_data.shape) != 3:
-            raise ValueError(\
-                '''no valid dimension for probmap tile:
-                   shape is %s, len of shape should be 3: (z, x, y)'''\
-                                % str(probmap_data.shape))
+        assert_equal(len(probmap_data.shape), 3, 'no valid dimension for probmap tile: 3-dim (Z,X,Y) expected')
+        assert_equal(probmap_data.shape, self._size_zxy, 'zxy shape for probmap tile invalid')
 
-        n_z, n_x, n_y = probmap_data.shape
-        if (n_z, n_x, n_y) != self._size_zxy:
-            raise ValueError(\
-                '''zxy shape of probmap tile is not valid:
-                   is %s, should be %s''' \
-                   % ((str((n_z, n_x, n_y)), str(self._size_zxy))))
-
-        if label not in self._labels:
-            raise ValueError('label %s not found in labels %s' % (str(label), str(self._labels)))
+        if label not in self.labels:
+            raise ValueError('label {} not found in labels {}'.format(label, self.labels))
 
         image_nr, pos_zxy = self._all_tile_positions[tile_pos_index]
 
@@ -228,10 +195,9 @@ class PredictionBatch(Minibatch):
         tile_pos = []
         for img_nr in list(range(self._dataset.n_images)):
             img_shape_czxy = self._dataset.image_dimensions(img_nr)
-
             img_shape_zxy = img_shape_czxy[1:]
 
-            tile_pos =tile_pos + [(img_nr, pos) for pos in ut.compute_pos(img_shape_zxy, self._size_zxy)]
+            tile_pos = tile_pos + [(img_nr, pos) for pos in ut.compute_pos(img_shape_zxy, self._size_zxy)]
 
         return tile_pos
 
