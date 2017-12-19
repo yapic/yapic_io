@@ -378,21 +378,6 @@ class Dataset(object):
 
         return weight_mat
 
-    def set_label_weight(self, weight, label_value):
-        '''
-        sets the same weight for all labels of label_value
-        in self.label_weights
-        :param weight: weight value
-        :param label_value: label
-        '''
-        try:
-            self.label_weights[label_value] = weight
-            return True
-        except KeyError:
-            logger.warning('Invalid label value: {}'.format(label_value))
-            return False
-
-
     def equalize_label_weights(self):
         '''
         equalizes labels according to their amount.

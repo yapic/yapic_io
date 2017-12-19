@@ -467,7 +467,7 @@ class TestDataset(TestCase):
         c = TiffConnector(img_path, label_path)
         d = Dataset(c)
 
-        d.set_label_weight(1.2, 3)
+        d.label_weights[3] = 1.2
         img_nr = 2
         pos_czxy = np.array((0, 0, 0))
         size_czxy = np.array((1, 6, 4))
@@ -579,7 +579,7 @@ class TestDataset(TestCase):
         c = TiffConnector(img_path, label_path)
         d = Dataset(c)
 
-        d.set_label_weight(0.7, 3)
+        d.label_weights[3] = 0.7
 
         self.assertTrue((d.label_weights[3] == np.array([0.7, 0.7, 0.7, 0.7, 0.7, 0.7])).all())
         self.assertTrue((d.label_weights[1] == np.array([1, 1, 1, 1])).all())
