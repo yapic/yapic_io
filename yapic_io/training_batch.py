@@ -17,7 +17,7 @@ class TrainingBatch(Minibatch):
 
     Code example for initializing a TrainingBatch:
 
-    >>> from yapic_io.factories import make_tiff_interface
+    >>> from yapic_io import TiffConnector, Dataset, PredictionBatch
     >>> import tempfile
     >>>
     >>> # define data locations
@@ -28,8 +28,8 @@ class TrainingBatch(Minibatch):
     >>> tile_size = (1, 5, 4) # size of network output layer in zxy
     >>> padding = (0, 2, 2) # padding of network input layer in zxy, in respect to output layer
     >>>
-    >>> # make training_batch mb and prediction interface p with TiffConnector binding
-    >>> m, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath.name, tile_size, padding_zxy=padding)
+    >>> c = TiffConnector(pixel_image_dir, label_image_dir, savepath=savepath.name)
+    >>> m = TrainingBatch(Dataset(c), tile_size, padding_zxy=padding)
     >>>
     >>> counter=0
     >>> for mini in m:

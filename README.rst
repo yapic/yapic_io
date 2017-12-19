@@ -44,7 +44,7 @@ Code example
 
 Classifier training:
 
-    >>> from yapic_io.factories import make_tiff_interface
+    >>> from yapic_io import TiffConnector, Dataset, TrainingBatch
     >>>
     >>> #define data locations
     >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/*.tif'
@@ -76,7 +76,7 @@ Classifier training:
 
 Prediction:
 
-    >>> from yapic_io.factories import make_tiff_interface
+    >>> from yapic_io import TiffConnector, Dataset, PredictionBatch
     >>>
     >>> #mock classification function
     >>> def classify(pixels, value):

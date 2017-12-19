@@ -7,7 +7,7 @@ from yapic_io.prediction_batch import PredictionBatch
 import numpy as np
 import yapic_io.utils as ut
 base_path = os.path.dirname(__file__)
-from yapic_io.factories import make_tiff_interface
+from yapic_io import TiffConnector, Dataset, PredictionBatch
 
 class TestPredictionBatch(TestCase):
     def test_computepos_1(self):
@@ -259,7 +259,8 @@ class TestPredictionBatch(TestCase):
             padding = (0, 0, 0) # padding of network input layer in zxy, in respect to output layer
 
              # make training_batch mb and prediction interface p with TiffConnector binding
-            _, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tile_size, padding_zxy=padding, training_batch_size=2) 
+            c = TiffConnector(pixel_image_dir, label_image_dir, savepath=savepath)
+            p = PredictionBatch(Dataset(c), 2, tile_size, padding_zxy=padding)
 
             self.assertEqual(len(p), 255)
             self.assertEqual(p.labels, [1, 2, 3])

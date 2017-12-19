@@ -65,8 +65,7 @@ class TestTrainingBatch(TestCase):
 
 
     def test_getitem(self):
-
-        from yapic_io.factories import make_tiff_interface
+        from yapic_io import TiffConnector, Dataset, PredictionBatch
         #define data loacations
         pixel_image_dir = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
         label_image_dir = os.path.join(base_path, '..//test_data/tiffconnector_1/labels/*.tif')
@@ -74,24 +73,21 @@ class TestTrainingBatch(TestCase):
 
         tile_size = (1, 5, 4) # size of network output layer in zxy
         padding = (0, 2, 2) # padding of network input layer in zxy, in respect to output layer
-        # make training_batch mb and prediction interface p with TiffConnector binding
-        m, p = make_tiff_interface(pixel_image_dir, label_image_dir\
-            , savepath.name, tile_size, padding_zxy=padding, training_batch_size=3)
-        counter=0
-        for mini in m:
+        c = TiffConnector(pixel_image_dir, label_image_dir, savepath=savepath.name)
+        m = TrainingBatch(Dataset(c), tile_size, padding_zxy=padding)
+
+        for counter, mini in enumerate(m):
             weights = mini.weights() #shape is (6, 3, 1, 5, 4) : batchsize 6 , 3 label-classes, 1 z, 5 x, 4 y
             pixels = mini.pixels() # shape is (6, 3, 1, 9, 8) : batchsize 6, 3 channels, 1 z, 9 x, 4 y (more xy due to padding)
             self.assertEqual(weights.shape, (3, 3, 1, 5, 4))
             self.assertEqual(pixels.shape, (3, 3, 1, 9, 8))
             #here: apply training on mini.pixels and mini.weights
-            counter += 1
             if counter > 10: #m is infinite
                 break
 
 
     def test_getitem_multichannel_labels(self):
-
-        from yapic_io.factories import make_tiff_interface
+        from yapic_io import TiffConnector, Dataset, PredictionBatch
         #define data loacations
         pixel_image_dir = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
         label_image_dir = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/*.tif')
@@ -100,16 +96,15 @@ class TestTrainingBatch(TestCase):
         tile_size = (1, 5, 4) # size of network output layer in zxy
         padding = (0, 2, 2) # padding of network input layer in zxy, in respect to output layer
         # make training_batch mb and prediction interface p with TiffConnector binding
-        m, p = make_tiff_interface(pixel_image_dir, label_image_dir\
-            , savepath.name, tile_size, padding_zxy=padding, training_batch_size=3)
-        counter=0
-        for mini in m:
+        c = TiffConnector(pixel_image_dir, label_image_dir, savepath=savepath.name)
+        m = TrainingBatch(Dataset(c), tile_size, padding_zxy=padding)
+
+        for counter, mini in enumerate(m):
             weights = mini.weights() #shape is (6, 6, 1, 5, 4) : batchsize 6 , 6 label-classes, 1 z, 5 x, 4 y
             pixels = mini.pixels() # shape is (6, 3, 1, 9, 8) : batchsize 6, 6 channels, 1 z, 9 x, 4 y (more xy due to padding)
             self.assertEqual(weights.shape, (6, 6, 1, 5, 4))
             self.assertEqual(pixels.shape, (6, 3, 1, 9, 8))
             #here: apply training on mini.pixels and mini.weights
-            counter += 1
             if counter > 10: #m is infinite
                 break
 
