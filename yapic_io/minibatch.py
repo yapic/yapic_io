@@ -69,12 +69,13 @@ class Minibatch(object):
         self.global_norm_minmax = None
 
         self.float_data_type = np.float32  # type of pixel and weight data
-        self._size_zxy = None
-        self._padding_zxy = None
-        if size_zxy is not None:
-            self.set_tile_size_zxy(size_zxy)
-        if padding_zxy is not None:
-            self.set_padding_zxy(padding_zxy)
+
+        np.testing.assert_equal(len(size_zxy), 3, 'len of size_zxy be 3: (z, x, y)')
+        self.tile_size_zxy = size_zxy
+
+        np.testing.assert_equal(len(padding_zxy), 3, 'len of padding_shoule be 3: (z, x, y)')
+        self.padding_zxy = padding_zxy
+
         # imports all available channels by default
         self.channel_list = self._dataset.channel_list()
         # imports all available labels by default
@@ -107,89 +108,6 @@ class Minibatch(object):
             err_msg = '''Wrong normalization mode argument: {}. '''.format(mode_str) + \
                       '''choose between 'local', 'local_z_score', 'global' and 'off' '''
             raise ValueError(err_msg)
-
-    def get_tile_size_zxy(self):
-        '''
-        Returns the size in (z, x, y) of the tile. Should match the size in (z, x, y)
-        of the network's output layer.
-        '''
-        return self._size_zxy
-
-    def set_tile_size_zxy(self, size_zxy):
-        '''
-        Sets the size in (z, x, y) of the tile. Should match the size in (z, x, y)
-        of the network's output layer.
-
-        Must not be larger than the smallest image of the dataset!!
-        '''
-        if len(size_zxy) != 3:
-            raise ValueError(
-                '''no valid size for probmap tile:
-                   shape is %s, len of shape should be 3: (z, x, y)'''
-                % str(size_zxy))
-
-        self._size_zxy = size_zxy
-
-        # a list of all possible tile positions
-        #[(image_nr, zpos, xpos, ypos), (image_nr, zpos, xpos, ypos), ...]
-        #self._all_tile_positions = self._compute_pos_zxy()
-
-    def get_padding_zxy(self):
-        '''
-        Returns the padding size in (z, x, y), i.e. the padding of the network's
-        input layer compared to its output layer.
-
-        Padding size has to be defined by the user according to the used network
-        structure.
-
-        '''
-        return self._padding_zxy
-
-    def set_padding_zxy(self, padding_zxy):
-        '''
-        Sets the padding size in (z, x, y), i.e. the padding of the network's
-        input layer compared to its output layer.
-
-        Padding size has to be defined according to the used network
-        structure.
-
-        Example: If the output layer's size is (1, 6, 4) and the input layer's
-                 size is (1, 8, 6), then the padding in xyz is (0, 1, 1), i.e
-                 the input layer grows 0 pixels in z, and 1 pixel in
-                 in x and y, compared to the output layer. (The growth of
-                 1 pixel at both ends results in a matrix that is 2 pixels larger
-                 than the output layer).
-
-                >>> import numpy as np
-                >>> from pprint import pprint
-                >>>
-                >>> output_layer = np.zeros((1, 6, 4))
-                >>> input_layer = np.zeros((1, 8, 6)) #padded by (0, 1, 1) compared to output_layer
-                >>>
-                >>> output_layer_expected = np.array([[[ 0.,  0.,  0.,  0.],
-                ...     [ 0.,  0.,  0.,  0.],
-                ...     [ 0.,  0.,  0.,  0.],
-                ...     [ 0.,  0.,  0.,  0.],
-                ...     [ 0.,  0.,  0.,  0.],
-                ...     [ 0.,  0.,  0.,  0.]]])
-                >>> input_layer_expected = np.array([[[ 0.,  0.,  0.,  0.,  0.,  0.],
-                ...     [ 0.,  0.,  0.,  0.,  0.,  0.],
-                ...     [ 0.,  0.,  0.,  0.,  0.,  0.],
-                ...     [ 0.,  0.,  0.,  0.,  0.,  0.],
-                ...     [ 0.,  0.,  0.,  0.,  0.,  0.],
-                ...     [ 0.,  0.,  0.,  0.,  0.,  0.],
-                ...     [ 0.,  0.,  0.,  0.,  0.,  0.],
-                ...     [ 0.,  0.,  0.,  0.,  0.,  0.]]])
-                >>> np.testing.assert_array_equal(output_layer, output_layer_expected)
-                >>> np.testing.assert_array_equal(input_layer, input_layer_expected)
-
-        '''
-        if len(padding_zxy) != 3:
-            raise ValueError(
-                '''no valid dimension for padding:
-                   shape is %s, len of shape should be 3: (z, x, y)'''
-                % str(padding_zxy.shape))
-        self._padding_zxy = padding_zxy
 
     def remove_channel(self, channel):
         '''

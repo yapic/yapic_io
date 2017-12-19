@@ -67,6 +67,7 @@ class PredictionBatch(Minibatch):
         :type padding_zxy: Tuple of 3 integers (z, x, y).
         '''
         super().__init__(dataset, batch_size, size_zxy, padding_zxy=padding_zxy)
+        self._all_tile_positions = self._compute_pos_zxy()
 
         self.curr_batch_pos = 0 # current bach position
 
@@ -74,12 +75,15 @@ class PredictionBatch(Minibatch):
     def pixels(self):
         pixfunc = self._dataset.multichannel_pixel_tile
 
+        curr_tile_positions = [self._all_tile_positions[x]
+                               for x in self._get_curr_tile_indices()]
+
         pixels = [pixfunc(im_nr,
                           pos_zxy,
-                          self._size_zxy,
+                          self.tile_size_zxy,
                           self.channel_list,
-                          self._padding_zxy)
-                  for im_nr, pos_zxy in self._get_curr_tile_positions()]
+                          self.padding_zxy)
+                  for im_nr, pos_zxy in curr_tile_positions]
 
         pixels = np.array(pixels)
 
@@ -106,18 +110,6 @@ class PredictionBatch(Minibatch):
         return self
 
 
-    def set_tile_size_zxy(self, size_zxy):
-        '''
-        overloads the set method for the _size_zxy attribute
-        by updating the tile position list
-        '''
-        super().set_tile_size_zxy(size_zxy)
-
-        # a list of all possible tile positions
-        # [(image_nr, zpos, xpos, ypos), (image_nr, zpos, xpos, ypos), ...]
-        self._all_tile_positions = self._compute_pos_zxy()
-
-
     def get_actual_batch_size(self):
         '''
         Returns the batch size (which might be smaller than `batch_size`
@@ -126,10 +118,6 @@ class PredictionBatch(Minibatch):
         total = len(self._all_tile_positions) # nr of single tiles
         processed = self.curr_batch_pos * self._batch_size
         return np.minimum(self._batch_size, total - processed)
-
-
-    def _get_curr_tile_positions(self):
-        return [self._all_tile_positions[x] for x in self._get_curr_tile_indices()]
 
 
     def _get_curr_tile_indices(self):
@@ -160,7 +148,7 @@ class PredictionBatch(Minibatch):
 
         assert_equal(B, self.get_actual_batch_size(), 'Invalid batch size given')
         assert_equal(L, len(self.labels), 'Invalid number of labels given')
-        assert_equal(ZXY, self._size_zxy, 'zxy shape of probmap tile is not valid')
+        assert_equal(ZXY, self.tile_size_zxy, 'zxy shape of probmap tile is not valid')
 
         # iterate through batch
         for probmap_data_sel, tile_pos_index in zip(probmap_data, self._get_curr_tile_indices()):
@@ -173,7 +161,7 @@ class PredictionBatch(Minibatch):
         assert_array_less(tile_pos_index, len(self._all_tile_positions))
 
         assert_equal(len(probmap_data.shape), 3, 'no valid dimension for probmap tile: 3-dim (Z,X,Y) expected')
-        assert_equal(probmap_data.shape, self._size_zxy, 'zxy shape for probmap tile invalid')
+        assert_equal(probmap_data.shape, self.tile_size_zxy, 'zxy shape for probmap tile invalid')
 
         if label not in self.labels:
             raise ValueError('label {} not found in labels {}'.format(label, self.labels))
@@ -198,7 +186,7 @@ class PredictionBatch(Minibatch):
             img_shape_czxy = self._dataset.image_dimensions(img_nr)
             img_shape_zxy = img_shape_czxy[1:]
 
-            tile_pos = tile_pos + [(img_nr, pos) for pos in ut.compute_pos(img_shape_zxy, self._size_zxy)]
+            tile_pos = tile_pos + [(img_nr, pos) for pos in ut.compute_pos(img_shape_zxy, self.tile_size_zxy)]
 
         return tile_pos
 

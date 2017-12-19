@@ -79,7 +79,7 @@ class TrainingBatch(Minibatch):
 
     def __repr__(self):
         info = 'TrainingBatch (batch_size: {}, tile_size (zxy): {}, augment: {}'
-        return info.format(self._batch_size, self._size_zxy, self.augmentation)
+        return info.format(self._batch_size, self.tile_size_zxy, self.augmentation)
 
 
     def __iter__(self):
@@ -154,7 +154,7 @@ class TrainingBatch(Minibatch):
         augment_params = {}
 
         if 'flip' in self.augmentation:
-            _, x, y = self.get_tile_size_zxy()
+            _, x, y = self.tile_size_zxy
             is_square_tile = (x == y)
 
             augment_params = {'fliplr' : np.random.choice([True, False]),
@@ -167,9 +167,9 @@ class TrainingBatch(Minibatch):
         if 'shear' in self.augmentation:
              augment_params['shear_angle'] = random.uniform(*self.shear_range)
 
-        return self._dataset.random_training_tile(self._size_zxy,
+        return self._dataset.random_training_tile(self.tile_size_zxy,
                                                   self.channel_list,
-                                                  pixel_padding=self._padding_zxy,
+                                                  pixel_padding=self.padding_zxy,
                                                   equalized=self.equalized,
                                                   augment_params=augment_params,
                                                   labels=self.labels,

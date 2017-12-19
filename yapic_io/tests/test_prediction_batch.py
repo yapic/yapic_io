@@ -140,22 +140,6 @@ class TestPredictionBatch(TestCase):
         self.assertEqual(p[0]._get_curr_tile_indices(), [0, 1])
         self.assertEqual(p[1]._get_curr_tile_indices(), [2])
 
-
-    def test_get_curr_tile_positions(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
-        label_path = os.path.join(base_path, '/path/to/nowhere')
-        c = TiffConnector(img_path, label_path)
-
-        d = Dataset(c)
-
-        size = (1, 6, 4)
-        batch_size = 2
-        p = PredictionBatch(d, batch_size, size)
-
-
-        self.assertEqual(p[0]._get_curr_tile_positions(), [(0, (0, 0, 0)), (0, (1, 0, 0))])
-        self.assertEqual(p[1]._get_curr_tile_positions(), [(0, (2, 0, 0))])
-        
     def test_put_probmap_data(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
         label_path = os.path.join(base_path, '/path/to/nowhere')
