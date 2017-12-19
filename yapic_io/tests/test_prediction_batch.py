@@ -247,7 +247,7 @@ class TestPredictionBatch(TestCase):
             p = PredictionBatch(Dataset(c), 2, tile_size, padding_zxy=padding)
 
             self.assertEqual(len(p), 255)
-            self.assertEqual(p.labels, [1, 2, 3])
+            self.assertEqual(p.labels, {1, 2, 3})
 
             #classify the whole bound dataset
             for counter, item in enumerate(p):

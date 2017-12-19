@@ -45,7 +45,7 @@ class PredictionBatch(Minibatch):
         >>> len(p)
         255
         >>> p.labels
-        [1, 2, 3]
+        {1, 2, 3}
         >>> # classify the whole bound dataset
         >>> counter = 0 # needed for mock data
         >>> for item in p:
@@ -81,7 +81,7 @@ class PredictionBatch(Minibatch):
         pixels = [pixfunc(im_nr,
                           pos_zxy,
                           self.tile_size_zxy,
-                          self.channel_list,
+                          self.channels,
                           self.padding_zxy)
                   for im_nr, pos_zxy in curr_tile_positions]
 

@@ -168,7 +168,7 @@ class TrainingBatch(Minibatch):
              augment_params['shear_angle'] = random.uniform(*self.shear_range)
 
         return self._dataset.random_training_tile(self.tile_size_zxy,
-                                                  self.channel_list,
+                                                  self.channels,
                                                   pixel_padding=self.padding_zxy,
                                                   equalized=self.equalized,
                                                   augment_params=augment_params,

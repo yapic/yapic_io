@@ -42,8 +42,6 @@ class Minibatch(object):
     (10, 3, 1, 5, 4)
     >>>
     '''
-    channel_list = []
-
     def __init__(self, dataset, batch_size, size_zxy, padding_zxy=(0, 0, 0)):
         '''
         :param dataset: dataset object, to connect to pixels and labels weights
@@ -77,9 +75,9 @@ class Minibatch(object):
         self.padding_zxy = padding_zxy
 
         # imports all available channels by default
-        self.channel_list = self._dataset.channel_list()
+        self.channels = set(self._dataset.channel_list())
         # imports all available labels by default
-        self.labels = self._dataset.label_values()
+        self.labels = set(self._dataset.label_values())
 
     def set_normalize_mode(self, mode_str, minmax=None):
         '''
@@ -109,133 +107,6 @@ class Minibatch(object):
                       '''choose between 'local', 'local_z_score', 'global' and 'off' '''
             raise ValueError(err_msg)
 
-    def remove_channel(self, channel):
-        '''
-        Removes a pixel channel from the selection.
-        :param channel: channel
-        :returns: bool, True if channel was removed from selection
-
-        >>> from yapic_io import TiffConnector, Dataset, PredictionBatch
-        >>> import tempfile
-        >>>
-        >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/'
-        >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
-        >>> savepath = tempfile.TemporaryDirectory()
-        >>>
-        >>> tile_size = (1, 5, 4)
-        >>> #upon object initialization all available image channels are set
-        >>> c = TiffConnector(pixel_image_dir, label_image_dir, savepath=savepath.name)
-        >>> p = PredictionBatch(Dataset(c), 10, tile_size, padding_zxy=(0,0,0))
-        >>>
-        >>> p.channel_list #we have 3 channels
-        [0, 1, 2]
-        >>> p[0].pixels().shape #accordingly, we have 3 channels in the 5D pixels tile (n, c, z, x, y)
-        (10, 3, 1, 5, 4)
-        >>>
-        >>> p.remove_channel(1) #remove channel 1
-        >>> p.channel_list #only 2 channels selected
-        [0, 2]
-        >>> p[0].pixels().shape #only 2 channels left in the pixel tile
-        (10, 2, 1, 5, 4)
-
-        '''
-        if channel not in self.channel_list:
-            raise ValueError('not possible to remove channel %s from channel selection %s'
-                             % (str(channel), str(self.channel_list)))
-        self.channel_list.remove(channel)
-
-    def add_channel(self, channel):
-        '''
-        Adds a pixel-channel to the selection.
-        '''
-        if channel in self.channel_list:
-            logger.info('channel already selected %s', channel)
-            return False
-
-        if channel not in self._dataset.channel_list():
-            msg = 'Not possible to add channel {} from dataset channels {}'
-            raise ValueError(msg.format(channel, self._dataset.channel_list()))
-
-        insort_left(self.channel_list, channel)
-        return True
-
-    def remove_label(self, label):
-        '''
-        Removes a label class from the selection.
-
-        :param label: label
-        :returns: bool, True if label was removed from selection
-
-        >>> from yapic_io import TiffConnector, Dataset, PredictionBatch
-        >>> import tempfile
-        >>>
-        >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/'
-        >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
-        >>> savepath = tempfile.TemporaryDirectory()
-        >>>
-        >>> tile_size = (1, 5, 4)
-        >>> #upon object initialization all available image channels are set
-        >>> c = TiffConnector(pixel_image_dir, label_image_dir, savepath=savepath.name)
-        >>> p = PredictionBatch(Dataset(c), 10, tile_size, padding_zxy=(0,0,0))
-        >>>
-        >>> p.labels #we have 3 label classes
-        [1, 2, 3]
-        >>> p.remove_label(2) #remove label class 109
-        >>> p.labels #only 2 classes remain selected
-        [1, 3]
-
-        '''
-        if label not in self.labels:
-            msg = 'Not possible to remove label {} from label selection {}'
-            raise ValueError(msg.format(label, self.labels))
-
-        self.labels.remove(label)
-
-    def add_label(self, label):
-        '''
-        Adds a label class to the selection.
-
-        >>> from yapic_io import TiffConnector, Dataset, PredictionBatch
-        >>> import tempfile
-        >>>
-        >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/'
-        >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/'
-        >>> savepath = tempfile.TemporaryDirectory()
-        >>>
-        >>> tile_size = (1, 5, 4)
-        >>> #upon object initialization all available image channels are set
-        >>> c = TiffConnector(pixel_image_dir, label_image_dir, savepath=savepath.name)
-        >>> p = PredictionBatch(Dataset(c), 10, tile_size, padding_zxy=(0,0,0))
-        >>>
-        >>> p.labels #we have 3 label classes
-        [1, 2, 3]
-        >>> p.remove_label(2) #remove label class 2
-        >>> p.labels #only 2 classes remain selected
-        [1, 3]
-        >>> p.remove_label(1) #remove label class 1
-        >>> p.labels #only 1 class remains selected
-        [3]
-        >>> p.add_label(1)
-        True
-        >>> p.labels
-        [1, 3]
-        >>> p.add_label(2)
-        True
-        >>> p.labels
-        [1, 2, 3]
-
-
-        '''
-        if label in self.labels:
-            logger.info('Label class already selected {}', label)
-            return False
-
-        if label not in self._dataset.label_values():
-            msg = 'Not possible to add label class {} from dataset label classes {}'
-            raise ValueError(msg.format(label, self._dataset.label_values()))
-
-        insort_left(self.labels, label)
-        return True
 
     def _normalize(self, pixels):
         '''
