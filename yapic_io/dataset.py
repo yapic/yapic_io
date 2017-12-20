@@ -192,12 +192,8 @@ class Dataset(object):
                 are_weights_in_tile = weights_lblregion.any()
 
             if are_weights_in_tile:
-                if label_region:
-                    msg = 'Needed {} trials to fetch random tile containing labelvalue {}'.format(counter, label_region)
-                else:
-                    msg = 'Needed {} trials to fetch random tile containing any labelvalue'.format(counter)
+                msg = 'Needed {} trials to fetch random tile containing labelvalue {}'.format(counter, label_region or '<any>')
                 logger.info(msg)
-
                 return tile_data
 
         msg = 'Could not fetch random tile containing labelvalue {} within {} trials'
@@ -221,9 +217,10 @@ class Dataset(object):
         if label_region is None:
             # pick training tile where it is assured that weights for a specified label
             # are within the tile. the specified label is label_region
-            coor = self.random_label_coordinate(equalized=equalized)
-        else:
-            coor = self.random_label_coordinate_for_label(label_region)
+            label_region = self.random_label_value(equalized=equalized)
+
+        total_count = self.label_counts[label_region].sum()
+        coor = self.label_coordinate(label_region, randint(total_count))
 
         img_nr = coor[0]
         coor_zxy = coor[2:]
@@ -267,64 +264,29 @@ class Dataset(object):
                                 size_zxy,
                                 channels,
                                 pixel_padding=(0, 0, 0),
+                                reflect=True,
                                 augment_params=None):
         augment_params = augment_params or {}
         np.testing.assert_equal(len(pos_zxy), 3, 'Expected 3 dimensions (Z,X,Y)')
         np.testing.assert_equal(len(size_zxy), 3, 'Expected 3 dimensions (Z,X,Y)')
 
-        image_shape_zxy = self.image_dimensions(image_nr)[1:]
-        assert ut.is_valid_image_subset(image_shape_zxy, pos_zxy, size_zxy), 'image subset not correct'
+        image_shape_zxy = self.image_dimensions(image_nr)
+        assert ut.is_valid_image_subset(image_shape_zxy[1:], pos_zxy, size_zxy)
 
         pixel_padding = np.array(pixel_padding)
-        size_padded = tuple(size_zxy + 2 * pixel_padding)
-        pos_padded = tuple(pos_zxy - pixel_padding)
+        size_padded = size_zxy + 2 * pixel_padding
+        pos_padded = pos_zxy - pixel_padding
 
-        # 4d pixel tile with selected channels in 1st dimension
-        pixel_tile = [ self.singlechannel_pixel_tile(image_nr, pos_padded, size_padded, c, augment_params=augment_params)
-                       for c in channels ]
+        tile = [ augment_tile(image_shape_zxy,
+                              np.hstack([[c], pos_padded]),
+                              np.hstack([[1], size_padded]),
+                              self.pixel_connector.get_tile,
+                              reflect=reflect,
+                              augment_params=augment_params,
+                              image_nr=image_nr)
+                for c in channels]
 
-        return np.array(pixel_tile)
-
-    def singlechannel_pixel_tile(self,
-                           image_nr,
-                           pos_zxy,
-                           size_zxy,
-                           channel,
-                           reflect=True,
-                           augment_params=None):
-        '''
-        returns a recangular subsection of an image with specified size.
-        if requested tile is out of bounds, values will be added by reflection
-
-        :param image_nr: image index
-        :type image_nr: int
-        :param pos_zxy: tuple defining the upper left position of the tile in 3 dimensions zxy
-        :type pos_zxy: tuple
-        :param size_zxy: tuple defining size of tile in 3 dimensions zxy
-        :type size_zxy: tuple
-        :returns: 3d tile as numpy array with dimensions zxy
-        '''
-        augment_params = augment_params or {}
-        assert -1 < image_nr < self.n_images, 'Invalid image nr: {}'.format(image_nr)
-
-        np.testing.assert_equal(len(pos_zxy), 3, 'Expected 3 dimensions (Z,X,Y)')
-        np.testing.assert_equal(len(size_zxy), 3, 'Expected 3 dimensions (Z,X,Y)')
-
-        # size in channel dimension is set to 1 to only select a single channel
-        size_czxy = np.hstack([[1], size_zxy])
-        pos_czxy = np.hstack([[channel], pos_zxy])
-        shape_czxy = self.image_dimensions(image_nr)
-
-        tile = augment_tile(shape_czxy,
-                            pos_czxy,
-                            size_czxy,
-                            self.pixel_connector.get_tile,
-                            augment_params=augment_params,
-                            reflect=reflect,
-                            image_nr=image_nr)
-
-        return np.squeeze(tile, axis=(0, ))
-
+        return np.vstack(tile)
 
     def label_tile(self,
                    image_nr,
@@ -368,12 +330,11 @@ class Dataset(object):
         '''
         returns a 3d weight matrix tile for a certain label with dimensions zxy.
         '''
-        if label_value not in self.label_values():
-            return False
+        assert label_value in self.label_values()
 
         boolmat = self.pixel_connector.label_tile(image_nr, pos, size, label_value)
 
-        weight_mat = np.zeros(boolmat.shape)
+        weight_mat = np.zeros_like(boolmat, float)
         weight_mat[boolmat] = self.label_weights[label_value]
 
         return weight_mat
@@ -383,21 +344,12 @@ class Dataset(object):
         equalizes labels according to their amount.
         less frequent labels are weighted higher than more frequent labels
         '''
-        total_label_count = { l: img_counts.sum() for l, img_counts in self.label_counts.items() }
-
-        nn = sum(total_label_count.values())
-        weight_total_per_labelvalue = float(nn) / float(len(total_label_count))
-
-        # equalize
-        eq_weight = {
-            l: weight_total_per_labelvalue / float(c) if c != 0 else 0
-            for l, c in total_label_count.items()
+        weights = {
+            l: np.nan_to_num(1.0 / img_counts.sum())
+            for l, img_counts in self.label_counts.items()
         }
-        eq_weight_total = sum(eq_weight.values())
 
-        # normalize
-        self.label_weights = { l: c / eq_weight_total for l, c in eq_weight.items() }
-        return True
+        self.label_weights = { l: c / sum(weights.values()) for l, c in weights.items() }
 
 
     def load_label_counts(self):
@@ -494,26 +446,6 @@ class Dataset(object):
         coor_iczxy = np.insert(coor_czxy, 0, image_nr)
         return coor_iczxy
 
-    def random_label_coordinate_for_label(self, label_value):
-        '''
-        returns a rondomly chosen label coordinate and the label value for a givel label value:
-
-        (label_value, (img_nr, channel, z, x, y))
-
-        channel is always zero!!
-
-        :param equalized: If true, less frequent label_values are picked with same probability as frequent label_values
-        :type equalized: bool
-        '''
-        err_msg = 'Label value {} not valid, possible label values are {}'.format(label_value, self.label_values())
-        assert label_value in self.label_values(), err_msg
-
-        total_count = self.label_counts[label_value].sum()
-        assert total_count > 0, 'No labels of value {} existing'.format(label_value)
-
-        choice = randint(total_count)
-        return self.label_coordinate(label_value, choice)
-
 
     def random_label_value(self, equalized=False):
         '''
@@ -533,36 +465,7 @@ class Dataset(object):
         return np.random.choice(self.label_values(), p=total_counts_norm)
 
 
-    def random_label_coordinate(self, equalized=False):
-        '''
-        returns a randomly chosen label coordinate and the label value:
-
-        (label_value, (img_nr, channel, z, x, y))
-
-        channel is always zero!!
-
-        :param equalized: If true, less frequent label_values are picked with same probability as frequent label_values
-        :type equalized: bool
-        '''
-        chosen_label = self.random_label_value(equalized=equalized)
-        return self.random_label_coordinate_for_label(chosen_label)
-
-
-def get_padding_size(image_shape, pos, tile_shape):
-    '''
-    [(x_lower, x_upper), (y_lower, _y_upper)]
-    '''
-    pos = np.array(pos)
-    tile_shape = np.array(tile_shape)
-    image_shape = np.array(image_shape)
-
-    lower = np.maximum(0, -pos)
-    upper = np.maximum(0, pos - (image_shape - tile_shape))
-
-    return np.vstack([lower, upper]).T
-
-
-def inner_tile_size(image_shape, pos, tile_shape, padding_sizes):
+def inner_tile_size(image_shape, pos, tile_shape):
     '''
     if a requested tile is out of bounds, this function calculates
     a transient tile position size and pos. The transient tile has to be padded in a
@@ -580,29 +483,21 @@ def inner_tile_size(image_shape, pos, tile_shape, padding_sizes):
     pos_out is the position inside the full size original image for the transient tile.
     (more explanation needed)
     '''
-    image_shape = np.array(image_shape)
-    pos = np.array(pos)
-    tile_shape = np.array(tile_shape)
+    padding_lower = np.maximum(0, -pos)
+    padding_upper = np.maximum(0, pos - (image_shape - tile_shape))
+    padding = np.vstack([padding_lower, padding_upper]).T
 
-    padding_lower = padding_sizes[:,0]
-    padding_upper = padding_sizes[:,1]
+    pos_tile = np.maximum(0, pos + padding_upper - image_shape)
+    pos_out = pos + padding_lower - pos_tile
 
     # WTF is going on here??
-
-    shift_2 = np.minimum(0, image_shape - (pos + padding_upper))
-
-    shift = padding_lower + shift_2
-    pos_out = pos + shift
-    pos_tile = -shift_2
-
-    dist_lu_s = image_shape - pos - shift
     size_inmat = tile_shape + np.minimum(0, pos)
 
     size_new_1 = np.maximum(padding_lower, size_inmat)
-    size_new_2 = np.minimum(tile_shape, dist_lu_s)
+    size_new_2 = np.minimum(tile_shape, image_shape - pos_out)
     size_out = np.minimum(size_new_1, size_new_2)
 
-    return tuple(pos_out), tuple(size_out), tuple(pos_tile)
+    return tuple(pos_out), tuple(size_out), tuple(pos_tile), tuple(padding)
 
 
 def augment_tile(img_shape,
@@ -619,84 +514,44 @@ def augment_tile(img_shape,
     rotation/shear.
     '''
     augment_params = augment_params or {}
-
     rotation_angle = augment_params.get('rotation_angle', 0)
     shear_angle = augment_params.get('shear_angle', 0)
-    flipud = augment_params.get('flipud', False)
-    fliplr = augment_params.get('fliplr', False)
-    rot90 = augment_params.get('rot90', 0)
 
-    if (tile_shape[-2]) == 1 and (tile_shape[-1] == 1):
+    pos = np.array(pos)
+    orig_tile_shape = np.array(tile_shape)
+    tile_shape = np.array(tile_shape)
+
+    augment_fast = (tile_shape[-2:] > 1).any()
+    augment_slow = augment_fast and (rotation_angle > 0 or shear_angle > 0)
+
+    if augment_slow:
+        pos -= tile_shape
+        tile_shape *= 3
+
+    res = inner_tile_size(img_shape, pos, tile_shape)
+    pos_transient, size_transient, pos_inside_transient, pad_size = res
+
+    tile = get_tile_func(pos=pos_transient, size=size_transient, **kwargs)
+
+    assert np.all(pad_size ==0) or reflect, 'requested tile out of bounds'
+    tile = np.pad(tile, pad_size, mode='symmetric')
+    mesh = ut.get_tile_meshgrid(tile.shape, pos_inside_transient, tile_shape)
+    tile = tile[mesh]
+
+    if augment_fast:
         # if the requested tile is only of size 1 in x and y,
         # augmentation can be omitted, since rotation and flipping always
         # occurs around the center axis.
-        pad_size = get_padding_size(img_shape, pos, tile_shape)
-        res = inner_tile_size(img_shape, pos, tile_shape, pad_size)
-        pos_transient, size_transient, pos_inside_transient = res
+        rot90 = augment_params.get('rot90', 0)
+        flipud = augment_params.get('flipud', False)
+        fliplr = augment_params.get('fliplr', False)
 
-        tile = get_tile_func(pos=pos_transient, size=size_transient, **kwargs)
-
-        return tile_with_reflection(tile, pos_inside_transient, tile_shape, pad_size,
-                                    reflect=reflect, **kwargs)
-
-    if (rotation_angle == 0) and (shear_angle == 0):
-        pad_size = get_padding_size(img_shape, pos, tile_shape)
-        res = inner_tile_size(img_shape, pos, tile_shape, pad_size)
-        pos_transient, size_transient, pos_inside_transient = res
-
-        tile = get_tile_func(pos=pos_transient, size=size_transient, **kwargs)
-
-        res = tile_with_reflection(tile, pos_inside_transient, tile_shape, pad_size,
-                                   reflect=reflect, **kwargs)
-
-        logger.debug('tile_with_reflection dims = {}, {}'.format(res.shape, img_shape))
-        return trafo.flip_image_2d_stack(res, fliplr=fliplr,
+        tile = trafo.flip_image_2d_stack(tile, fliplr=fliplr,
                                          flipud=flipud, rot90=rot90)
 
-    size_new = 3 * np.array(tile_shape)  # triple tile size if morphing takes place
-    pos_new = np.array(pos) - tile_shape
+    if augment_slow:
+        tile = trafo.warp_image_2d_stack(tile, rotation_angle, shear_angle)
+        mesh = ut.get_tile_meshgrid(tile.shape, orig_tile_shape, orig_tile_shape)
+        tile = tile[mesh]
 
-    pad_size = get_padding_size(img_shape, pos_new, size_new)
-    res = inner_tile_size(img_shape, pos_new, size_new, pad_size)
-    pos_transient, size_transient, pos_inside_transient = res
-    tile = get_tile_func(pos=pos_transient, size=size_transient, **kwargs)
-
-    tile_large = tile_with_reflection(tile, pos_inside_transient, size_new, pad_size,
-                               reflect=reflect, **kwargs)
-
-    # simple and fast augmentation
-    tile_large_flipped = trafo.flip_image_2d_stack(tile_large, fliplr=fliplr,
-                                         flipud=flipud, rot90=rot90)
-    # slow augmentation
-    tile_large_morphed = trafo.warp_image_2d_stack(
-        tile_large_flipped, rotation_angle, shear_angle)
-
-    mesh = ut.get_tile_meshgrid(tile_large_morphed.shape, tile_shape, tile_shape)
-
-    return tile_large_morphed[mesh]
-
-
-def tile_with_reflection(tile, pos_inside_transient, size, pad_size,
-                         reflect=True, **kwargs):
-    if np.any(pad_size):
-        if not reflect:
-            # if image has to be padded to get the tile
-            logger.error('requested tile out of bounds')
-            return False
-        else:
-            # if image has to be padded to get the tile and reflection mode is on
-            logger.debug('requested tile out of bounds')
-            logger.debug('image will be extended with reflection')
-
-    logger.debug('transient_tile1 dims={}'.format(tile.shape))
-
-    # pad transient tile with reflection
-    transient_tile_pad = np.pad(tile, pad_size, mode='symmetric')
-
-    mesh = ut.get_tile_meshgrid(transient_tile_pad.shape,
-                                pos_inside_transient, size)
-
-    logger.debug('transient_tile2 dims={}'.format(transient_tile_pad.shape))
-    logger.debug('transient_tile3 dims={}'.format(transient_tile_pad[mesh].shape))
-
-    return transient_tile_pad[mesh]
+    return tile
