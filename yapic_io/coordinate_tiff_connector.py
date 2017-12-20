@@ -1,5 +1,6 @@
 from yapic_io.tiff_connector import TiffConnector
 from yapic_io.coordinate_connector import CoordinateConnector
+import yapic_io.utils as ut
 import numpy as np
 
 
@@ -10,18 +11,6 @@ class CoordinateTiffConnector(TiffConnector, CoordinateConnector):
     effectively, this will change the training tile fetching from
     polling to fetching by_label
     '''
-
-    def __init__(self,
-                 img_filepath, label_filepath, savepath=None,
-                 multichannel_pixel_image=None,
-                 multichannel_label_image=None,
-                 zstack=True):
-        super().__init__(img_filepath, label_filepath,
-                         savepath=savepath,
-                         multichannel_pixel_image=multichannel_pixel_image,
-                         multichannel_label_image=multichannel_label_image,
-                         zstack=zstack)
-
     def label_index_to_coordinate(self, image_nr, label_value, label_index):
         '''
         returns a czxy coordinate of a specific label (specified by the
@@ -35,18 +24,15 @@ class CoordinateTiffConnector(TiffConnector, CoordinateConnector):
         '''
         mat = self.load_label_matrix(image_nr)
 
-        # check for correct label_value
-        if not self.is_labelvalue_valid(label_value):
-            raise ValueError('Label value %s does not exist. Label value mapping: %s' %
-                             (str(label_value), str(self.labelvalue_mapping)))
+        valid_labels = ut.flatten(d.values() for d in self.labelvalue_mapping)
+        msg = 'Label {} non-existing in label value mapping {}'
+        assert label_value in valid_labels, msg.format(label_value, self.labelvalue_mapping)
 
         coors = np.array(np.where(mat.ravel() == label_value))
 
-        n_coors = coors.size
-        if (label_index < 0) or (label_index >= n_coors):
-            raise ValueError('''Label index %s for label value %s in image %s
-                not correct. Only %s labels of that value for this image''' %
-                             (str(label_index), str(label_value), str(image_nr), str(n_coors)))
+        err = 'label index out of range for label_value {}, img {}'.format(label_value, image_nr)
+        np.testing.assert_array_less(-1, label_index, coors.size, err)
+        np.testing.assert_array_less(label_index, coors.size, err)
 
         coor = np.unravel_index(coors[0, label_index], mat.shape)
         coor = np.array(coor)

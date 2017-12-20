@@ -86,6 +86,11 @@ def compute_pos(img_shape, tile_shape):
     return pos
 
 
+def flatten(listOfLists):
+    "Flatten one level of nesting"
+    return itertools.chain.from_iterable(listOfLists)
+
+
 def add_to_filename(path, insert_str):
     '''
     adds suffix ore prefix to filename

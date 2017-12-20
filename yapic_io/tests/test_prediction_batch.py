@@ -210,9 +210,8 @@ class TestPredictionBatch(TestCase):
 
         print('labels')
         print(c.labelvalue_mapping)
-        c.load_label_filenames('*')    
         original_labels = c.original_label_values_for_all_images()
-        res = c.map_label_values(original_labels)
+        res = c.calc_label_values_mapping(original_labels)
         print('labels')
         print(c.labelvalue_mapping)
         d = Dataset(c)

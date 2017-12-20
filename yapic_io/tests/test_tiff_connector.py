@@ -195,7 +195,7 @@ class TestTiffconnector(TestCase):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel_not_valid/')
     
-        self.assertRaises(ValueError, lambda: TiffConnector(img_path, label_path))    
+        self.assertRaises(AssertionError, lambda: TiffConnector(img_path, label_path))
 
 
     def test_label_count_for_image(self):
@@ -208,16 +208,6 @@ class TestTiffconnector(TestCase):
         print(c.labelvalue_mapping)
 
         self.assertEqual(count, {2 : 11, 3: 3})
-
-
-    def test_get_probmap_path(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = TiffConnector(img_path, label_path, savepath = 'path/to/probmaps')
-        
-        p = c.get_probmap_path(2, 3)
-
-        self.assertEqual(p, 'path/to/probmaps/6width4height3slices_rgb_class_3.tif')
 
 
     def test_init_probmap_image(self):
@@ -373,42 +363,6 @@ class TestTiffconnector(TestCase):
         except: pass
 
 
-    def test_original_label_values_for_image(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
-
-        c = TiffConnector(img_path, label_path)
-
-        L = c.load_label_matrix(2, original_labelvalues=True)
-        res = c.unique_labels_per_channel(L)
-        self.assertEqual(res, [{109, 150}])
-
-        L = c.load_label_matrix(1, original_labelvalues=True)
-        self.assertIsNone(L)
-
-        L = c.load_label_matrix(0, original_labelvalues=True)
-        res = c.unique_labels_per_channel(L)
-        self.assertEqual(res, [{91, 109, 150}])
-
-
-    def test_original_label_values_for_image_2(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/*.tif')
-
-        c = TiffConnector(img_path, label_path)
-
-        L = c.load_label_matrix(0, original_labelvalues=True)
-        res = c.unique_labels_per_channel(L)
-        self.assertEqual(res, [{91, 109, 150}, {91, 109, 150}])
-
-        L = c.load_label_matrix(1, original_labelvalues=True)
-        self.assertIsNone(L)
-
-        L = c.load_label_matrix(2, original_labelvalues=True)
-        res = c.unique_labels_per_channel(L)
-        self.assertEqual(res, [{109, 150}, {109, 150}])
-
-
     def test_original_label_values(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/*.tif')
@@ -425,7 +379,7 @@ class TestTiffconnector(TestCase):
         c = TiffConnector(img_path, label_path)
 
         original_labels = c.original_label_values_for_all_images()
-        res = c.map_label_values(original_labels)
+        res = c.calc_label_values_mapping(original_labels)
         self.assertEqual(res, [{91:1, 109:2, 150:3}, {91:4, 109:5, 150:6}])
 
 
@@ -435,7 +389,7 @@ class TestTiffconnector(TestCase):
         c = TiffConnector(img_path, label_path)
 
         original_labels = c.original_label_values_for_all_images()
-        res = c.map_label_values(original_labels)
+        res = c.calc_label_values_mapping(original_labels)
         self.assertEqual(res, [{91:1, 109:2, 150:3}])
 
 
@@ -445,7 +399,7 @@ class TestTiffconnector(TestCase):
         c = TiffConnector(img_path, label_path)
 
         original_labels = c.original_label_values_for_all_images()
-        res = c.map_label_values(original_labels)
+        res = c.calc_label_values_mapping(original_labels)
         self.assertEqual(res, [{91:1, 109:2, 150:3}])
 
 
@@ -457,6 +411,6 @@ class TestTiffconnector(TestCase):
         c = TiffConnector(img_path, label_path)
 
         original_labels = c.original_label_values_for_all_images()
-        res = c.map_label_values(original_labels)
+        res = c.calc_label_values_mapping(original_labels)
         self.assertEqual(c.labelvalue_mapping, [{109: 1, 150: 2}])
 

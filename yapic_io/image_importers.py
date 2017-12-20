@@ -139,8 +139,7 @@ def init_empty_tiff_image(path, x_size, y_size, z_size=1):
     initializes dark 32 bit floating point grayscale tiff image
     '''
 
-    path = autocomplete_filename_extension(path)
-    check_filename_extension(path)
+    path = autocomplete_filename_extension(path, '.tif')
 
     data = np.zeros((z_size, x_size, y_size), dtype=np.float32)
     logger.info('write empty tiff image with %s values to %s', data.dtype, path)
@@ -159,8 +158,7 @@ def add_vals_to_tiff_image(path, pos_zxy, pixels):
 
     pixels = np.array(pixels, dtype=np.float32)
 
-    path = autocomplete_filename_extension(path)
-    check_filename_extension(path)
+    path = autocomplete_filename_extension(path, '.tif')
 
     img = import_tiff_image(path, zstack=True)
     assert len(img.shape) == 4
@@ -175,15 +173,8 @@ def add_vals_to_tiff_image(path, pos_zxy, pixels):
     imsave(path, img[0,...], metadata={'axes': 'ZXY'})
 
 
-def check_filename_extension(path, format_str='.tif'):
-    ext = os.path.splitext(path)[1]
-
-    if ext != format_str:
-        raise ValueError('extension must be %s, but is %s', (format_str, ext))
-
-
-def autocomplete_filename_extension(path, format_str='.tif'):
-    ext = os.path.splitext(path)[1]
+def autocomplete_filename_extension(path, format_str):
+    _, ext = os.path.splitext(path)
     if ext == '':
         return path + format_str
     return path
