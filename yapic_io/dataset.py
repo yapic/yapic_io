@@ -271,7 +271,7 @@ class Dataset(object):
         np.testing.assert_equal(len(size_zxy), 3, 'Expected 3 dimensions (Z,X,Y)')
 
         image_shape_zxy = self.image_dimensions(image_nr)
-        assert ut.is_valid_image_subset(image_shape_zxy[1:], pos_zxy, size_zxy)
+        ut.assert_valid_image_subset(image_shape_zxy[1:], pos_zxy, size_zxy)
 
         pixel_padding = np.array(pixel_padding)
         size_padded = size_zxy + 2 * pixel_padding

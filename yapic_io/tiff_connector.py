@@ -257,11 +257,12 @@ class TiffConnector(Connector):
 
 
     def get_probmap_path(self, image_nr, label_value):
-        if self.savepath is None:
-            raise ValueError('savepath not set')
+        assert self.savepath is not None
         image_filename = self.filenames[image_nr].img
-        probmap_filename = add_to_filename(image_filename, \
-                     'class_' + str(label_value))
+
+        path, ext = os.path.splitext(image_filename)
+        probmap_filename = '{}_class_{}{}'.format(path, label_value, ext)
+
         return os.path.join(self.savepath, probmap_filename)
 
 
@@ -270,7 +271,7 @@ class TiffConnector(Connector):
         im = self.load_image(image_nr)
         mesh = get_tile_meshgrid(im.shape, pos, size)
 
-        return(im[mesh])
+        return im[mesh]
 
 
     def image_dimensions(self, image_nr):
@@ -282,8 +283,8 @@ class TiffConnector(Connector):
         :returns (nr_channels, nr_zslices, nr_x, nr_y)
         '''
         path = os.path.join(self.img_path, self.filenames[image_nr].img)
-        return ip.get_tiff_image_dimensions(path, \
-            zstack=self.zstack, multichannel=self.multichannel_pixel_image)
+        return ip.get_tiff_image_dimensions(path, zstack=self.zstack,
+                                            multichannel=self.multichannel_pixel_image)
 
 
     def label_matrix_dimensions(self, image_nr):

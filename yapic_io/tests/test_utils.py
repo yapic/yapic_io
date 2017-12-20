@@ -22,32 +22,6 @@ class TestUtils(TestCase):
 
         #self.assertTrue(False)
 
-    
-    
-
-
-    def test_nest_list(self):
-        t = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9]
-
-        val = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9]]
-        res = ut.nest_list(t, 3)
-        self.assertEqual(res, val)
-
-    def test_nest_list_2(self):
-        t = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -23]
-
-        val = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [9, -23]]
-        res = ut.nest_list(t, 3)
-        self.assertEqual(res, val)   
-
-    def test_nest_list_3(self):
-        t = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -23]
-
-        val = [[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, -23]]
-        res = ut.nest_list(t, 12)
-        self.assertEqual(res, val)        
-
-
     def test_get_random_pos_for_coordinate(self):
         coor = (5, 4)
         size = (4, 3)
@@ -115,26 +89,14 @@ class TestUtils(TestCase):
         self.assertEqual(val, res)
 
     def test_add_to_filename(self):
-
         path = 'path/to/tiff/file.tif'
-        add_str = 'label_1'
-
-        out_s = ut.add_to_filename(path, add_str, suffix=True)
-        out_p = ut.add_to_filename(path, add_str, suffix=False)
-
+        out_s = ut.add_to_filename(path, 'label_1')
         self.assertEqual(out_s, 'path/to/tiff/file_label_1.tif')
-        self.assertEqual(out_p, 'path/to/tiff/label_1_file.tif')
 
     def test_add_to_filename_2(self):
-
         path = 'tifffile.tif'
-        add_str = 'label_1'
-
-        out_s = ut.add_to_filename(path, add_str, suffix=True)
-        out_p = ut.add_to_filename(path, add_str, suffix=False)
-
+        out_s = ut.add_to_filename(path, 'label_1')
         self.assertEqual(out_s, 'tifffile_label_1.tif')
-        self.assertEqual(out_p, 'label_1_tifffile.tif')
 
             
     def test_assign_slice_by_slice(self):
@@ -167,16 +129,6 @@ class TestUtils(TestCase):
         out = ut.assign_slice_by_slice(d, vol)
         pprint(out)
         self.assertTrue(np.array_equal(out, val))
-    
-    def test_string_distance(self):
-        a = ut.string_distance('hallo', 'hallo')
-        print (a)
-        b = ut.string_distance('hallo', 'hillu')
-        print (b)
-
-
-        self.assertEqual(0., a)
-        self.assertEqual(.4, b)
 
     def test_compute_str_dist_matrix(self):
 
