@@ -16,98 +16,6 @@ def assign_slice_by_slice(assignment_dicts, vol):
     return vol
 
 
-
-
-def remove_exclusive_vals_from_set(list_of_sets):
-    '''
-    takes a list of sets and removes for each set the values
-    that are not present any of the other sets of the list.
-
-    example:
-    list_of_sets = [{1, 2, 3}, {1, 2}, {1, 4}]
-    remove_exclusive_vals_from_set(list_of_sets)
-    [{1, 2}, {1, 2}, {1}]
-
-    '''
-
-    out = []
-    for i in range(len(list_of_sets)):
-        subset = set()
-        for j in range(len(list_of_sets)):
-            if j==i:
-                pass
-            else:
-                subset = subset.union(list_of_sets[j])
-        out.append(list_of_sets[i].intersection(subset))
-    return out
-
-def get_exclusive_vals_from_set(list_of_sets):
-    '''
-    takes a list of sets and removes for each set the values
-    that are also present in the other sets of the list.
-
-    example:
-    list_of_sets = [{1, 2, 3}, {1, 2}, {1, 4}]
-    remove_exclusive_vals_from_set(list_of_sets)
-    [{3}, set(), {4}]
-
-    '''
-
-    out = []
-    for i in range(len(list_of_sets)):
-        subset = set()
-        for j in range(len(list_of_sets)):
-            if j==i:
-                pass
-            else:
-                subset = subset.union(list_of_sets[j])
-        out.append(list_of_sets[i].difference(subset))
-    return out
-
-
-
-def get_indices(pos, size):
-    '''
-    returns all indices for a sub matrix, given a certain n-dimensional position (upper left)
-    and n-dimensional size.
-
-
-    :param pos: tuple defining the upper left position of the tile in n dimensions
-    :param size: tuple defining size of tile in all dimensions
-    :returns: list of indices for all dimensions
-    '''
-    if len(pos) != len(size):
-        error_str = '''nr of dimensions does not fit: pos(%s),
-            size (%s)''' % (pos, size)
-        raise ValueError(error_str)
-
-
-    return [list(range(p, p+s)) for p, s in zip(pos, size)]
-
-
-def get_indices_fast(pos, size):
-    '''
-    returns all indices for a sub matrix, given a certain n-dimensional position (upper left)
-    and n-dimensional size.
-
-
-    :param pos: tuple defining the upper left position of the tile in n dimensions
-    :param size: tuple defining size of tile in all dimensions
-    :returns: list of indices for all dimensions
-    '''
-    # if len(pos) != len(size):
-    #     error_str = '''nr of dimensions does not fit: pos(%s),
-    #         size (%s)''' % (pos, size)
-    #     raise ValueError(error_str)
-
-
-
-    return [list(np.arange(p, p+s)) for p, s in zip(pos, size)]
-
-
-
-
-
 def get_tile_meshgrid(image_shape, pos, size):
     '''
     returns coordinates for selection of a sub matrix
@@ -120,18 +28,8 @@ def get_tile_meshgrid(image_shape, pos, size):
     :returns: a multidimensional meshgrid defining the sub matrix
 
     '''
-
-    pos = np.array(pos)
-    size = np.array(size)
-
-    if not is_valid_image_subset(image_shape, pos, size):
-        raise ValueError('image subset not valid')
-
+    assert is_valid_image_subset(image_shape, pos, size)
     return [slice(p, p+s) for p, s in zip(pos, size)]
-
-    indices = get_indices_fast(pos, size)
-    return np.meshgrid(*indices, indexing='ij')
-
 
 def is_valid_image_subset(image_shape, pos, size):
     '''
@@ -174,18 +72,6 @@ def is_valid_image_subset(image_shape, pos, size):
     return True
 
 
-def flatten_label_coordinates(label_coordinates):
-    return [(label, coor) for label in label_coordinates.keys() for coor in label_coordinates[label]]
-
-
-def get_max_pos_for_tile(size, shape):
-    '''
-    returns maxpos as np array
-    '''
-    
-    return np.array(shape) - np.array(size)
-
-
 def get_random_pos_for_coordinate(coor, size, shape):
 
     if len(coor) != len(size):
@@ -195,8 +81,7 @@ def get_random_pos_for_coordinate(coor, size, shape):
     coor = np.array(coor)
     size = np.array(size)
 
-
-    maxpos = get_max_pos_for_tile(size, shape)
+    maxpos = shape - size
     maxpos[maxpos>coor] = coor[maxpos>coor]
 
     minpos = coor - size + 1
@@ -231,8 +116,8 @@ def compute_pos(shape, size):
     if mod.any():
         shift_last_tile[mod!=0] = mod[mod!=0] - size[mod!=0]
 
-    pos_per_dim = \
-        [list(range(0, imlength, templength)) for imlength, templength in zip(shape, size)]
+    pos_per_dim =  [list(range(0, imlength, templength))
+                    for imlength, templength in zip(shape, size)]
 
     for el, shift in zip(pos_per_dim, shift_last_tile):
         el[-1] = el[-1] + shift

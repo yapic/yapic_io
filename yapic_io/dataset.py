@@ -132,7 +132,7 @@ class Dataset(object):
 
         # get random zxy position within selected image
         img_shape_zxy = self.image_dimensions(img_nr)[1:]
-        img_maxpos_zxy = ut.get_max_pos_for_tile(tile_size_zxy, img_shape_zxy)
+        img_maxpos_zxy = np.array(img_shape_zxy) - tile_size_zxy
 
         msg = 'Tile of size {} does not fit in image of size {}'.format(tile_size_zxy, img_shape_zxy)
         assert (img_maxpos_zxy > -1).all(), msg

@@ -48,30 +48,6 @@ class TestUtils(TestCase):
         self.assertEqual(res, val)        
 
 
-    def test_flatten_label_coordinates(self):
-
-        c = {100 : [(1, 2, 3), (4, 5, 6), (7, 8, 9)], 200 : [(10, 11, 12), (13, 14, 15)]}
-
-        val = [(100, (1, 2, 3)), (100, (4, 5, 6)), (100, (7, 8, 9)), \
-                 (200, (10, 11, 12)), (200, (13, 14, 15))]
-
-        print(val)
-
-
-        res = ut.flatten_label_coordinates(c)
-        res.sort()
-        print(res)
-        self.assertEqual(res, val)         
-
-    def test_get_mx_pos_for_tile(self):
-
-        size = (3, 3)
-        shape = (10, 10)
-
-        maxpos = np.array((7, 7)) 
-        print(ut.get_max_pos_for_tile(size, shape))
-        self.assertTrue((maxpos==ut.get_max_pos_for_tile(size, shape)).all())    
-
     def test_get_random_pos_for_coordinate(self):
         coor = (5, 4)
         size = (4, 3)
@@ -159,30 +135,6 @@ class TestUtils(TestCase):
 
         self.assertEqual(out_s, 'tifffile_label_1.tif')
         self.assertEqual(out_p, 'label_1_tifffile.tif')
-    
-
-
-
-    def test_remove_exclusive_vals_from_set(self):
-        list_of_sets = [{1, 2, 3}, {1, 2}, {1, 4}, {5, 6}]
-
-        res = ut.remove_exclusive_vals_from_set(list_of_sets)
-        val = [{1, 2}, {1, 2}, {1}, set()]
-        self.assertEqual(res, val)
-
-    def test_remove_exclusive_vals_from_set(self):
-        list_of_sets = [{1, 2, 3}, {1, 2}, {1, 4}, {5, 6}]
-
-        res = ut.remove_exclusive_vals_from_set(list_of_sets)
-        val = [{1, 2}, {1, 2}, {1}, set()]
-        self.assertEqual(res, val)
-    
-    def test_get_exclusive_vals_from_set(self):
-        list_of_sets = [{1, 2, 3}, {1, 2}, {1, 4}, {5, 6}]
-
-        res = ut.get_exclusive_vals_from_set(list_of_sets)
-        val = [{3}, set(), {4}, {5, 6}]
-        self.assertEqual(res, val)
 
             
     def test_assign_slice_by_slice(self):
