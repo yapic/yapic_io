@@ -8,6 +8,7 @@ import yapic_io.image_importers as ip
 import logging
 from pprint import pprint
 import tempfile
+from pathlib import Path
 logger = logging.getLogger(os.path.basename(__file__))
 
 base_path = os.path.dirname(__file__)
@@ -17,9 +18,9 @@ class TestTiffconnector(TestCase):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
         c = TiffConnector(img_path, 'path/to/nowhere/')
 
-        img_filenames = ['6width4height3slices_rgb.tif', 
-                         '40width26height3slices_rgb.tif', 
-                         '40width26height6slices_rgb.tif']
+        img_filenames = [Path('6width4height3slices_rgb.tif'),
+                         Path('40width26height3slices_rgb.tif'),
+                         Path('40width26height6slices_rgb.tif')]
 
         fnames = [e[0] for e in c.filenames]
         self.assertEqual(set(img_filenames), set(fnames))
@@ -31,9 +32,9 @@ class TestTiffconnector(TestCase):
         c = TiffConnector(img_path, lbl_path)
         
         expected_names = \
-            [('img_40width26height3slices_rgb.tif', 'lbl_40width26height3slices_rgb.tif')\
-           , ('img_40width26height6slices_rgb.tif', None)\
-           , ('img_6width4height3slices_rgb.tif', 'lbl_6width4height3slices_rgb.tif')]
+            [(Path('img_40width26height3slices_rgb.tif'), Path('lbl_40width26height3slices_rgb.tif'))\
+           , (Path('img_40width26height6slices_rgb.tif'), None)\
+           , (Path('img_6width4height3slices_rgb.tif'), Path('lbl_6width4height3slices_rgb.tif'))]
 
         self.assertEqual(c.filenames, expected_names)   
 
@@ -44,8 +45,8 @@ class TestTiffconnector(TestCase):
         c = TiffConnector(img_path, lbl_path).filter_labeled()
 
         expected_names = \
-            [('img_40width26height3slices_rgb.tif', 'lbl_40width26height3slices_rgb.tif')\
-           , ('img_6width4height3slices_rgb.tif', 'lbl_6width4height3slices_rgb.tif')]
+            [(Path('img_40width26height3slices_rgb.tif'), Path('lbl_40width26height3slices_rgb.tif'))\
+           , (Path('img_6width4height3slices_rgb.tif'), Path('lbl_6width4height3slices_rgb.tif'))]
 
         self.assertEqual(set(c.filenames), set(expected_names))
 
@@ -56,9 +57,9 @@ class TestTiffconnector(TestCase):
         c = TiffConnector(img_path, lbl_path)
         c1, c2 = c.split(0.5)
 
-        expected_names1 = [('img_40width26height3slices_rgb.tif', 'lbl_40width26height3slices_rgb.tif')]
-        expected_names2 = [('img_40width26height6slices_rgb.tif', None), 
-                           ('img_6width4height3slices_rgb.tif', 'lbl_6width4height3slices_rgb.tif')]
+        expected_names1 = [(Path('img_40width26height3slices_rgb.tif'), Path('lbl_40width26height3slices_rgb.tif'))]
+        expected_names2 = [(Path('img_40width26height6slices_rgb.tif'), None),
+                           (Path('img_6width4height3slices_rgb.tif'), Path('lbl_6width4height3slices_rgb.tif'))]
 
         self.assertEqual(set(c1.filenames), set(expected_names1))
         self.assertEqual(set(c2.filenames), set(expected_names2))
@@ -119,9 +120,9 @@ class TestTiffconnector(TestCase):
 
         c = TiffConnector(img_path, label_path)
 
-        self.assertEqual(c.filenames[0][1], '40width26height3slices_rgb.tif')
+        self.assertEqual(c.filenames[0][1], Path('40width26height3slices_rgb.tif'))
         self.assertIsNone(c.filenames[1][1])
-        self.assertEqual(c.filenames[2][1], '6width4height3slices_rgb.tif')
+        self.assertEqual(c.filenames[2][1], Path('6width4height3slices_rgb.tif'))
 
 
     def test_load_label_matrix(self):

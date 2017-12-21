@@ -31,15 +31,13 @@ class TrainingBatch(Minibatch):
     >>> c = TiffConnector(pixel_image_dir, label_image_dir, savepath=savepath.name)
     >>> m = TrainingBatch(Dataset(c), tile_size, padding_zxy=padding)
     >>>
-    >>> counter=0
-    >>> for mini in m:
+    >>> for counter, mini in enumerate(m):
     ...     weights = mini.weights() #shape is (6, 3, 1, 5, 4) : 3 label-classes, 1 z, 5 x, 4 y
     ...     #shape of weights is (6, 3, 1, 5, 4) : batchsize 6 , 3 label-classes, 1 z, 5 x, 4 y
     ...
     ...     pixels = mini.pixels()
     ...     # shape of pixels is (6, 3, 1, 9, 8) : 3 channels, 1 z, 9 x, 4 y (more xy due to padding)
     ...     # here: apply training on mini.pixels and mini.weights
-    ...     counter += 1
     ...     if counter > 10: #m is infinite
     ...         break
     '''
@@ -85,7 +83,21 @@ class TrainingBatch(Minibatch):
 
 
     def __next__(self):
-        self._fetch_training_batch_data()
+        pixels = []
+        weights = []
+        augmentations = []
+
+        for label in self.labels:
+            tile_data = self._random_tile(for_label=label)
+
+            pixels.append(tile_data.pixels)
+            weights.append(tile_data.weights)
+            augmentations.append(tile_data.augmentation)
+
+        self._pixels = np.array(pixels)
+        self._weights = np.array(weights, self.float_data_type)
+        self.augmentations = augmentations
+
         return self
 
     def augment_by_flipping(self, flip_on):
@@ -128,23 +140,6 @@ class TrainingBatch(Minibatch):
         return self._weights
 
 
-    def _fetch_training_batch_data(self):
-        pixels = []
-        weights = []
-        augmentations = []
-
-        for label in self.labels:
-            tile_data = self._random_tile(for_label=label)
-
-            pixels.append(tile_data.pixels)
-            weights.append(tile_data.weights)
-            augmentations.append(tile_data.augmentation)
-
-        self._pixels = np.array(pixels)
-        self._weights = np.array(weights, self.float_data_type)
-        self.augmentations = augmentations
-
-
     def _random_tile(self, for_label=None):
         '''
         pick random tile in image regions where label data is present
@@ -165,10 +160,10 @@ class TrainingBatch(Minibatch):
         if 'shear' in self.augmentation:
              augment_params['shear_angle'] = random.uniform(*self.shear_range)
 
-        return self._dataset.random_training_tile(self.tile_size_zxy,
-                                                  self.channels,
-                                                  pixel_padding=self.padding_zxy,
-                                                  equalized=self.equalized,
-                                                  augment_params=augment_params,
-                                                  labels=self.labels,
-                                                  label_region=for_label)
+        return self.dataset.random_training_tile(self.tile_size_zxy,
+                                                 self.channels,
+                                                 pixel_padding=self.padding_zxy,
+                                                 equalized=self.equalized,
+                                                 augment_params=augment_params,
+                                                 labels=self.labels,
+                                                 label_region=for_label)

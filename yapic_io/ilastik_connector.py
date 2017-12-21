@@ -56,7 +56,7 @@ class IlastikConnector(TiffConnector):
         if original_labelvalues is False, the mapped label values are returned,
         otherwise the original labelvalues.
         '''
-        label_filename = self.filenames[image_nr].lbl
+        label_filename = str(self.filenames[image_nr].lbl)
         img_shape = self.image_dimensions(image_nr)
 
         if label_filename is None:

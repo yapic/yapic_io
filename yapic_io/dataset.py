@@ -54,10 +54,6 @@ class Dataset(object):
         '''
         return self.pixel_connector.image_dimensions(image_nr)
 
-    def channel_list(self):
-        nr_channels = self.image_dimensions(0)[0]
-        return list(range(nr_channels))
-
     def label_values(self):
         labels = list(self.label_counts.keys())
         labels.sort()
@@ -233,6 +229,7 @@ class Dataset(object):
                       channels,
                       labels,
                       pixel_padding=(0, 0, 0),
+                      reflect=True,
                       augment_params=None):
         augment_params = augment_params or {}
         # 4d pixel tile with selected channels in 1st dimension
@@ -241,7 +238,13 @@ class Dataset(object):
                                                   augment_params=augment_params)
 
         # 4d label tile with selected labels in 1st dimension
-        label_tile = [ self.label_tile(image_nr, pos_zxy, size_zxy, l, augment_params=augment_params)
+        shape_zxy = self.image_dimensions(image_nr)[1:]
+        label_tile = [ augment_tile(shape_zxy, pos_zxy, size_zxy,
+                                    self._get_weights_tile,
+                                    augment_params=augment_params,
+                                    reflect=reflect,
+                                    image_nr=image_nr,
+                                    label_value=l)
                        for l in labels ]
         label_tile = np.array(label_tile)
 
@@ -279,44 +282,6 @@ class Dataset(object):
                 for c in channels]
 
         return np.vstack(tile)
-
-    def label_tile(self,
-                   image_nr,
-                   pos_zxy,
-                   size_zxy,
-                   label_value,
-                   reflect=True,
-                   augment_params=None):
-        '''
-        returns a recangular subsection of label weights with specified size.
-        if requested tile is out of bounds, values will be added by reflection
-
-        :param image_nr: image index
-        :type image: int
-        :param pos_zxy: tuple defining the upper left position of the tile in 3 dimensions zxy
-        :type pos_zxy: tuple
-        :param size_zxy: tuple defining size of tile in 3 dimensions zxy
-        :type size: tuple
-        :param label_value: label identifier
-        :type label_value: int
-        :returns: 3d tile of label weights as numpy array with dimensions zxy
-        '''
-        augment_params = augment_params or {}
-        np.testing.assert_equal(len(pos_zxy), 3, 'Expected 3 dimensions (Z,X,Y)')
-        np.testing.assert_equal(len(size_zxy), 3, 'Expected 3 dimensions (Z,X,Y)')
-
-        shape_zxy = self.image_dimensions(image_nr)[1:]
-
-        tile = augment_tile(shape_zxy,
-                            pos_zxy,
-                            size_zxy,
-                            self._get_weights_tile,
-                            augment_params=augment_params,
-                            reflect=reflect,
-                            image_nr=image_nr,
-                            label_value=label_value)
-
-        return tile
 
     def _get_weights_tile(self, image_nr=None, pos=None, size=None, label_value=None):
         '''

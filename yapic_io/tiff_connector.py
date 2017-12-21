@@ -9,6 +9,7 @@ import numpy as np
 import itertools
 import warnings
 from itertools import zip_longest
+from pathlib import Path
 
 import yapic_io.image_importers as ip
 from yapic_io.utils import get_tile_meshgrid, add_to_filename, find_best_matching_pairs
@@ -30,8 +31,6 @@ class TiffConnector(Connector):
     >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/*.tif'
     >>> label_image_dir = 'yapic_io/test_data/tiffconnector_1/labels/*.tif'
     >>> t = TiffConnector(pixel_image_dir, label_image_dir)
-    >>> print(t)
-    <TiffConnector(imgpath=yapic_io/test_data/tiffconnector_1/im, lblpath=yapic_io/test_data/tiffconnector_1/labels)>
     '''
     def __init__(self, img_filepath, label_filepath,
             savepath=None,
@@ -77,62 +76,47 @@ class TiffConnector(Connector):
           dimensional images, it throws an error, because it is not clear if the thrid
           dimension is z or channel (RGB images will still be mapped correctly)
         '''
-        self.filenames = None # list of FilePairs: [(imgfile_1.tif, labelfile_1.tif), (imgfile_2.tif, labelfile_2.tif), ...]
-        self.labelvalue_mapping = None # list of dicts of original and assigned labelvalues
-        self.savepath = savepath # path for probability maps
+        self.savepath = Path(savepath) if savepath else None # path for probability maps
         self.zstack = zstack
         self.multichannel_pixel_image = multichannel_pixel_image
         self.multichannel_label_image = multichannel_label_image
 
-        if type(img_filepath) == str:
-            assert type(label_filepath) == str
+        if type(img_filepath) in (str, Path):
+            assert type(label_filepath) in (str, Path)
+            img_path = Path(img_filepath).expanduser().resolve()
+            lbl_path = Path(label_filepath).expanduser().resolve()
 
-            img_filepath = os.path.normpath(os.path.expanduser(img_filepath))
-            lbl_filepath = os.path.normpath(os.path.expanduser(label_filepath))
+            img_mask = '*.tif' if img_path.is_dir() else img_path.name
+            lbl_mask = '*.tif' if lbl_path.is_dir() else lbl_path.name
 
-            if os.path.isdir(img_filepath):
-                img_filepath = os.path.join(img_filepath, '*.tif')
-            if os.path.isdir(lbl_filepath):
-                lbl_filepath = os.path.join(lbl_filepath, '*.tif')
+            self.img_path = img_path if img_path.is_dir() else img_path.parent
+            self.label_path = lbl_path if lbl_path.is_dir() else lbl_path.parent
 
-            self.img_path, img_filemask = os.path.split(img_filepath)
-            self.label_path, label_filemask = os.path.split(lbl_filepath)
-
-            img_filenames = [os.path.basename(fname) for fname in sorted(glob.glob(img_filepath))]
-            lbl_filenames = [os.path.basename(fname) for fname in sorted(glob.glob(lbl_filepath))]
+            img_filenames = [fname.name for fname in sorted(self.img_path.glob(img_mask))]
+            lbl_filenames = [fname.name for fname in sorted(self.label_path.glob(lbl_mask))]
 
             pairs = find_best_matching_pairs(img_filenames, lbl_filenames)
-            self.filenames = [FilePair(img, lbl) for img, lbl in pairs]
+            self.filenames = [FilePair(Path(img), Path(lbl) if lbl else None) for img, lbl in pairs]
         else:
-            img_filenames = img_filepath
-            lbl_filenames = label_filepath
+            img_filenames = [Path(p).expanduser().resolve() for p in img_filepath]
+            lbl_filenames = [Path(p).expanduser().resolve() if p else None for p in label_filepath]
 
             if len(img_filenames) > 0:
-                self.img_path = os.path.dirname(img_filenames[0])
-                img_filenames = [os.path.basename(fname) if fname is not None else None for fname in img_filenames]
+                self.img_path = img_filenames[0].parent
+                img_filenames = [fname.name if fname is not None else None for fname in img_filenames]
             else:
                 self.img_path = None
 
             filtered_labels = [fname for fname in lbl_filenames if fname is not None]
             if len(filtered_labels) > 0:
-                self.label_path = os.path.dirname(filtered_labels[0])
-                lbl_filenames = [os.path.basename(fname) if fname is not None else None for fname in lbl_filenames]
+                self.label_path = filtered_labels[0].parent
+                lbl_filenames = [fname.name if fname is not None else None for fname in lbl_filenames]
             else:
                 self.label_path = None
 
-            self.filenames = [FilePair(img, lbl) for img, lbl in zip(img_filenames, lbl_filenames)]
+            self.filenames = [FilePair(Path(img), Path(lbl) if lbl else None) for img, lbl in zip(img_filenames, lbl_filenames)]
 
-        assert img_filenames is not None
-        assert lbl_filenames is not None
-
-        logger.info('{} pixel image files detected.'.format(len(img_filenames)))
-        logger.debug('Pixel image files:')
-        logger.debug(img_filenames)
-
-        if len(img_filenames) != len(lbl_filenames):
-            msg = 'Number of image files ({}) and label files ({}) differ!'
-            logger.warning(msg.format(len(img_filenames), len(lbl_filenames)))
-
+        logger.info('{} pixel image files detected.'.format(len(self.filenames)))
         logger.debug('Pixel and label files are assigned as follows:')
         logger.debug('\n'.join('{p.img} <-> {p.lbl}'.format(p=pair) for pair in self.filenames))
 
@@ -150,10 +134,10 @@ class TiffConnector(Connector):
         '''
         Returns a new TiffConnector containing only images that have labels
         '''
-        img_fnames = [os.path.join(self.img_path, img) for img, lbl in self.filenames
+        img_fnames = [self.img_path / img for img, lbl in self.filenames
                       if lbl is not None]
 
-        lbl_fnames = [os.path.join(self.label_path, lbl)
+        lbl_fnames = [self.label_path / lbl
                       for img, lbl in self.filenames
                       if lbl is not None]
 
@@ -176,14 +160,14 @@ class TiffConnector(Connector):
         mask = np.random.choice([True, False], size=N, p=[1-fraction, fraction])
         np.random.set_state(state)
 
-        img_fnames1 = [os.path.join(self.img_path, img)
+        img_fnames1 = [self.img_path / img
                        for img, lbl in itertools.compress(self.filenames, mask)]
-        lbl_fnames1 = [os.path.join(self.label_path, lbl) if lbl is not None else None
+        lbl_fnames1 = [self.label_path / lbl if lbl is not None else None
                        for img, lbl in itertools.compress(self.filenames, mask)]
 
-        img_fnames2 = [os.path.join(self.img_path, img)
+        img_fnames2 = [self.img_path / img
                        for img, lbl in itertools.compress(self.filenames, ~mask)]
-        lbl_fnames2 = [os.path.join(self.label_path, lbl) if lbl is not None else None
+        lbl_fnames2 = [self.label_path / lbl if lbl is not None else None
                        for img, lbl in itertools.compress(self.filenames, ~mask)]
 
         if len(img_fnames1) == 0:
@@ -220,21 +204,22 @@ class TiffConnector(Connector):
         np.testing.assert_equal(len(pixels.shape), 3, '{} must have shape of 3'.format(pixels.shape))
 
         path = self.init_probmap_image(image_nr, label_value)
-        return ip.add_vals_to_tiff_image(path, pos_zxy, pixels)
+        return ip.add_vals_to_tiff_image(str(path), pos_zxy, pixels)
 
 
     def init_probmap_image(self, image_nr, label_value, overwrite=False):
         assert self.savepath is not None
         image_filename = self.filenames[image_nr].img
 
-        path, ext = os.path.splitext(image_filename)
+        path = image_filename.stem
+        ext = image_filename.suffix
         probmap_filename = '{}_class_{}{}'.format(path, label_value, ext)
-        out_path = os.path.join(self.savepath, probmap_filename)
+        out_path = self.savepath / probmap_filename
 
-        if overwrite or not os.path.exists(out_path):
+        if overwrite or not out_path.exists():
             logger.debug('initializing a new probmap image: %s', out_path)
             _, Z, X, Y = self.image_dimensions(image_nr)
-            ip.init_empty_tiff_image(out_path, X, Y, z_size=Z)
+            ip.init_empty_tiff_image(str(out_path), X, Y, z_size=Z)
 
         return out_path
 
@@ -255,8 +240,8 @@ class TiffConnector(Connector):
         :param image_nr: index of image
         :returns (nr_channels, nr_zslices, nr_x, nr_y)
         '''
-        path = os.path.join(self.img_path, self.filenames[image_nr].img)
-        return ip.get_tiff_image_dimensions(path, zstack=self.zstack,
+        path = self.img_path / self.filenames[image_nr].img
+        return ip.get_tiff_image_dimensions(str(path), zstack=self.zstack,
                                             multichannel=self.multichannel_pixel_image)
 
 
@@ -271,8 +256,8 @@ class TiffConnector(Connector):
         if self.filenames[image_nr].lbl is None:
             return None
 
-        path = os.path.join(self.label_path, self.filenames[image_nr].lbl)
-        return ip.get_tiff_image_dimensions(path, zstack=self.zstack,
+        path = self.label_path / self.filenames[image_nr].lbl
+        return ip.get_tiff_image_dimensions(str(path), zstack=self.zstack,
                                             multichannel=self.multichannel_label_image)
 
 
@@ -305,8 +290,8 @@ class TiffConnector(Connector):
 
     @lru_cache(maxsize = 20)
     def load_image(self, image_nr):
-        path = os.path.join(self.img_path, self.filenames[image_nr].img)
-        return ip.import_tiff_image(path)
+        path = self.img_path / self.filenames[image_nr].img
+        return ip.import_tiff_image(str(path))
 
 
     def label_tile(self, image_nr, pos_zxy, size_zxy, label_value):
@@ -344,10 +329,10 @@ class TiffConnector(Connector):
             logger.warning('no label matrix file found for image file %s', str(image_nr))
             return None
 
-        path = os.path.join(self.label_path, label_filename)
+        path = self.label_path / label_filename
         logger.debug('Trying to load labelmat %s', path)
 
-        label_image = ip.import_tiff_image(path, zstack=self.zstack,
+        label_image = ip.import_tiff_image(str(path), zstack=self.zstack,
                                            multichannel=self.multichannel_label_image)
 
         if not original_labelvalues:

@@ -72,7 +72,7 @@ class PredictionBatch(Minibatch):
 
 
     def pixels(self):
-        load_img = self._dataset.multichannel_pixel_tile
+        load_img = self.dataset.multichannel_pixel_tile
 
         pixels = [ load_img(im_nr, pos_zxy,
                             self.tile_size_zxy,
@@ -97,7 +97,7 @@ class PredictionBatch(Minibatch):
         Implements list-like operations of element selection and slicing.
         '''
         if position >= len(self):
-            raise StopIteration('index out of bounds')
+            raise IndexError('index out of bounds')
 
         self.current_batch_pos = position
         return self
@@ -134,7 +134,7 @@ class PredictionBatch(Minibatch):
 
         for probmap, (image_nr, pos_zxy) in zip(probmap_batch, self.current_tile_positions):
             for label_ch, label in zip(probmap, self.labels):
-                self.pixel_connector.put_tile(label_ch, pos_zxy, image_nr, label)
+                self.dataset.pixel_connector.put_tile(label_ch, pos_zxy, image_nr, label)
 
 
     def _compute_pos_zxy(self):
@@ -148,8 +148,8 @@ class PredictionBatch(Minibatch):
         [(image_nr, zpos, xpos, ypos), (image_nr, zpos, xpos, ypos), ...]
         '''
         tile_pos = []
-        for img_nr in list(range(self._dataset.n_images)):
-            img_shape_zxy = self._dataset.image_dimensions(img_nr)[1:]
+        for img_nr in list(range(self.dataset.n_images)):
+            img_shape_zxy = self.dataset.image_dimensions(img_nr)[1:]
             tile_pos = tile_pos + [(img_nr, pos) for pos in ut.compute_pos(img_shape_zxy, self.tile_size_zxy)]
 
         return tile_pos

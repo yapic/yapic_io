@@ -314,63 +314,6 @@ class TestDataset(TestCase):
 
         np.testing.assert_array_equal(val, mat)
 
-
-    def test_label_tile_1(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = TiffConnector(img_path, label_path)
-        d = Dataset(c)
-
-        img_nr = 2
-        pos_czxy = np.array((0, 0, 0))
-        size_czxy = np.array((1, 6, 4))
-        label_value = 3
-        mat = d.label_tile(img_nr, \
-         pos_czxy, size_czxy, label_value)
-
-        val = np.zeros(size_czxy)
-        val[0, 0, 1] = 1
-        val[0, 4, 1] = 1
-        val[0, 5, 1] = 1
-
-        self.assertTrue((val==mat).all())
-        np.testing.assert_array_equal(len(mat.shape), 3)
-
-
-    def test_label_tile_2(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        c = TiffConnector(img_path, label_path)
-        d = Dataset(c)
-
-        img_nr = 2
-        pos_czxy = np.array((0, 2, 1))
-        size_czxy = np.array((1, 7, 2))
-        label_value = 3
-        mat = d.label_tile(img_nr, \
-         pos_czxy, size_czxy, label_value)
-
-        val = np.zeros(size_czxy)
-        # val[0, 0, 1] = 1
-        # val[0, 4, 1] = 1
-        # val[0, 5, 1] = 1
-
-        print('tile')
-        print(mat)
-
-        val = [\
-            [0., 0.], \
-            [0., 0.], \
-            [1., 0.], \
-            [1., 0.], \
-            [1., 0.], \
-            [1., 0.], \
-            [0., 0.]\
-        ]
-        val = np.array(val)
-        self.assertTrue((mat==val).all())
-
-
     def test_get_weight_tile_for_label_2(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')

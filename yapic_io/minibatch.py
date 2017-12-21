@@ -59,11 +59,10 @@ class Minibatch(object):
         :param equalized: if True, less frequent labels are favored in randomized tile selection
         :type equalized: bool
         '''
-        self._dataset = dataset
+        self.dataset = dataset
         self._batch_size = batch_size
         self.normalize_mode = None
         self.global_norm_minmax = None
-
         self.float_data_type = np.float32  # type of pixel and weight data
 
         np.testing.assert_equal(len(size_zxy), 3, 'len of size_zxy be 3: (z, x, y)')
@@ -73,9 +72,10 @@ class Minibatch(object):
         self.padding_zxy = padding_zxy
 
         # imports all available channels by default
-        self.channels = set(self._dataset.channel_list())
+        nr_channels = self.dataset.image_dimensions(0)[0]
+        self.channels = set(range(nr_channels))
         # imports all available labels by default
-        self.labels = set(self._dataset.label_values())
+        self.labels = set(self.dataset.label_values())
 
     def set_normalize_mode(self, mode_str, minmax=None):
         '''
