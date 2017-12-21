@@ -108,22 +108,7 @@ class TestPredictionBatch(TestCase):
         print(len(p))
         self.assertEqual(len(p), 1)
         self.assertEqual(p[0].pixels().shape, (3, 3, 1, 6, 4))
-        
 
-    def test_get_actual_batch_size(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
-        label_path = os.path.join(base_path, '/path/to/nowhere')
-        c = TiffConnector(img_path, label_path)
-
-        d = Dataset(c)
-
-        size = (1, 6, 4)
-        batch_size = 2
-        p = PredictionBatch(d, batch_size, size)
-
-
-        self.assertEqual(p[0].get_actual_batch_size(), 2)
-        self.assertEqual(p[1].get_actual_batch_size(), 1)
 
     def test_get_curr_tile_indices(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
@@ -136,9 +121,8 @@ class TestPredictionBatch(TestCase):
         batch_size = 2
         p = PredictionBatch(d, batch_size, size)
 
-
-        self.assertEqual(p[0]._get_curr_tile_indices(), [0, 1])
-        self.assertEqual(p[1]._get_curr_tile_indices(), [2])
+        self.assertEqual(p[0].current_tile_positions, [(0, (0, 0, 0)), (0, (1, 0, 0))])
+        self.assertEqual(p[1].current_tile_positions, [(0, (2, 0, 0))])
 
     def test_put_probmap_data(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
@@ -254,56 +238,3 @@ class TestPredictionBatch(TestCase):
                 mock_classifier_result = classify(pixels, counter) #classifier output
                 #pass classifier results for each class to data source
                 item.put_probmap_data(mock_classifier_result)     
-
-
-    def test_put_probmap_data_for_label(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*')
-        savepath = tempfile.TemporaryDirectory()
-        c = TiffConnector(img_path, label_path, savepath=savepath.name)
-        d = Dataset(c)
-
-        d = Dataset(c)
-
-        size = (3, 3, 3)
-        batch_size = 1
-
-        p = PredictionBatch(d, batch_size, size)
-
-        data = np.ones((3, 3, 3))
-        
-        path1 = savepath.name + '40width26height3slices_rgb_class_109.tif'
-        path2 = savepath.name + '40width26height6slices_rgb_class_109.tif'
-        path3 = savepath.name + '6width4height3slices_rgb_class_109.tif'
-        
-        try:
-            os.remove(path1)
-        except:
-            pass
-        try:
-            os.remove(path2)
-        except:
-            pass
-        try:
-            os.remove(path3)
-        except:
-            pass               
-
-        print(len(p))
-        print(p._all_tile_positions)
-        p._put_probmap_data_for_label(data, label=1, tile_pos_index=0) #first
-        p._put_probmap_data_for_label(data, label=1, tile_pos_index=381) #last
-
-        try:
-            os.remove(path1)
-        except:
-            pass
-        try:
-            os.remove(path2)
-        except:
-            pass
-        try:
-            os.remove(path3)
-        except:
-            pass
-

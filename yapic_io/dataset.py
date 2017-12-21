@@ -63,14 +63,6 @@ class Dataset(object):
         labels.sort()
         return labels
 
-    def put_prediction_tile(self, probmap_tile, pos_zxy, image_nr, label_value):
-        # check if pos and tile size are 3d
-        assert -1 < image_nr < self.n_images, 'Invalid image nr: {}'.format(image_nr)
-        np.testing.assert_equal(len(pos_zxy), 3, 'Expected 3 dimensions (Z,X,Y)')
-        np.testing.assert_equal(len(probmap_tile.shape), 3, 'Expected 3 dimensions (Z,X,Y)')
-
-        return self.pixel_connector.put_tile(probmap_tile, pos_zxy, image_nr, label_value)
-
     def random_training_tile(self,
                              size_zxy,
                              channels,

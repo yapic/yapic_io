@@ -130,16 +130,6 @@ class TestUtils(TestCase):
         pprint(out)
         self.assertTrue(np.array_equal(out, val))
 
-    def test_compute_str_dist_matrix(self):
-
-        a = ['hund', 'katze', 'maus']
-        b = ['hund', 'mauser', 'kater', 'pferd']
-
-        mat, a, b = ut.compute_str_dist_matrix(a, b)
-        print(mat)
-        print(a)
-        print(b)
-        
 
     def test_compute_str_dist_matrix(self):
 

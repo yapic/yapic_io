@@ -74,8 +74,6 @@ class TrainingBatch(Minibatch):
         self._pixels = None
         self._weights = None
 
-        #self._fetch_training_batch_data()
-
 
     def __repr__(self):
         info = 'TrainingBatch (batch_size: {}, tile_size (zxy): {}, augment: {}'
@@ -127,7 +125,7 @@ class TrainingBatch(Minibatch):
 
 
     def weights(self):
-        return self._weights.astype(self.float_data_type)
+        return self._weights
 
 
     def _fetch_training_batch_data(self):
@@ -143,7 +141,7 @@ class TrainingBatch(Minibatch):
             augmentations.append(tile_data.augmentation)
 
         self._pixels = np.array(pixels)
-        self._weights = np.array(weights)
+        self._weights = np.array(weights, self.float_data_type)
         self.augmentations = augmentations
 
 

@@ -14,8 +14,6 @@ class Minibatch(object):
     labels layer in the probability map (i.e. the classification result
     matrix) that can be exported with put_probmap_data().
     '''
-    labels = []
-
     '''
     Returns the selected image channels.
     Per default, all available channels are selected.
@@ -69,9 +67,9 @@ class Minibatch(object):
         self.float_data_type = np.float32  # type of pixel and weight data
 
         np.testing.assert_equal(len(size_zxy), 3, 'len of size_zxy be 3: (z, x, y)')
-        self.tile_size_zxy = size_zxy
-
         np.testing.assert_equal(len(padding_zxy), 3, 'len of padding_shoule be 3: (z, x, y)')
+
+        self.tile_size_zxy = size_zxy
         self.padding_zxy = padding_zxy
 
         # imports all available channels by default
@@ -90,62 +88,45 @@ class Minibatch(object):
         minmax : tuple of minimum and maximum pixel value for global
                  normalization. e.g (0, 255) for 8 bit images
         '''
+        valid = ('local_z_score', 'local', 'off', 'global')
+        msg = 'Invalid normalization mode: "{}". Valid choices: {}'
+        assert mode_str in valid, msg.format(mode_str, valid)
 
-        if mode_str in ('local_z_score', 'local', 'off'):
-            self.normalize_mode = mode_str
+        self.normalize_mode = mode_str
 
-        elif mode_str == 'global':
-            if minmax is None:
-                err_msg = 'Missing minmax for defining global minimum' + \
-                          'and maximum for normalization: (min, max)'
-                raise ValueError(err_msg)
+        if mode_str == 'global':
+            assert minmax is not None, 'normalization range (min, max) required'
             self.global_norm_minmax = minmax
-            self.normalize_mode = mode_str
-
-        else:
-            err_msg = '''Wrong normalization mode argument: {}. '''.format(mode_str) + \
-                      '''choose between 'local', 'local_z_score', 'global' and 'off' '''
-            raise ValueError(err_msg)
 
 
     def _normalize(self, pixels):
         '''
         to be called by the self.pixels() function
         '''
-
-        if self.normalize_mode is None:
-            return pixels
-
-        if self.normalize_mode == 'off':
+        if self.normalize_mode in ('off', None):
             return pixels
 
         if self.normalize_mode == 'global':
             center_ref = np.array(self.global_norm_minmax[0])
             scale_ref = np.array(self.global_norm_minmax[1])
-
-        if self.normalize_mode == 'local':
-            # scale between 0 and 1
-            #(data-minval)/(maxval-minval)
-            # percentiles are used for minval and maxval to be robust
-            # against outliers
+        elif self.normalize_mode == 'local':
+            # (data - minval) / (maxval - minval)
+            # percentiles are used to be robust against outliers
             max_ref = np.percentile(pixels, 99, axis=(0, 2, 3, 4))
             min_ref = np.percentile(pixels, 1, axis=(0, 2, 3, 4))
 
             center_ref = min_ref
             scale_ref = max_ref - min_ref
-
-        if self.normalize_mode == 'local_z_score':
-             #(data-mean)/std
+        elif self.normalize_mode == 'local_z_score':
+             # (data - mean) / std
             center_ref = pixels.mean(axis=(0, 2, 3, 4))
             scale_ref = pixels.std(axis=(0, 2, 3, 4))
 
-        pixels_centered = (pixels.swapaxes(1, 4) -
-                           center_ref).swapaxes(1, 4)
+        pixels_centered = (pixels.swapaxes(1, 4) - center_ref)
 
         if (scale_ref == 0).all():
-            # if scale_ref is zero, do not scale to avoid zero
-            # division
-            return pixels_centered
-        # scale by scale reference
-        return (pixels_centered.swapaxes(1, 4) /
-                scale_ref).swapaxes(1, 4)
+            # if scale_ref is zero, do not scale to avoid zero division
+            return pixels_centered.swapaxes(1, 4)
+        else:
+            # scale by scale reference
+            return (pixels_centered / scale_ref).swapaxes(1, 4)

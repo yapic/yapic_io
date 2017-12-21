@@ -89,7 +89,7 @@ def axes_order(input_axes):
     assert Y is not None
     assert X is not None
 
-    return (C,Z,X,Y)
+    return C,Z,X,Y
 
 
 def import_tiff_image(path, multichannel=None, zstack=None):
@@ -138,13 +138,10 @@ def init_empty_tiff_image(path, x_size, y_size, z_size=1):
     '''
     initializes dark 32 bit floating point grayscale tiff image
     '''
-
-    path = autocomplete_filename_extension(path, '.tif')
-
+    path = path + '.tif' if not path.endswith('.tif') else path
     data = np.zeros((z_size, x_size, y_size), dtype=np.float32)
-    logger.info('write empty tiff image with %s values to %s', data.dtype, path)
 
-    assert len(data.shape) == 3
+    logger.info('Writing empty image (%s) to %s', data.dtype, path)
     imsave(path, data, metadata={'axes': 'ZXY'})
 
 
@@ -155,26 +152,16 @@ def add_vals_to_tiff_image(path, pos_zxy, pixels):
     and overwrites the input tiff image with the new pixels.
     pixels and pos_zxy are in order (z, x, y)
     '''
-
-    pixels = np.array(pixels, dtype=np.float32)
-
-    path = autocomplete_filename_extension(path, '.tif')
-
+    path = path + '.tif' if not path.endswith('.tif') else path
     img = import_tiff_image(path, zstack=True)
     assert len(img.shape) == 4
 
+    pixels = np.array(pixels, dtype=np.float32)
     pos_czxy = (0, ) + pos_zxy
     size_czxy = (1, ) + pixels.shape
-    mesh = ut.get_tile_meshgrid(img.shape, pos_czxy, size_czxy)
 
+    mesh = ut.get_tile_meshgrid(img.shape, pos_czxy, size_czxy)
     img[mesh] = pixels
 
     assert len(img.shape) == 4
     imsave(path, img[0,...], metadata={'axes': 'ZXY'})
-
-
-def autocomplete_filename_extension(path, format_str):
-    _, ext = os.path.splitext(path)
-    if ext == '':
-        return path + format_str
-    return path

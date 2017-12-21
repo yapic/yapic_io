@@ -187,12 +187,6 @@ class TestImageImports(TestCase):
             pass
 
 
-    def test_autocomplete(self):
-        path =  'path/to/image'
-
-        self.assertEqual('path/to/image.tif', ip.autocomplete_filename_extension(path, '.tif'))
-
-
     def test_add_vals_to_tiff_image(self):
         tmp = tempfile.TemporaryDirectory()
         path = os.path.join(tmp.name, 'tile.tif')
