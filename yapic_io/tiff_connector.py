@@ -10,6 +10,7 @@ import itertools
 import warnings
 from itertools import zip_longest
 from pathlib import Path
+from tifffile import imsave
 
 import yapic_io.image_importers as ip
 from yapic_io.utils import get_tile_meshgrid, add_to_filename, find_best_matching_pairs
@@ -200,28 +201,32 @@ class TiffConnector(Connector):
 
 
     def put_tile(self, pixels, pos_zxy, image_nr, label_value):
-        np.testing.assert_equal(len(pos_zxy), 3, '{} must have length of 3'.format(pos_zxy))
-        np.testing.assert_equal(len(pixels.shape), 3, '{} must have shape of 3'.format(pixels.shape))
-
-        path = self.init_probmap_image(image_nr, label_value)
-        return ip.add_vals_to_tiff_image(str(path), pos_zxy, pixels)
-
-
-    def init_probmap_image(self, image_nr, label_value, overwrite=False):
         assert self.savepath is not None
-        image_filename = self.filenames[image_nr].img
+        np.testing.assert_equal(len(pos_zxy), 3)
+        np.testing.assert_equal(len(pixels.shape), 3)
 
-        path = image_filename.stem
-        ext = image_filename.suffix
-        probmap_filename = '{}_class_{}{}'.format(path, label_value, ext)
-        out_path = self.savepath / probmap_filename
+        fname = self.filenames[image_nr].img
+        fname = '{}_class_{}{}'.format(fname.stem, label_value, fname.suffix)
+        path = self.savepath / fname
+        if not fname.endswith('.tif'):
+            path += '.tif'
 
-        if overwrite or not out_path.exists():
-            logger.debug('initializing a new probmap image: %s', out_path)
+        if path.exists():
+            img = ip.import_tiff_image(str(path), zstack=True)
+        else:
             _, Z, X, Y = self.image_dimensions(image_nr)
-            ip.init_empty_tiff_image(str(out_path), X, Y, z_size=Z)
+            img = np.zeros((1, Z, X, Y), dtype=np.float32)
 
-        return out_path
+        pixels = np.array(pixels, dtype=np.float32)
+        pos_czxy = (0,) + pos_zxy
+        size_czxy = (1,) + pixels.shape
+
+        assert len(img.shape) == 4
+        mesh = ut.get_tile_meshgrid(img.shape, pos_czxy, size_czxy)
+        img[mesh] = pixels
+
+        assert len(img.shape) == 4
+        imsave(str(path), img[0, ...], metadata={'axes': 'ZXY'})
 
 
     @lru_cache(maxsize=5000)

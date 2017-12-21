@@ -211,37 +211,6 @@ class TestTiffconnector(TestCase):
         self.assertEqual(count, {2 : 11, 3: 3})
 
 
-    def test_init_probmap_image(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
-
-        savepath = tempfile.TemporaryDirectory()
-
-        c = TiffConnector(img_path, label_path, savepath = savepath.name)
-
-        fnames = ['6width4height3slices_rgb_class_1.tif', '6width4height3slices_rgb_class_2.tif']
-        path1, path2 = [os.path.join(savepath.name, f) for f in fnames]
-
-        for p in [path1, path2]:
-            try:
-                os.remove(path1)
-            except: pass
-
-        c.init_probmap_image(2, 1, overwrite=True)
-        c.init_probmap_image(2, 2, overwrite=True)    
-            
-        probim_1 = ip.import_tiff_image(path1, zstack=True)
-        probim_2 = ip.import_tiff_image(path2, zstack=True)
-
-        self.assertEqual(probim_1.shape, (1, 3, 6, 4))
-        self.assertEqual(probim_2.shape, (1, 3, 6, 4))
-
-        for p in [path1, path2]:
-            try:
-                os.remove(path1)
-            except: pass
-
-
     def test_put_tile_1(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
