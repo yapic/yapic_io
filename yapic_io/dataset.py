@@ -203,18 +203,21 @@ class Dataset(object):
                                             label_region=None):
         augment_params = augment_params or {}
         if label_region is None:
-            # pick training tile where it is assured that weights for a specified label
-            # are within the tile. the specified label is label_region
             label_region = self.random_label_value(equalized=equalized)
 
         total_count = self.label_counts[label_region].sum()
-        coor = self.label_coordinate(label_region, randint(total_count))
+        img_nr, _, *pos_zxy = self.label_coordinate(label_region, randint(total_count))
+        np.testing.assert_array_equal(len(pos_zxy), len(size_zxy))
 
-        img_nr = coor[0]
-        coor_zxy = coor[2:]
-        shape_zxy = self.image_dimensions(img_nr)[1:]
-        pos_zxy = np.array(ut.get_random_pos_for_coordinate(
-            coor_zxy, size_zxy, shape_zxy))
+        # Now we have a label. But we can but the tile anywhere as long as the label is in it
+
+        pos_zxy = np.array(pos_zxy)
+        shape_zxy = np.array(self.image_dimensions(img_nr)[1:])
+
+        maxpos = np.minimum(pos_zxy, shape_zxy - size_zxy)
+        minpos = np.maximum(0, pos_zxy - size_zxy + 1)
+
+        pos_zxy = [ np.random.randint(a, b + 1) for a, b in zip(minpos, maxpos) ]
 
         tile_data = self.training_tile(img_nr, pos_zxy, size_zxy,
                                        channels, labels, pixel_padding=pixel_padding,

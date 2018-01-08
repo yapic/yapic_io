@@ -8,67 +8,6 @@ import yapic_io.utils as ut
 
 
 class TestUtils(TestCase):
-    
-    
-    def test_get_tile_meshgrid(self):
-
-        shape = (10000, 30000)
-        pos = (3, 3)
-        size = (7000, 9000)
-
-        res = ut.get_tile_meshgrid(shape, pos, size)
-
-        #pprint(res)
-
-        #self.assertTrue(False)
-
-    def test_get_random_pos_for_coordinate(self):
-        coor = (5, 4)
-        size = (4, 3)
-        shape = (100, 100)
-        
-
-        pos_allowed = [(2, 2), (3, 2), (4, 2), (5, 2), \
-                       (2, 3), (3, 3), (4, 3), (5, 3), \
-                       (2, 4), (3, 4), (4, 4), (5, 4), \
-                        ]
-
-        for i in list(range(1500)):                
-            rpos = ut.get_random_pos_for_coordinate(coor, size, shape)
-            self.assertTrue(rpos in pos_allowed)
-
-
-    def test_get_random_pos_for_coordinate_2(self):
-        coor = (5, 4)
-        size = (1, 1)
-        shape = (100, 100)
-
-        
-
-        for i in list(range(1500)):                
-            rpos = ut.get_random_pos_for_coordinate(coor, size, shape)
-            self.assertEqual(rpos, (5, 4))   
-
-
-
-
-    def test_get_random_pos_for_coordinate_3(self):
-        coor = (5, 4)
-        size = (4, 3)
-        shape = (7, 7)
-        
-
-        pos_allowed = [(2, 2), (3, 2), \
-                       (2, 3), (3, 3), \
-                       (2, 4), (3, 4)\
-                        ]
-
-        for i in list(range(1500)):                
-            rpos = ut.get_random_pos_for_coordinate(coor, size, shape)
-            self.assertTrue(rpos in pos_allowed) 
-
-
-
     def test_compute_pos(self):
         shape = (8, 5)
         size = (5, 2)

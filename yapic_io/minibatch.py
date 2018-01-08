@@ -65,8 +65,10 @@ class Minibatch(object):
         self.global_norm_minmax = None
         self.float_data_type = np.float32  # type of pixel and weight data
 
-        np.testing.assert_equal(len(size_zxy), 3, 'len of size_zxy be 3: (z, x, y)')
-        np.testing.assert_equal(len(padding_zxy), 3, 'len of padding_shoule be 3: (z, x, y)')
+        if size_zxy:
+            np.testing.assert_equal(len(size_zxy), 3, 'len of size_zxy be 3: (z, x, y)')
+        if padding_zxy:
+            np.testing.assert_equal(len(padding_zxy), 3, 'len of padding_shoule be 3: (z, x, y)')
 
         self.tile_size_zxy = size_zxy
         self.padding_zxy = padding_zxy

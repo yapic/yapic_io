@@ -44,22 +44,6 @@ def assert_valid_image_subset(image_shape, pos, size):
     assert not (pos < 0).any(), 'tile out of image bounds'
     assert not (image_shape < (pos + size)).any(), 'tile out of image bounds'
 
-
-def get_random_pos_for_coordinate(coor, size, shape):
-    np.testing.assert_array_equal(len(coor), len(size))
-
-    coor = np.array(coor)
-    size = np.array(size)
-
-    maxpos = np.minimum(coor, shape - size)
-    minpos = np.maximum(0, coor - size + 1)
-
-    random_pos = [ np.random.randint(a, b + 1)
-                   for a, b in zip(minpos, maxpos) ]
-
-    return tuple(random_pos)
-
-
 def compute_pos(img_shape, tile_shape):
     '''
     computes all possible positions for fetching tiles of a given size

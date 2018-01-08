@@ -67,8 +67,8 @@ class TestTrainingBatch(TestCase):
     def test_getitem(self):
         from yapic_io import TiffConnector, Dataset, PredictionBatch
         #define data loacations
-        pixel_image_dir = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
-        label_image_dir = os.path.join(base_path, '..//test_data/tiffconnector_1/labels/*.tif')
+        pixel_image_dir = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_image_dir = os.path.join(base_path, '..//test_data/tiffconnector_1/labels/')
         savepath = tempfile.TemporaryDirectory()
 
         tile_size = (1, 5, 4) # size of network output layer in zxy
@@ -89,8 +89,8 @@ class TestTrainingBatch(TestCase):
     def test_getitem_multichannel_labels(self):
         from yapic_io import TiffConnector, Dataset, PredictionBatch
         #define data loacations
-        pixel_image_dir = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
-        label_image_dir = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/*.tif')
+        pixel_image_dir = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_image_dir = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/')
         savepath = tempfile.TemporaryDirectory()
 
         tile_size = (1, 5, 4) # size of network output layer in zxy
@@ -110,8 +110,8 @@ class TestTrainingBatch(TestCase):
 
 
     def test_init_trainingbatch(self):
-        pixel_image_dir = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
-        label_image_dir = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/*.tif')
+        pixel_image_dir = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_image_dir = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/')
         savepath = tempfile.TemporaryDirectory()
 
         tile_size = (1, 5, 4) # size of network output layer in zxy

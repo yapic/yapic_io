@@ -84,8 +84,8 @@ class TiffConnector(Connector):
 
         if type(img_filepath) in (str, Path):
             assert type(label_filepath) in (str, Path)
-            img_path = Path(img_filepath).expanduser().resolve()
-            lbl_path = Path(label_filepath).expanduser().resolve()
+            img_path = Path(img_filepath).expanduser()
+            lbl_path = Path(label_filepath).expanduser()
 
             img_mask = '*.tif' if img_path.is_dir() else img_path.name
             lbl_mask = '*.tif' if lbl_path.is_dir() else lbl_path.name
