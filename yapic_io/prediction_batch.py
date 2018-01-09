@@ -68,8 +68,13 @@ class PredictionBatch(Minibatch):
         '''
         super().__init__(dataset, batch_size, size_zxy, padding_zxy=padding_zxy)
         self.current_batch_pos = 0
-        self._all_tile_positions = self._compute_pos_zxy()
 
+        if size_zxy:
+            self.set_tile_size(size_zxy)
+
+    def set_tile_size(self, size_zxy):
+        super().set_tile_size(size_zxy)
+        self._all_tile_positions = self._compute_pos_zxy()
 
     def pixels(self):
         load_img = self.dataset.multichannel_pixel_tile

@@ -79,6 +79,9 @@ class Minibatch(object):
         # imports all available labels by default
         self.labels = set(self.dataset.label_values())
 
+    def set_tile_size(self, size_zxy):
+        self.tile_size_zxy = size_zxy
+
     def set_normalize_mode(self, mode_str, minmax=None):
         '''
         local : scale between 0 and 1 (per minibatch, each channel
