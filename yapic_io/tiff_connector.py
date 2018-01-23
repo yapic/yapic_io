@@ -13,7 +13,7 @@ from pathlib import Path
 from tifffile import imsave
 
 import yapic_io.image_importers as ip
-from yapic_io.utils import get_tile_meshgrid, add_to_filename, find_best_matching_pairs
+from yapic_io.utils import get_tile_meshgrid, find_best_matching_pairs
 from yapic_io.connector import Connector
 from pprint import pprint
 logger = logging.getLogger(os.path.basename(__file__))

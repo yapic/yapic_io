@@ -75,22 +75,6 @@ def flatten(listOfLists):
     return itertools.chain.from_iterable(listOfLists)
 
 
-def add_to_filename(path, insert_str):
-    '''
-    adds suffix ore prefix to filename
-
-    >>> from yapic_io.utils import add_to_filename
-    >>> path = 'path/to/tiff/file.tif'
-    >>> add_str = 'label_1'
-    >>> add_to_filename(path, add_str)
-    'path/to/tiff/file_label_1.tif'
-    '''
-    assert insert_str.replace('_', '').isalnum(), '"{}" is not alphanumeric'.format(insert_str)
-
-    path, ext = os.path.splitext(path)
-    return '{}_{}{}'.format(path, insert_str, ext)
-
-
 def compute_str_dist_matrix(s1, s2):
     '''
     - compute matrix of string distances for two lists of strings

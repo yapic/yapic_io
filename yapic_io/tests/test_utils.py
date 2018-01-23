@@ -27,19 +27,7 @@ class TestUtils(TestCase):
         val = [(0, 0), (0, 2), (2, 0), (2, 2), (4, 0), (4, 2)]
         self.assertEqual(val, res)
 
-    def test_add_to_filename(self):
-        path = 'path/to/tiff/file.tif'
-        out_s = ut.add_to_filename(path, 'label_1')
-        self.assertEqual(out_s, 'path/to/tiff/file_label_1.tif')
-
-    def test_add_to_filename_2(self):
-        path = 'tifffile.tif'
-        out_s = ut.add_to_filename(path, 'label_1')
-        self.assertEqual(out_s, 'tifffile_label_1.tif')
-
-            
     def test_assign_slice_by_slice(self):
-        
         vol = np.array([[[ 0., 0., 0.], 
                          [ 0., 1., 2.]], 
                         [[ 0., 0., 0.], 
