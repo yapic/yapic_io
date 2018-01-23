@@ -41,25 +41,26 @@ class TestTiffconnector(TestCase):
         self.assertEqual(set(filenames_val), set(names))
 
         # list of filepaths
-        filenames = [os.path.join(folder_val, '6width4height3slices_rgb.tif'),
-                     os.path.join(
-                         folder_val, '40width26height3slices_rgb.tif'),
-                     os.path.join(folder_val, '40width26height6slices_rgb.tif')]
+        filenames = [os.path.join(str(folder_val), '6width4height3slices_rgb.tif'),
+                     os.path.join(str(folder_val), '40width26height3slices_rgb.tif'),
+                     os.path.join(str(folder_val), '40width26height6slices_rgb.tif')]
+
         folder, names = tc.handle_img_filenames(filenames)
         self.assertEqual(folder, folder_val)
         self.assertEqual(set(filenames_val), set(names))
 
         # list of filepaths with None
-        filenames = [os.path.join(folder_val, '6width4height3slices_rgb.tif'),
+        filenames = [os.path.join(str(folder_val), '6width4height3slices_rgb.tif'),
                      os.path.join(
-                         folder_val, '40width26height3slices_rgb.tif'),
+                         str(folder_val), '40width26height3slices_rgb.tif'),
                      None,
-                     os.path.join(folder_val, '40width26height6slices_rgb.tif')]
+                     os.path.join(str(folder_val), '40width26height6slices_rgb.tif')]
         filenames_val = ['6width4height3slices_rgb.tif',
                          '40width26height3slices_rgb.tif',
                          None,
                          '40width26height6slices_rgb.tif']
 
+        print(filenames)
         folder, names = tc.handle_img_filenames(filenames)
         self.assertEqual(folder, folder_val)
         self.assertEqual(set(filenames_val), set(names))

@@ -61,7 +61,7 @@ class IlastikConnector(TiffConnector):
         pairs = [self.filenames[i]for i in range(
             self.image_count()) if self.label_count_for_image(i)]
 
-        tiff_sel = [os.path.join(self.img_path, pair.img) for pair in pairs]
+        tiff_sel = [self.img_path / pair.img for pair in pairs]
 
         return IlastikConnector(tiff_sel, self.label_path,
                                 savepath=self.savepath,
