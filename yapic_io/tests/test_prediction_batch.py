@@ -7,7 +7,7 @@ from yapic_io.prediction_batch import PredictionBatch
 import numpy as np
 import yapic_io.utils as ut
 base_path = os.path.dirname(__file__)
-from yapic_io.factories import make_tiff_interface
+from yapic_io import TiffConnector, Dataset, PredictionBatch
 
 class TestPredictionBatch(TestCase):
     def test_computepos_1(self):
@@ -108,9 +108,9 @@ class TestPredictionBatch(TestCase):
         print(len(p))
         self.assertEqual(len(p), 1)
         self.assertEqual(p[0].pixels().shape, (3, 3, 1, 6, 4))
-        
 
-    def test_get_actual_batch_size(self):
+
+    def test_current_tile_positions(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
         label_path = os.path.join(base_path, '/path/to/nowhere')
         c = TiffConnector(img_path, label_path)
@@ -121,41 +121,9 @@ class TestPredictionBatch(TestCase):
         batch_size = 2
         p = PredictionBatch(d, batch_size, size)
 
+        self.assertEqual(p[0].current_tile_positions, [(0, (0, 0, 0)), (0, (1, 0, 0))])
+        self.assertEqual(p[1].current_tile_positions, [(0, (2, 0, 0))])
 
-        self.assertEqual(p[0].get_actual_batch_size(), 2)
-        self.assertEqual(p[1].get_actual_batch_size(), 1)
-
-    def test_get_curr_tile_indices(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
-        label_path = os.path.join(base_path, '/path/to/nowhere')
-        c = TiffConnector(img_path, label_path)
-
-        d = Dataset(c)
-
-        size = (1, 6, 4)
-        batch_size = 2
-        p = PredictionBatch(d, batch_size, size)
-
-
-        self.assertEqual(p[0]._get_curr_tile_indices(), [0, 1])
-        self.assertEqual(p[1]._get_curr_tile_indices(), [2])
-
-
-    def test_get_curr_tile_positions(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
-        label_path = os.path.join(base_path, '/path/to/nowhere')
-        c = TiffConnector(img_path, label_path)
-
-        d = Dataset(c)
-
-        size = (1, 6, 4)
-        batch_size = 2
-        p = PredictionBatch(d, batch_size, size)
-
-
-        self.assertEqual(p[0]._get_curr_tile_positions(), [(0, (0, 0, 0)), (0, (1, 0, 0))])
-        self.assertEqual(p[1]._get_curr_tile_positions(), [(0, (2, 0, 0))])
-        
     def test_put_probmap_data(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
         label_path = os.path.join(base_path, '/path/to/nowhere')
@@ -226,9 +194,8 @@ class TestPredictionBatch(TestCase):
 
         print('labels')
         print(c.labelvalue_mapping)
-        c.load_label_filenames('*')    
         original_labels = c.original_label_values_for_all_images()
-        res = c.map_label_values(original_labels)
+        res = c.calc_label_values_mapping(original_labels)
         print('labels')
         print(c.labelvalue_mapping)
         d = Dataset(c)
@@ -259,10 +226,11 @@ class TestPredictionBatch(TestCase):
             padding = (0, 0, 0) # padding of network input layer in zxy, in respect to output layer
 
              # make training_batch mb and prediction interface p with TiffConnector binding
-            _, p = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tile_size, padding_zxy=padding, training_batch_size=2) 
+            c = TiffConnector(pixel_image_dir, label_image_dir, savepath=savepath)
+            p = PredictionBatch(Dataset(c), 2, tile_size, padding_zxy=padding)
 
             self.assertEqual(len(p), 255)
-            self.assertEqual(p.labels, [1, 2, 3])
+            self.assertEqual(p.labels, {1, 2, 3})
 
             #classify the whole bound dataset
             for counter, item in enumerate(p):
@@ -270,56 +238,3 @@ class TestPredictionBatch(TestCase):
                 mock_classifier_result = classify(pixels, counter) #classifier output
                 #pass classifier results for each class to data source
                 item.put_probmap_data(mock_classifier_result)     
-
-
-    def test_put_probmap_data_for_label(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*')
-        savepath = tempfile.TemporaryDirectory()
-        c = TiffConnector(img_path, label_path, savepath=savepath.name)
-        d = Dataset(c)
-
-        d = Dataset(c)
-
-        size = (3, 3, 3)
-        batch_size = 1
-
-        p = PredictionBatch(d, batch_size, size)
-
-        data = np.ones((3, 3, 3))
-        
-        path1 = savepath.name + '40width26height3slices_rgb_class_109.tif'
-        path2 = savepath.name + '40width26height6slices_rgb_class_109.tif'
-        path3 = savepath.name + '6width4height3slices_rgb_class_109.tif'
-        
-        try:
-            os.remove(path1)
-        except:
-            pass
-        try:
-            os.remove(path2)
-        except:
-            pass
-        try:
-            os.remove(path3)
-        except:
-            pass               
-
-        print(len(p))
-        print(p._all_tile_positions)
-        p._put_probmap_data_for_label(data, label=1, tile_pos_index=0) #first
-        p._put_probmap_data_for_label(data, label=1, tile_pos_index=381) #last
-
-        try:
-            os.remove(path1)
-        except:
-            pass
-        try:
-            os.remove(path2)
-        except:
-            pass
-        try:
-            os.remove(path3)
-        except:
-            pass
-

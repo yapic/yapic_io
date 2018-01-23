@@ -10,12 +10,6 @@ from functools import lru_cache
 
 logger = logging.getLogger(os.path.basename(__file__))
 
-@lru_cache(maxsize = 5000)
-def is_rgb_image(path):
-    with TiffFile(path) as tiff:
-        tag = next(page.tags['photometric'] for page in tiff)
-        return tag.value == 2
-
 
 @lru_cache(maxsize = 5000)
 def get_tiff_image_dimensions(path, multichannel=None, zstack=None):
@@ -89,7 +83,7 @@ def axes_order(input_axes):
     assert Y is not None
     assert X is not None
 
-    return (C,Z,X,Y)
+    return C,Z,X,Y
 
 
 def import_tiff_image(path, multichannel=None, zstack=None):
@@ -132,58 +126,3 @@ def import_tiff_image(path, multichannel=None, zstack=None):
 
     assert len(img.shape) == 4
     return img
-
-
-def init_empty_tiff_image(path, x_size, y_size, z_size=1):
-    '''
-    initializes dark 32 bit floating point grayscale tiff image
-    '''
-
-    path = autocomplete_filename_extension(path)
-    check_filename_extension(path)
-
-    data = np.zeros((z_size, x_size, y_size), dtype=np.float32)
-    logger.info('write empty tiff image with %s values to %s', data.dtype, path)
-
-    assert len(data.shape) == 3
-    imsave(path, data, metadata={'axes': 'ZXY'})
-
-
-def add_vals_to_tiff_image(path, pos_zxy, pixels):
-    '''
-    opens a onechannel zstack tiff image, overwrites pixels values
-    with pixels at pos_zxy
-    and overwrites the input tiff image with the new pixels.
-    pixels and pos_zxy are in order (z, x, y)
-    '''
-
-    pixels = np.array(pixels, dtype=np.float32)
-
-    path = autocomplete_filename_extension(path)
-    check_filename_extension(path)
-
-    img = import_tiff_image(path, zstack=True)
-    assert len(img.shape) == 4
-
-    pos_czxy = (0, ) + pos_zxy
-    size_czxy = (1, ) + pixels.shape
-    mesh = ut.get_tile_meshgrid(img.shape, pos_czxy, size_czxy)
-
-    img[mesh] = pixels
-
-    assert len(img.shape) == 4
-    imsave(path, img[0,...], metadata={'axes': 'ZXY'})
-
-
-def check_filename_extension(path, format_str='.tif'):
-    ext = os.path.splitext(path)[1]
-
-    if ext != format_str:
-        raise ValueError('extension must be %s, but is %s', (format_str, ext))
-
-
-def autocomplete_filename_extension(path, format_str='.tif'):
-    ext = os.path.splitext(path)[1]
-    if ext == '':
-        return path + format_str
-    return path
