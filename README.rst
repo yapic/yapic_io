@@ -55,9 +55,8 @@ Classifier training:
     >>> tpl_size = (1,5,4) # size of network output layer in zxy
     >>> padding = (0,2,2) # padding of network input layer in zxy, in respect to output layer
     >>>
-    >>> # make minibatch mb and prediction interface p with TiffConnector binding
-    >>> train_data, _ = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size, padding_zxy=padding, multichannel_pixel_image=True, zstack=True,
-    multichannel_label_image=False) 
+    >>> c = TiffConnector(pixel_image_dir, label_image_dir, savepath=savepath)
+    >>> train_data = TrainingBatch(Dataset(c), tpl_size, padding_zxy=padding)
     >>>
     >>> counter=0
     >>> for mini in train_data:
@@ -90,8 +89,8 @@ Prediction:
     >>> tpl_size = (1,5,4) # size of network output layer in zxy
     >>> padding = (0,2,2) # padding of network input layer in zxy, in respect to output layer
     >>>
-    >>> # make minibatch mb and prediction interface p with TiffConnector binding
-    >>> _, prediction_data = make_tiff_interface(pixel_image_dir, label_image_dir, savepath, tpl_size, padding_zxy=padding) 
+    >>> c = TiffConnector(pixel_image_dir, label_image_dir, savepath=savepath)
+    >>> prediction_data = PredictionBatch(Dataset(c))
     >>> len(prediction_data) #give the total number of templates that cover the whole bound tiff files 
     510
     >>>
