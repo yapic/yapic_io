@@ -110,7 +110,7 @@ class TestPredictionBatch(TestCase):
         self.assertEqual(p[0].pixels().shape, (3, 3, 1, 6, 4))
 
 
-    def test_get_curr_tile_indices(self):
+    def test_current_tile_positions(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
         label_path = os.path.join(base_path, '/path/to/nowhere')
         c = TiffConnector(img_path, label_path)
