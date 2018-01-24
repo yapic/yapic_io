@@ -304,6 +304,7 @@ class Dataset(object):
         equalizes labels according to their amount.
         less frequent labels are weighted higher than more frequent labels
         '''
+
         weights = {
             l: np.nan_to_num(1.0 / img_counts.sum())
             for l, img_counts in self.label_counts.items()
@@ -332,8 +333,9 @@ class Dataset(object):
             for label_value in img_label_counts.keys():
                 label_counts[label_value][i] = img_label_counts[label_value]
 
-        logger.debug('label_counts: %i', label_counts)
+
         return dict(label_counts)
+
 
 
     def sync_label_counts(self, datset):

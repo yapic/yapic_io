@@ -3,6 +3,8 @@ import os
 import numpy as np
 from yapic_io.coordinate_tiff_connector import CoordinateTiffConnector
 from yapic_io.tiff_connector import TiffConnector
+from yapic_io.ilastik_connector import IlastikConnector
+from yapic_io.connector import io_connector
 from yapic_io.dataset import Dataset
 from yapic_io.utils import get_tile_meshgrid
 import yapic_io.dataset as ds
@@ -340,6 +342,22 @@ class TestDataset(TestCase):
         pprint(val)
         self.assertTrue((val==mat).all())
 
+
+    def test_load_label_counts_from_ilastik(self):
+        img_path = os.path.join(base_path, '../test_data/ilastik')
+        lbl_path = os.path.join(base_path, '../test_data/ilastik/ilastik-1.2.ilp')
+
+        c = io_connector(img_path, lbl_path)
+        d = Dataset(c)
+
+        actual_counts = c.label_count_for_image(0)
+        print(actual_counts)
+        label_counts = d.load_label_counts()
+        print(label_counts)
+
+        assert_array_equal(label_counts[1], np.array([1]))
+        assert_array_equal(label_counts[2], np.array([1]))
+        assert_array_equal(label_counts[3], np.array([1]))
 
     def test_load_label_counts(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')

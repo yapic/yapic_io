@@ -44,7 +44,9 @@ def assert_valid_image_subset(image_shape, pos, size):
     assert not (pos < 0).any(), 'tile out of image bounds'
     assert not (image_shape < (pos + size)).any(), 'tile out of image bounds'
 
+
 def compute_pos(img_shape, tile_shape):
+
     '''
     computes all possible positions for fetching tiles of a given size
     if the tiles do not fit perfectly in the image, the last positions
@@ -96,6 +98,11 @@ def find_best_matching_pairs(s1, s2):
     find global minimum for pairwise assignment of strings
     by using the munkres (hungarian) algorithm
     '''
+
+    #remove empties
+    s1 = list(filter(None,s1))
+    s2 = list(filter(None,s2))
+
     if len(s1) == 0:
         assert len(s2) == 0
         return []

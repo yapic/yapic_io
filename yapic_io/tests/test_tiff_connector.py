@@ -4,6 +4,7 @@ from pprint import pprint
 import numpy as np
 from numpy.testing import assert_array_equal
 from yapic_io.tiff_connector import TiffConnector
+import yapic_io.tiff_connector as tc
 import yapic_io.image_importers as ip
 import logging
 from pprint import pprint
@@ -13,49 +14,109 @@ logger = logging.getLogger(os.path.basename(__file__))
 
 base_path = os.path.dirname(__file__)
 
+
 class TestTiffconnector(TestCase):
+
+    def test_handle_img_filenames(self):
+
+        folder_val = os.path.join(
+            base_path, '../test_data/tiffconnector_1/im/')
+        folder_val = Path(os.path.normpath(os.path.expanduser(folder_val)))
+
+        filenames_val = ['6width4height3slices_rgb.tif',
+                         '40width26height3slices_rgb.tif',
+                         '40width26height6slices_rgb.tif']
+
+        # str with wildcard
+        img_path = os.path.normpath(os.path.join(
+            base_path, '../test_data/tiffconnector_1/im/*.tif'))
+        folder, names = tc.handle_img_filenames(img_path)
+        self.assertEqual(folder, folder_val)
+        self.assertEqual(set(filenames_val), set(names))
+
+        # str without wildcard
+        img_path = os.path.normpath(os.path.join(base_path, '../test_data/tiffconnector_1/im'))
+        folder, names = tc.handle_img_filenames(img_path)
+        self.assertEqual(folder, folder_val)
+        self.assertEqual(set(filenames_val), set(names))
+
+        # list of filepaths
+        filenames = [os.path.join(str(folder_val), '6width4height3slices_rgb.tif'),
+                     os.path.join(str(folder_val), '40width26height3slices_rgb.tif'),
+                     os.path.join(str(folder_val), '40width26height6slices_rgb.tif')]
+
+        folder, names = tc.handle_img_filenames(filenames)
+        self.assertEqual(folder, folder_val)
+        self.assertEqual(set(filenames_val), set(names))
+
+        # list of filepaths with None
+        filenames = [os.path.join(str(folder_val), '6width4height3slices_rgb.tif'),
+                     os.path.join(
+                         str(folder_val), '40width26height3slices_rgb.tif'),
+                     None,
+                     os.path.join(str(folder_val), '40width26height6slices_rgb.tif')]
+        filenames_val = ['6width4height3slices_rgb.tif',
+                         '40width26height3slices_rgb.tif',
+                         None,
+                         '40width26height6slices_rgb.tif']
+
+        print(filenames)
+        folder, names = tc.handle_img_filenames(filenames)
+        self.assertEqual(folder, folder_val)
+        self.assertEqual(set(filenames_val), set(names))
+
     def test_load_filenames(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
+        img_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/im/*.tif')
         c = TiffConnector(img_path, 'path/to/nowhere/')
+
 
         img_filenames = [Path('6width4height3slices_rgb.tif'),
                          Path('40width26height3slices_rgb.tif'),
                          Path('40width26height6slices_rgb.tif')]
 
+
         fnames = [e[0] for e in c.filenames]
         self.assertEqual(set(img_filenames), set(fnames))
 
-
     def test_load_filenames_from_same_path(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/together/img*.tif')
-        lbl_path = os.path.join(base_path, '../test_data/tiffconnector_1/together/lbl*.tif')
+        img_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/together/img*.tif')
+        lbl_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/together/lbl*.tif')
         c = TiffConnector(img_path, lbl_path)
-        
+
+
         expected_names = \
             [(Path('img_40width26height3slices_rgb.tif'), Path('lbl_40width26height3slices_rgb.tif'))\
            , (Path('img_40width26height6slices_rgb.tif'), None)\
            , (Path('img_6width4height3slices_rgb.tif'), Path('lbl_6width4height3slices_rgb.tif'))]
 
-        self.assertEqual(c.filenames, expected_names)   
 
+        self.assertEqual(c.filenames, expected_names)
 
     def test_filter_labeled(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/together/img*.tif')
-        lbl_path = os.path.join(base_path, '../test_data/tiffconnector_1/together/lbl*.tif')
+        img_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/together/img*.tif')
+        lbl_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/together/lbl*.tif')
         c = TiffConnector(img_path, lbl_path).filter_labeled()
 
         expected_names = \
             [(Path('img_40width26height3slices_rgb.tif'), Path('lbl_40width26height3slices_rgb.tif'))\
            , (Path('img_6width4height3slices_rgb.tif'), Path('lbl_6width4height3slices_rgb.tif'))]
 
+
         self.assertEqual(set(c.filenames), set(expected_names))
 
-
     def test_split(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/together/img*.tif')
-        lbl_path = os.path.join(base_path, '../test_data/tiffconnector_1/together/lbl*.tif')
+        img_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/together/img*.tif')
+        lbl_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/together/lbl*.tif')
         c = TiffConnector(img_path, lbl_path)
         c1, c2 = c.split(0.5)
+
 
         expected_names1 = [(Path('img_40width26height3slices_rgb.tif'), Path('lbl_40width26height3slices_rgb.tif'))]
         expected_names2 = [(Path('img_40width26height6slices_rgb.tif'), None),
@@ -64,42 +125,42 @@ class TestTiffconnector(TestCase):
         self.assertEqual(set(c1.filenames), set(expected_names1))
         self.assertEqual(set(c2.filenames), set(expected_names2))
 
-        #test for issue #1
+        # test for issue #1
         self.assertEqual(c1.labelvalue_mapping, c.labelvalue_mapping)
         self.assertEqual(c2.labelvalue_mapping, c.labelvalue_mapping)
-
 
     def test_load_filenames_emptyfolder(self):
         img_path = os.path.join(base_path, '../test_data/empty_folder/')
         c = TiffConnector(img_path, 'path/to/nowhere/')
         self.assertEqual(len(c.filenames), 0)
 
-
     def test_image_dimensions(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/together/img*.tif')
-        lbl_path = os.path.join(base_path, '../test_data/tiffconnector_1/together/lbl*.tif')
+        img_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/together/img*.tif')
+        lbl_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/together/lbl*.tif')
         c = TiffConnector(img_path, lbl_path)
-        
+
         with self.assertRaises(IndexError):
             c.image_dimensions(4)
-        
+
         self.assertEqual(c.image_dimensions(0), (3, 3, 40, 26))
         self.assertEqual(c.image_dimensions(1), (3, 6, 40, 26))
-        self.assertEqual(c.image_dimensions(2), (3, 3, 6, 4))   
-
+        self.assertEqual(c.image_dimensions(2), (3, 3, 6, 4))
 
     def test_load_image(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/together/*.tif')
+        img_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/together/*.tif')
         c = TiffConnector(img_path, 'path/to/nowhere/')
-        
+
         im = c.load_image(0)
         self.assertEqual(im.shape, (3, 3, 40, 26))
 
-
     def test_get_tile(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/together/*.tif')
+        img_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/together/*.tif')
         c = TiffConnector(img_path, 'path/to/nowhere/')
-        
+
         image_nr = 0
         pos = (0, 0, 0, 0)
         size = (1, 1, 1, 2)
@@ -113,10 +174,11 @@ class TestTiffconnector(TestCase):
         print(tile)
         np.testing.assert_array_equal(tile, val)
 
-
     def test_load_label_filenames(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
+        img_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/im/*.tif')
+        label_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/labels/*.tif')
 
         c = TiffConnector(img_path, label_path)
 
@@ -124,10 +186,11 @@ class TestTiffconnector(TestCase):
         self.assertIsNone(c.filenames[1][1])
         self.assertEqual(c.filenames[2][1], Path('6width4height3slices_rgb.tif'))
 
-
     def test_load_label_matrix(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
+        img_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/im/*.tif')
+        label_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/labels/*.tif')
 
         c = TiffConnector(img_path, label_path)
 
@@ -136,21 +199,23 @@ class TestTiffconnector(TestCase):
         print(labelmat)
         self.assertEqual(labelmat.shape, (1, 3, 6, 4))
 
-
     def test_load_label_matrix_multichannel(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/*.tif')
+        img_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/im/*.tif')
+        label_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/labels_multichannel/*.tif')
 
         c = TiffConnector(img_path, label_path)
 
         im = c.load_image(2)
         labelmat = c.load_label_matrix(2)
-        self.assertEqual(labelmat.shape, (2, 3, 6, 4)) 
-
+        self.assertEqual(labelmat.shape, (2, 3, 6, 4))
 
     def test_label_tile(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/*.tif')
+        img_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/im/*.tif')
+        label_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/labels_multichannel/*.tif')
 
         c = TiffConnector(img_path, label_path)
 
@@ -160,13 +225,13 @@ class TestTiffconnector(TestCase):
 
         tile = c.label_tile(2, pos_zxy, size_zxy, label_value)
 
-        val_z0 = np.array(\
-                [[[False, False, False, False], 
-                  [False, False, False, False], 
-                  [False, True, True, True], 
-                  [False, True, True, True], 
-                  [False, False, False, False], 
-                  [False, False, False, False]]])
+        val_z0 = np.array(
+            [[[False, False, False, False],
+              [False, False, False, False],
+              [False, True, True, True],
+              [False, True, True, True],
+              [False, False, False, False],
+              [False, False, False, False]]])
         assert_array_equal(val_z0, tile)
 
         pos_zxy = (1, 0, 0)
@@ -174,178 +239,189 @@ class TestTiffconnector(TestCase):
 
         tile_z1 = c.label_tile(2, pos_zxy, size_zxy, label_value)
 
-        val_z1 = np.array(\
-        [[[False, False, False, False], 
-          [False, False, False, False], 
-          [False, False, False, False], 
-          [False, False, False, False], 
-          [False, False, False, False], 
-          [ True, True, False, False]]])
+        val_z1 = np.array(
+            [[[False, False, False, False],
+              [False, False, False, False],
+                [False, False, False, False],
+                [False, False, False, False],
+                [False, False, False, False],
+                [True, True, False, False]]])
         assert_array_equal(val_z1, tile_z1)
 
-
     def test_check_label_matrix_dimensions(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/*.tif')
+        img_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/im/*.tif')
+        label_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/labels_multichannel/*.tif')
 
         c = TiffConnector(img_path, label_path)
         c.check_label_matrix_dimensions()
 
-
     def test_check_label_matrix_dimensions_2(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel_not_valid/')
-    
+
         self.assertRaises(AssertionError, lambda: TiffConnector(img_path, label_path))
 
 
     def test_label_count_for_image(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
+        img_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/im/*.tif')
+        label_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/labels/*.tif')
 
         c = TiffConnector(img_path, label_path)
 
         count = c.label_count_for_image(2)
         print(c.labelvalue_mapping)
 
-        self.assertEqual(count, {2 : 11, 3: 3})
+        self.assertEqual(count, {2: 11, 3: 3})
 
 
     def test_put_tile_1(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
+        img_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/im/*.tif')
+        label_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/labels/*.tif')
         savepath = tempfile.TemporaryDirectory()
 
         c = TiffConnector(img_path, label_path, savepath=savepath.name)
 
-        pixels = np.array([[[.1, .2, .3], \
+        pixels = np.array([[[.1, .2, .3],
                             [.4, .5, .6]]], dtype=np.float32)
-        
-        path = os.path.join(savepath.name, '6width4height3slices_rgb_class_3.tif')
-        
+
+        path = os.path.join(
+            savepath.name, '6width4height3slices_rgb_class_3.tif')
+
         try:
             os.remove(path)
-        except: pass    
+        except:
+            pass
 
         c.put_tile(pixels, pos_zxy=(0, 1, 1), image_nr=2, label_value=3)
         probim = ip.import_tiff_image(path, zstack=True)
         pprint(probim)
 
         val = \
-            np.array([[[[ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.1       , 0.2       , 0.3       ], \
-             [ 0.        , 0.4       , 0.5       , 0.6       ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ]], \
-            [[ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ]], \
-            [[ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ]]]], dtype=np.float32)
-        
-        self.assertTrue((val==probim).all())
+            np.array([[[[0., 0., 0., 0.],
+                        [0., 0.1, 0.2, 0.3],
+                        [0., 0.4, 0.5, 0.6],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.]],
+                       [[0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.]],
+                       [[0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.]]]], dtype=np.float32)
+
+        self.assertTrue((val == probim).all())
 
         try:
             os.remove(path)
-        except: pass
-
-        
+        except:
+            pass
 
     def test_put_tile_2(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
+        img_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/im/*.tif')
+        label_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/labels/*.tif')
         savepath = tempfile.TemporaryDirectory()
 
         c = TiffConnector(img_path, label_path, savepath=savepath.name)
 
-        pixels = np.array([[[.1, .2, .3], \
+        pixels = np.array([[[.1, .2, .3],
                             [.4, .5, .6]]], dtype=np.float32)
-        
-        path = os.path.join(savepath.name, '6width4height3slices_rgb_class_3.tif')
-        
+
+        path = os.path.join(
+            savepath.name, '6width4height3slices_rgb_class_3.tif')
+
         try:
             os.remove(path)
-        except: pass    
+        except:
+            pass
 
         c.put_tile(pixels, pos_zxy=(0, 1, 1), image_nr=2, label_value=3)
         probim = ip.import_tiff_image(path, zstack=True)
         pprint(probim)
 
         val = \
-            np.array([[[[ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.1       , 0.2       , 0.3       ], \
-             [ 0.        , 0.4       , 0.5       , 0.6       ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ]], \
-            [[ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ]], \
-            [[ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ]]]], dtype=np.float32)
-        
-        self.assertTrue((val==probim).all())
+            np.array([[[[0., 0., 0., 0.],
+                        [0., 0.1, 0.2, 0.3],
+                        [0., 0.4, 0.5, 0.6],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.]],
+                       [[0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.]],
+                       [[0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.]]]], dtype=np.float32)
 
+        self.assertTrue((val == probim).all())
 
         c.put_tile(pixels, pos_zxy=(2, 1, 1), image_nr=2, label_value=3)
         probim_2 = ip.import_tiff_image(path, zstack=True)
         pprint(probim_2)
 
         val_2 = \
-            np.array([[[[ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.1       , 0.2       , 0.3       ], \
-             [ 0.        , 0.4       , 0.5       , 0.6       ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ]], \
-            [[ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ]], \
-            [[ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.1       , 0.2       , 0.3        ], \
-             [ 0.        , 0.4       , 0.5       , 0.6        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ], \
-             [ 0.        , 0.        , 0.        , 0.        ]]]], dtype=np.float32)
+            np.array([[[[0., 0., 0., 0.],
+                        [0., 0.1, 0.2, 0.3],
+                        [0., 0.4, 0.5, 0.6],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.]],
+                       [[0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.]],
+                       [[0., 0., 0., 0.],
+                        [0., 0.1, 0.2, 0.3],
+                        [0., 0.4, 0.5, 0.6],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.]]]], dtype=np.float32)
 
-        self.assertTrue((val_2==probim_2).all())    
+        self.assertTrue((val_2 == probim_2).all())
 
         try:
             os.remove(path)
-        except: pass
+        except:
+            pass
 
 
     def test_original_label_values(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*.tif')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/*.tif')
+        img_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/im/*.tif')
+        label_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/labels_multichannel/*.tif')
 
         c = TiffConnector(img_path, label_path)
 
         res = c.original_label_values_for_all_images()
         self.assertEqual(res, [{91, 109, 150}, {91, 109, 150}])
-        
 
     def test_map_label_values(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/')
+        label_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/labels_multichannel/')
         c = TiffConnector(img_path, label_path)
 
         original_labels = c.original_label_values_for_all_images()
@@ -355,7 +431,8 @@ class TestTiffconnector(TestCase):
 
     def test_map_label_values_2(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        label_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/labels/')
         c = TiffConnector(img_path, label_path)
 
         original_labels = c.original_label_values_for_all_images()
@@ -365,7 +442,8 @@ class TestTiffconnector(TestCase):
 
     def test_map_label_values_3(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
+        label_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/labels/')
         c = TiffConnector(img_path, label_path)
 
         original_labels = c.original_label_values_for_all_images()
@@ -373,14 +451,15 @@ class TestTiffconnector(TestCase):
         self.assertEqual(res, [{91:1, 109:2, 150:3}])
 
 
-    def test_map_label_values_4(self):    
-        
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/*.tif')
+    def test_map_label_values_4(self):
+
+        img_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
+        label_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/labels/*.tif')
 
         c = TiffConnector(img_path, label_path)
 
         original_labels = c.original_label_values_for_all_images()
         res = c.calc_label_values_mapping(original_labels)
         self.assertEqual(c.labelvalue_mapping, [{109: 1, 150: 2}])
-
