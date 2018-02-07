@@ -1,20 +1,11 @@
-import os
 import numpy as np
 import logging
 import os
-import random
 import itertools
-logger = logging.getLogger(os.path.basename(__file__))
 from difflib import SequenceMatcher
 from munkres import Munkres
 
-
-def assign_slice_by_slice(assignment_dicts, vol):
-    # potential bug? we must assign to a copy of vol!
-    for c, cd in enumerate(assignment_dicts):
-        for key, value in cd.items():
-            vol[c][vol[c] == key] = value
-    return vol
+logger = logging.getLogger(os.path.basename(__file__))
 
 
 def get_tile_meshgrid(image_shape, pos, size):

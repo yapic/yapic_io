@@ -1,17 +1,14 @@
+from itertools import zip_longest
 import os
 import logging
-import glob
 from functools import lru_cache
 
 import numpy as np
-
-logger = logging.getLogger(os.path.basename(__file__))
-
 import pyilastik
 
-from yapic_io.tiff_connector import TiffConnector, handle_img_filenames, FilePair
-from yapic_io import utils as ut
+from yapic_io.tiff_connector import TiffConnector
 
+logger = logging.getLogger(os.path.basename(__file__))
 
 class IlastikConnector(TiffConnector):
     '''
@@ -29,12 +26,8 @@ class IlastikConnector(TiffConnector):
     label filepath: yapic_io/test_data/ilastik/ilastik-multiim-1.2.ilp
     nr of images: 3
     labelvalue_mapping: [{1: 1, 2: 2}]
-
-
     '''
-
     def handle_lbl_filenames(self, label_filepath):
-
         label_path = label_filepath
         self.ilp = pyilastik.read_project(label_filepath, skip_image=True)
         lbl_filenames = self.ilp.image_path_list()
@@ -57,16 +50,12 @@ class IlastikConnector(TiffConnector):
         '''
         Overwrites filter_labeled from TiffConnector
         '''
-
         pairs = [self.filenames[i]for i in range(
             self.image_count()) if self.label_count_for_image(i)]
 
         tiff_sel = [self.img_path / pair.img for pair in pairs]
 
-        return IlastikConnector(tiff_sel, self.label_path,
-                                savepath=self.savepath,
-                                multichannel_pixel_image=self.multichannel_pixel_image,
-                                zstack=self.zstack)
+        return IlastikConnector(tiff_sel, self.label_path, savepath=self.savepath)
 
     def split(self, fraction, random_seed=42):
         '''
@@ -77,14 +66,8 @@ class IlastikConnector(TiffConnector):
         img_fnames1, img_fnames2, mask = self._split_img_fnames(
             fraction, random_seed=random_seed)
 
-        conn1 = IlastikConnector(img_fnames1, self.label_path,
-                                 savepath=self.savepath,
-                                 multichannel_pixel_image=self.multichannel_pixel_image,
-                                 zstack=self.zstack)
-        conn2 = IlastikConnector(img_fnames2, self.label_path,
-                                 savepath=self.savepath,
-                                 multichannel_pixel_image=self.multichannel_pixel_image,
-                                 zstack=self.zstack)
+        conn1 = IlastikConnector(img_fnames1, self.label_path, savepath=self.savepath)
+        conn2 = IlastikConnector(img_fnames2, self.label_path, savepath=self.savepath)
 
         # ensures that both resulting tiff_connectors have the same
         # labelvalue mapping (issue #1)
@@ -106,43 +89,29 @@ class IlastikConnector(TiffConnector):
         return self.image_dimensions(image_nr)
 
     @lru_cache(maxsize=20)
-    def load_label_matrix(self, image_nr, original_labelvalues=False):
+    def label_tile(self, image_nr, pos_zxy, size_zxy, label_value):
         '''
-        returns a 4d labelmatrix with dimensions czxy.
-        the albelmatrix consists of zeros (no label) or the respective
-        label value.
-
-        if original_labelvalues is False, the mapped label values are returned,
-        otherwise the original labelvalues.
+        returns a 3d zxy boolean matrix where positions of the requested label
+        are indicated with True. only mapped labelvalues can be requested.
         '''
         label_filename = str(self.filenames[image_nr].lbl)
-        img_shape = self.image_dimensions(image_nr)
 
         if label_filename is None:
-            msg = 'no label matrix file found for image file #{}'.format(
-                image_nr)
-            logger.warning(msg)
+            msg = 'No label matrix file found for image file #{}.'
+            logger.warning(msg.format(image_nr))
             return None
 
         filename, (img, lbl, prediction) = self.ilp[label_filename]
-
         lbl = np.transpose(lbl, (3, 0, 2, 1)).astype(int)
 
-        if lbl.size == 0:
-            lbl = np.zeros((1, 1, 1, 0))
+        C, original_label_value = self._mapped_label_value_to_original(label_value)
+        Z, X, Y = pos_zxy
+        ZZ, XX, YY = np.array(pos_zxy) + size_zxy
+        lbl = lbl[C, Z:ZZ, X:XX, Y:YY]
+        lbl = (lbl == original_label_value)
 
-        # acutal label size is unknown in ilastik project file, so we pad with zeros
-        #pad_width = [(0, i - l) for i, l in zip(img_shape, lbl.shape)]
-        # padding for label channel is always zero (always one label channel
-        # for ilastik data)
-        pad_width = [(0, 0)] + [(0, i - l)
-                                for i, l in zip(img_shape[1:], lbl.shape[1:])]
-        lbl = np.pad(lbl, pad_width, 'constant', constant_values=(0, 0))
+        return lbl
 
-        if original_labelvalues:
-            return lbl
-
-        return ut.assign_slice_by_slice(self.labelvalue_mapping, lbl)
 
     def check_label_matrix_dimensions(self):
         '''
@@ -151,3 +120,61 @@ class IlastikConnector(TiffConnector):
         are correct for Ilastik Projects.
         '''
         return True
+
+    @lru_cache(maxsize=1)
+    def original_label_values_for_all_images(self):
+        '''
+        returns a list of sets. each set corresponds to 1 label channel.
+        each set contains the label values of that channel.
+        E.g. `[{91, 109, 150}, {90, 100}]` for two label channels
+        '''
+        labels_per_channel = []
+
+        for image_nr in range(self.image_count()):
+            label_filename = str(self.filenames[image_nr].lbl)
+
+            if label_filename is None:
+                msg = 'No label matrix file found for image file #{}.'
+                logger.warning(msg.format(image_nr))
+                return None
+
+            filename, (img, lbl, prediction) = self.ilp[label_filename]
+            lbl = np.transpose(lbl, (3, 0, 2, 1)).astype(int)
+
+            C = lbl.shape[0]
+            labels = [np.unique(lbl[c,...]) for c in range(C)]
+            labels = [set(labels) - {0} for labels in labels]
+
+            labels_per_channel = [l1.union(l2)
+                                  for l1, l2 in zip_longest(labels_per_channel, labels, fillvalue=set())]
+
+        return labels_per_channel
+
+
+
+    @lru_cache(maxsize = 1500)
+    def label_count_for_image(self, image_nr):
+        '''
+        returns for each label value the number of labels for this image
+        '''
+        label_filename = str(self.filenames[image_nr].lbl)
+
+        if label_filename is None:
+            msg = 'No label matrix file found for image file #{}.'
+            logger.warning(msg.format(image_nr))
+            return None
+
+        filename, (img, lbl, prediction) = self.ilp[label_filename]
+        lbl = np.transpose(lbl, (3, 0, 2, 1)).astype(int)
+
+        C = lbl.shape[0]
+        labels = [np.unique(lbl[c,...]) for c in range(C)]
+
+        original_label_count = [{ l: np.count_nonzero(lbl[c,...] == l)
+                                  for l in labels[c] if l > 0
+                                }
+                                for c in range(C)]
+        label_count = {self.labelvalue_mapping[c][l]: count
+                       for c, orig in enumerate(original_label_count)
+                       for l, count in orig.items()}
+        return label_count
