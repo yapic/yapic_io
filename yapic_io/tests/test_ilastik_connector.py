@@ -108,6 +108,51 @@ class TestIlastikConnector(TestCase):
         pprint(c.filenames)
         assert_array_equal(lbl_identifiers, [lbl for im, lbl in c.filenames])
 
+    def test_label_tile(self):
+        import warnings
+        warnings.warn(('test_label_tile() should be reimplemented when '
+                       'IlastikConnector is fixes!'), FutureWarning)
+        '''
+        img_path = os.path.join(
+            base_path, '../test_data/ilastik/pixels_ilastik-multiim-1.2')
+        lbl_path = os.path.join(
+            base_path, '../test_data/ilastik/ilastik-multiim-1.2.ilp')
+        c = IlastikConnector(img_path, lbl_path)
+
+        mat_val = np.array([[0.,  0.,  0.,  0.,  0.,  0.,  0.],
+                            [0.,  0.,  2.,  2.,  2.,  0.,  0.],
+                            [0.,  2.,  2.,  2.,  2.,  2.,  0.],
+                            [0.,  2.,  2.,  2.,  2.,  2.,  0.],
+                            [0.,  2.,  2.,  2.,  2.,  2.,  0.],
+                            [0.,  2.,  2.,  2.,  2.,  2.,  0.],
+                            [0.,  2.,  2.,  2.,  2.,  2.,  0.],
+                            [0.,  2.,  2.,  2.,  2.,  2.,  0.],
+                            [0.,  2.,  2.,  2.,  2.,  2.,  0.],
+                            [0.,  2.,  2.,  2.,  2.,  0.,  0.],
+                            [0.,  0.,  0.,  2.,  0.,  0.,  0.],
+                            [0.,  0.,  0.,  0.,  0.,  0.,  0.]])
+
+        lbl = c.label_tile(0, (0,0,0), (1,19,17), 2)
+        assert_array_equal(lbl[0, 6:18, 9:16], mat_val != 0)
+
+        mat_val = np.array([[0.,  0.,  0.,  1.,  0.,  0.,  0.],
+                            [0.,  1.,  1.,  1.,  1.,  0.,  0.],
+                            [0.,  1.,  1.,  1.,  1.,  1.,  0.],
+                            [0.,  1.,  1.,  1.,  1.,  1.,  0.],
+                            [0.,  1.,  1.,  1.,  1.,  1.,  0.],
+                            [0.,  1.,  1.,  1.,  1.,  1.,  0.],
+                            [0.,  1.,  1.,  1.,  1.,  1.,  0.],
+                            [0.,  1.,  1.,  1.,  1.,  1.,  0.],
+                            [0.,  1.,  1.,  1.,  1.,  1.,  0.],
+                            [0.,  1.,  1.,  1.,  1.,  1.,  0.],
+                            [0.,  1.,  1.,  1.,  1.,  0.,  0.],
+                            [0.,  0.,  0.,  1.,  0.,  0.,  0.],
+                            [0.,  0.,  0.,  0.,  0.,  0.,  0.]])
+
+        lbl = c.label_tile(0, (0,0,0), (1,14,9), 1)
+        assert_array_equal(lbl[0, :13, 1:8], mat_val != 0)
+    '''
+
     def test_filter_labeled(self):
 
         img_path = os.path.join(
