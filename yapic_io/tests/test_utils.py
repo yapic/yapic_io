@@ -29,37 +29,6 @@ class TestUtils(TestCase):
         self.assertEqual(val, res)
 
 
-    def test_assign_slice_by_slice(self):
-        vol = np.array([[[ 0., 0., 0.],
-                         [ 0., 1., 2.]],
-                        [[ 0., 0., 0.],
-                         [ 0., 1., 2.]],
-                        [[ 0., 0., 0.],
-                         [ 0., 1., 2.]]])
-
-        val = np.array([[[ 0., 0., 0.],
-                         [ 0., 3., 4.]],
-                        [[ 0., 0., 0.],
-                         [ 0., 5., 6.]],
-                        [[ 0., 0., 0.],
-                         [ 0., 7., 8.]]])
-
-        # vol = np.zeros((3, 2, 3))
-
-        # vol[0, 1, 1] = 1
-        # vol[0, 1, 2] = 2
-        # vol[1, 1, 1] = 1
-        # vol[1, 1, 2] = 2
-        # vol[2, 1, 1] = 1
-        # vol[2, 1, 2] = 2
-
-        d = [{1:3, 2: 4}, {1:5, 2: 6}, {1:7, 2: 8}]
-
-        out = ut.assign_slice_by_slice(d, vol)
-        pprint(out)
-        self.assertTrue(np.array_equal(out, val))
-
-
     def test_compute_str_dist_matrix(self):
 
         a = ['hund', 'katze', 'maus']

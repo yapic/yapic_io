@@ -237,4 +237,4 @@ class TestPredictionBatch(TestCase):
                 pixels = item.pixels() #input for classifier
                 mock_classifier_result = classify(pixels, counter) #classifier output
                 #pass classifier results for each class to data source
-                item.put_probmap_data(mock_classifier_result)     
+                item.put_probmap_data(mock_classifier_result)

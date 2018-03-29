@@ -1,7 +1,5 @@
 import logging
 import os
-import glob
-import itertools
 import collections
 from functools import lru_cache
 import yapic_io.utils as ut
@@ -10,12 +8,9 @@ import itertools
 import warnings
 from itertools import zip_longest
 from pathlib import Path
-from tifffile import imsave
+from bigtiff import Tiff, PlaceHolder
 
-import yapic_io.image_importers as ip
-from yapic_io.utils import get_tile_meshgrid, find_best_matching_pairs
 from yapic_io.connector import Connector
-from pprint import pprint
 logger = logging.getLogger(os.path.basename(__file__))
 
 FilePair = collections.namedtuple('FilePair', ['img', 'lbl'])
@@ -82,53 +77,23 @@ class TiffConnector(Connector):
     label filepath: yapic_io/test_data/tiffconnector_1/labels
     nr of images: 3
     labelvalue_mapping: [{91: 1, 109: 2, 150: 3}]
-
     '''
 
-    def __init__(self, img_filepath, label_filepath, savepath=None, multichannel_pixel_image=None,
-                 multichannel_label_image=None, zstack=True):
-
+    def __init__(self, img_filepath, label_filepath, savepath=None):
         '''
         :param img_filepath: path to source pixel images (use wildcards for filtering)
                              or a list of filenames
         :param label_filepath: path to label images (use wildcards for filtering)
                                or a list of filenames
         :param savepath: path for output probability images
-        :param multichannel_pixel_image: set True if pixel images have multiple channels
-        :type multichannel_pixel_image: bool
-        :param multichannel_label_image: set True if label images have multiple channels
-        :type multichannel_label_image: bool
-        :param zstack: set True if label- and pixel images are zstacks
-        :type zstack: bool
-
         Label images and pixel images have to be equal in zxy dimensions, but can differ
         in nr of channels.
 
         Labels can be read from multichannel images. This is needed for networks
-        with multilee output layers. Each channel is assigned one output layer.
+        with multiple output layers. Each channel is assigned one output layer.
         Different labels from different channels can overlap (can share identical
         xyz positions).
-
-        Multichannel_pixel_image, multichannel_pixel_image and zstack
-        can be set to None. In this case the importer tries to map
-        dimensions automatically. This does not always work, esp. in case
-        of 3 dimensional images.
-
-
-        Examples:
-
-        - If zstack is set to False and multichannel_pixel_image is set to None,
-          the importer will assign the thrid dimensions (in case of 3 dimensional images)
-          to channels, i.e. interprets the image as multichannel, single z image.
-
-        - If zstack is set to None and multichannel_pixel_image is set to None,
-          the importer will assign all dims correctly in case of 4 dimensional images
-          and in case of 2 dimensional images (single z, singechannel). In case of 3
-          dimensional images, it throws an error, because it is not clear if the thrid
-          dimension is z or channel (RGB images will still be mapped correctly)
         '''
-
-
         self.img_path, img_filenames = handle_img_filenames(img_filepath)
         self.label_path, lbl_filenames = self.handle_lbl_filenames(
             label_filepath)
@@ -147,13 +112,8 @@ class TiffConnector(Connector):
                               for pair in self.filenames))
 
         self.labelvalue_mapping = None  # list of dicts of original and assigned labelvalues
-
         # reason: assign unique labelvalues
         # [{orig_label1: 1, orig_label2: 2}, {orig_label1: 3, orig_label2: 4}, ...]
-
-        self.zstack = zstack
-        self.multichannel_pixel_image = multichannel_pixel_image
-        self.multichannel_label_image = multichannel_label_image
         self.savepath = Path(savepath) if savepath is not None else None  # path for probability maps
 
         original_labels = self.original_label_values_for_all_images()
@@ -189,11 +149,7 @@ class TiffConnector(Connector):
                       for img, lbl in self.filenames
                       if lbl is not None]
 
-        return TiffConnector(img_fnames, lbl_fnames,
-                             savepath=self.savepath,
-                             multichannel_pixel_image=self.multichannel_pixel_image,
-                             multichannel_label_image=self.multichannel_label_image,
-                             zstack=self.zstack)
+        return TiffConnector(img_fnames, lbl_fnames, savepath=self.savepath)
 
     def _split_img_fnames(self, fraction, random_seed=42):
         # i took this out from the split method to be used in split method
@@ -238,16 +194,8 @@ class TiffConnector(Connector):
         lbl_fnames2 = [self.label_path / lbl if lbl is not None else None
                        for img, lbl in itertools.compress(self.filenames, ~mask)]
 
-        conn1 = TiffConnector(img_fnames1, lbl_fnames1,
-                              savepath=self.savepath,
-                              multichannel_pixel_image=self.multichannel_pixel_image,
-                              multichannel_label_image=self.multichannel_label_image,
-                              zstack=self.zstack)
-        conn2 = TiffConnector(img_fnames2, lbl_fnames2,
-                              savepath=self.savepath,
-                              multichannel_pixel_image=self.multichannel_pixel_image,
-                              multichannel_label_image=self.multichannel_label_image,
-                              zstack=self.zstack)
+        conn1 = TiffConnector(img_fnames1, lbl_fnames1, savepath=self.savepath)
+        conn2 = TiffConnector(img_fnames2, lbl_fnames2, savepath=self.savepath)
 
         # ensures that both resulting tiff_connectors have the same
         # labelvalue mapping (issue #1)
@@ -260,40 +208,43 @@ class TiffConnector(Connector):
     def image_count(self):
         return len(self.filenames)
 
-    def put_tile(self, pixels, pos_zxy, image_nr, label_value):
-        assert self.savepath is not None
-        np.testing.assert_equal(len(pos_zxy), 3)
-        np.testing.assert_equal(len(pixels.shape), 3)
-
+    @lru_cache(maxsize=10)
+    def _open_probability_map_file(self, image_nr, label_value):
+        # memmap is slow, so we must cache it to be fast!
         fname = self.filenames[image_nr].img
         fname = '{}_class_{}{}'.format(fname.stem, label_value, fname.suffix)
         path = self.savepath / fname
         if not fname.endswith('.tif'):
             path += '.tif'
 
-        if path.exists():
-            img = ip.import_tiff_image(str(path), zstack=True)
-        else:
+        if not path.exists():
+            T = 1
+            C = 1
             _, Z, X, Y = self.image_dimensions(image_nr)
-            img = np.zeros((1, Z, X, Y), dtype=np.float32)
+            images = [PlaceHolder((Y, X, 1), 'float32')] * Z
+            Tiff.write(images, io=str(path), imagej_shape=(T,C,Z))
 
+        return Tiff.memmap_tcz(path)
+
+    def put_tile(self, pixels, pos_zxy, image_nr, label_value):
+        assert self.savepath is not None
+        np.testing.assert_equal(len(pos_zxy), 3)
+        np.testing.assert_equal(len(pixels.shape), 3)
         pixels = np.array(pixels, dtype=np.float32)
-        pos_czxy = (0,) + pos_zxy
-        size_czxy = (1,) + pixels.shape
 
-        assert len(img.shape) == 4
-        mesh = ut.get_tile_meshgrid(img.shape, pos_czxy, size_czxy)
-        img[mesh] = pixels
+        slices = self._open_probability_map_file(image_nr, label_value)
 
-        assert len(img.shape) == 4
-        imsave(str(path), img[0, ...], metadata={'axes': 'ZXY'})
+        T = C = 0
+        Z, X, Y = pos_zxy
+        ZZ, XX, YY = np.array(pos_zxy) + pixels.shape
+        for z in range(Z, ZZ):
+            slices[T,C,z][Y:YY, X:XX] = pixels[z - Z, ...].T
 
-    @lru_cache(maxsize=5000)
-    def get_tile(self, image_nr, pos, size):
-        im = self.load_image(image_nr)
-        mesh = ut.get_tile_meshgrid(im.shape, pos, size)
-
-        return im[mesh]
+    @lru_cache(maxsize=10)
+    def _open_image_file(self, image_nr):
+        # memmap is slow, so we must cache it to be fast!
+        path = self.img_path / self.filenames[image_nr].img
+        return Tiff.memmap_tcz(path)
 
     def image_dimensions(self, image_nr):
         '''
@@ -303,12 +254,9 @@ class TiffConnector(Connector):
         :param image_nr: index of image
         :returns (nr_channels, nr_zslices, nr_x, nr_y)
         '''
-
-        path = self.img_path / self.filenames[image_nr].img
-        return ip.get_tiff_image_dimensions(str(path), zstack=self.zstack,
-                                            multichannel=self.multichannel_pixel_image)
-
-
+        img = self._open_image_file(image_nr)
+        Y, X = img[0,0,0].shape
+        return np.hstack([img.shape[1:], (X,Y)])
 
     def label_matrix_dimensions(self, image_nr):
         '''
@@ -318,15 +266,12 @@ class TiffConnector(Connector):
         :param image_nr: index of image
         :returns (nr_channels, nr_zslices, nr_x, nr_y)
         '''
-        if self.filenames[image_nr].lbl is None:
-            return None
+        lbl = self._open_label_file(image_nr)
+        if lbl is None:
+            return
 
-
-        path = self.label_path / self.filenames[image_nr].lbl
-        return ip.get_tiff_image_dimensions(str(path), zstack=self.zstack,
-                                            multichannel=self.multichannel_label_image)
-
-
+        Y, X = lbl[0,0,0].shape
+        return np.hstack([lbl.shape[1:], (X,Y)])
 
     def check_label_matrix_dimensions(self):
         '''
@@ -354,41 +299,54 @@ class TiffConnector(Connector):
             np.testing.assert_equal(N_channels, ch, 'Label channels inconsistent for {}'.format(lbl_fname))
             np.testing.assert_array_equal(lbl_dim, img_dim, 'Invalid image dims for {} and {}'.format(img_fname, lbl_fname))
 
-    @lru_cache(maxsize=20)
-    def load_image(self, image_nr):
-        path = self.img_path / self.filenames[image_nr].img
-        return ip.import_tiff_image(str(path))
+    def _mapped_label_value_to_original(self, label_value):
+        '''
+        self.labelvalue_mapping in reverse
+        '''
+        for c, mapping in enumerate(self.labelvalue_mapping):
+            reverse_mapping = {v: k for k, v in mapping.items()}
+            original = reverse_mapping.get(label_value)
+            if original is not None:
+                return c, original
+
+        msg = 'Should not be reached! (mapped_label_value={}, mapping={})'
+        raise Exception(msg.format(label_value, self.labelvalue_mapping))
+
+    def get_tile(self, image_nr, pos, size):
+        T = 0
+        C, Z, X, Y = pos
+        CC, ZZ, XX, YY = np.array(pos) + size
+
+        slices = self._open_image_file(image_nr)
+        tile = [ [ s[Y:YY, X:XX] for s in c[Z:ZZ] ] for c in slices[T, C:CC, :] ]
+        tile = np.stack(tile)
+        tile = np.moveaxis(tile, (0,1,2,3), (0,1,3,2))
+
+        return tile
 
     def label_tile(self, image_nr, pos_zxy, size_zxy, label_value):
         '''
         returns a 3d zxy boolean matrix where positions of the reuqested label
         are indicated with True. only mapped labelvalues can be requested.
         '''
-        labelmat = self.load_label_matrix(image_nr)  # matrix with labelvalues
-        boolmat_4d = (labelmat == label_value)
+        T = 0
+        Z, X, Y = pos_zxy
+        ZZ, XX, YY = np.array(pos_zxy) + size_zxy
+        C, original_label_value = self._mapped_label_value_to_original(label_value)
 
-        boolmat_3d = boolmat_4d.any(axis=0)  # reduction to zxy dimension
-        # comment: mapped labelvalues are unique for a channel, as they
-        # are generated with map_label_values(). This means,
-        # a mapped labelvalue is only present in one specific channel.
-        # This means: there could be not more than one truthy value along the
-        # channel dimension in boolmat_4d. this is not doublechecked here.
+        slices = self._open_label_file(image_nr)
 
+        tile = [ s[Y:YY, X:XX] for s in slices[T, C, Z:ZZ] ]
+        tile = np.stack(tile)
+        tile = np.moveaxis(tile, (0,1,2), (0,2,1))
 
-        mesh = get_tile_meshgrid(boolmat_3d.shape, pos_zxy, size_zxy)
+        tile = (tile == original_label_value)
+        return tile
 
-        return boolmat_3d[mesh]
-
-    @lru_cache(maxsize=20)
-    def load_label_matrix(self, image_nr, original_labelvalues=False):
-        '''
-        returns a 4d labelmatrix with dimensions czxy.
-        the albelmatrix consists of zeros (no label) or the respective
-        label value.
-
-        if original_labelvalues is False, the mapped label values are returned,
-        otherwise the original labelvalues.
-        '''
+    @lru_cache(maxsize=10)
+    def _open_label_file(self, image_nr):
+        # memmap is slow, so we must cache it to be fast!
+        path = self.img_path / self.filenames[image_nr].img
         label_filename = self.filenames[image_nr].lbl
 
         if label_filename is None:
@@ -399,13 +357,8 @@ class TiffConnector(Connector):
         path = self.label_path / label_filename
         logger.debug('Trying to load labelmat %s', path)
 
+        return Tiff.memmap_tcz(path)
 
-        label_image = ip.import_tiff_image(str(path), zstack=self.zstack,
-                                           multichannel=self.multichannel_label_image)
-        if not original_labelvalues:
-            label_image = ut.assign_slice_by_slice(self.labelvalue_mapping, label_image)
-
-        return label_image
 
     @staticmethod
     def calc_label_values_mapping(original_labels):
@@ -445,15 +398,17 @@ class TiffConnector(Connector):
         labels_per_channel = []
 
         for image_nr in range(self.image_count()):
-            mat = self.load_label_matrix(image_nr, original_labelvalues=True)
-            if mat is None:
+            slices = self._open_label_file(image_nr)
+            if slices is None:
                 continue
 
-            labels = [ np.unique(mat[ch]) for ch in range(mat.shape[0]) ]
-            labels = [ set(labels) - {0} for labels in labels ]
+            T = 0
+            C = slices.shape[1]
+            labels = [np.unique(np.concatenate([np.unique(s) for s in slices[T,c,:]])) for c in range(C)]
+            labels = [set(labels) - {0} for labels in labels]
 
-            labels_per_channel = [ l1.union(l2) for l1, l2
-                                   in zip_longest(labels_per_channel, labels, fillvalue=set()) ]
+            labels_per_channel = [l1.union(l2)
+                                  for l1, l2 in zip_longest(labels_per_channel, labels, fillvalue=set())]
 
         return labels_per_channel
 
@@ -463,12 +418,20 @@ class TiffConnector(Connector):
         '''
         returns for each label value the number of labels for this image
         '''
-        mat = self.load_label_matrix(image_nr)
-        if mat is None:
+        slices = self._open_label_file(image_nr)
+        if slices is None:
             return None
 
-        labels = np.unique(mat)
+        T = 0
+        C = slices.shape[1]
+        labels = [np.unique(np.concatenate([np.unique(s) for s in slices[T,c,:]]))
+                  for c in range(C)]
 
-        label_count = {l: np.count_nonzero(mat == l) for l in labels if l > 0}
+        original_label_count = [{ l: sum(np.count_nonzero(s == l) for s in slices[T,c,:])
+                                  for l in labels[c] if l > 0
+                                }
+                                for c in range(C)]
+        label_count = {self.labelvalue_mapping[c][l]: count
+                       for c, orig in enumerate(original_label_count)
+                       for l, count in orig.items()}
         return label_count
-

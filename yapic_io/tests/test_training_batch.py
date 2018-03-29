@@ -117,10 +117,7 @@ class TestTrainingBatch(TestCase):
         tile_size = (1, 5, 4) # size of network output layer in zxy
         padding = (0, 2, 2) # padding of network input layer in zxy, in respect to output layer
 
-        c = TiffConnector(pixel_image_dir, label_image_dir, savepath=savepath.name\
-        , multichannel_pixel_image=None\
-        , multichannel_label_image=None\
-        , zstack=True)
+        c = TiffConnector(pixel_image_dir, label_image_dir, savepath=savepath.name)
 
         d = Dataset(c)
 

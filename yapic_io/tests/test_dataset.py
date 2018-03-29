@@ -1,18 +1,14 @@
 from unittest import TestCase
 import os
 import numpy as np
-from yapic_io.coordinate_tiff_connector import CoordinateTiffConnector
 from yapic_io.tiff_connector import TiffConnector
-from yapic_io.ilastik_connector import IlastikConnector
 from yapic_io.connector import io_connector
 from yapic_io.dataset import Dataset
 from yapic_io.utils import get_tile_meshgrid
 import yapic_io.dataset as ds
-import yapic_io.image_importers as ip
 from pprint import pprint
 import logging
 from numpy.testing import assert_array_equal, assert_array_almost_equal
-import tempfile
 logger = logging.getLogger(os.path.basename(__file__))
 logger.setLevel(logging.WARNING)
 base_path = os.path.dirname(__file__)
@@ -368,13 +364,13 @@ class TestDataset(TestCase):
         t = d.load_label_counts()
         print(t)
 
-        val_1 = np.array([4, 0, 0]) # labelcounts for each image fopr labelvalue 1
-        val_2 = np.array([3, 0, 11]) # labelcounts for each image fopr labelvalue 2
-        val_3 = np.array([3, 0, 3]) # labelcounts for each image fopr labelvalue 3
+        expected_1 = np.array([4, 0, 0]) # labelcounts for each image for labelvalue 1
+        expected_2 = np.array([3, 0, 11]) # labelcounts for each image for labelvalue 2
+        expected_3 = np.array([3, 0, 3]) # labelcounts for each image for labelvalue 3
 
-        assert_array_equal(val_1, t[1])
-        assert_array_equal(val_2, t[2])
-        assert_array_equal(val_3, t[3])
+        assert_array_equal(expected_1, t[1])
+        assert_array_equal(expected_2, t[2])
+        assert_array_equal(expected_3, t[3])
         self.assertTrue(sorted(list(t.keys())), [1, 2, 3])
 
 
@@ -413,35 +409,6 @@ class TestDataset(TestCase):
         assert_array_equal(d2.label_counts[1], np.array([0, 0]))
         assert_array_equal(d2.label_counts[2], np.array([0, 11]))
         assert_array_equal(d2.label_counts[3], np.array([0, 3]))
-
-
-
-    def test_label_coordinate(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels_multichannel/')
-
-        img_fnames = [os.path.join(img_path, '6width4height3slices_rgb.tif'),
-                      os.path.join(img_path, '40width26height6slices_rgb.tif'),
-                      os.path.join(img_path, '40width26height3slices_rgb.tif'), ]
-        label_fnames = [os.path.join(label_path, '6width4height3slices_rgb.tif'),
-                        None,
-                        os.path.join(label_path, '40width26height3slices_rgb.tif'), ]
-
-#        c = TiffConnector(img_path, label_path)
-        c = CoordinateTiffConnector(img_fnames, label_fnames)
-        d = Dataset(c)
-
-        print(d.label_counts)
-
-        label_value = 3
-        choice = 5
-        res = d.label_coordinate(label_value, choice)
-        assert_array_equal(res, np.array((2, 0, 1, 39, 25)))
-
-        label_value = 1
-        choice = 0
-        res = d.label_coordinate(label_value, choice)
-        assert_array_equal(res, np.array((2, 0, 0, 0, 0)))
 
 
     def test_set_label_weight(self):
@@ -918,40 +885,3 @@ class TestDataset(TestCase):
         pprint(training_tile.weights)
         assert_array_equal(training_tile.weights, weights_val)
         np.random.seed(None)
-
-
-
-    def test_random_training_tile_spec_label(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
-        label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
-        #c = TiffConnector(img_path, label_path)
-        c = CoordinateTiffConnector(img_path, label_path)
-        d = Dataset(c)
-
-        size = (1, 1, 1)
-        pad = (0, 2, 2)
-        channels = [0, 1, 2]
-
-
-        labels_val = [1, 2, 3]
-
-        tile_1 = d.random_training_tile(\
-            size, channels, pixel_padding=pad,
-            augment_params={'rotation_angle' :45},
-            label_region=1)
-
-
-        tile_2 = d.random_training_tile(\
-            size, channels, pixel_padding=pad,
-            augment_params={'rotation_angle' :45},
-            label_region=2)
-
-        tile_3 = d.random_training_tile(\
-            size, channels, pixel_padding=pad,
-            augment_params={'rotation_angle' :45},
-            label_region=3)
-
-        print(tile_1[2])
-        np.testing.assert_array_equal(tile_1[2][0][0][0][0], 1)
-        np.testing.assert_array_equal(tile_2[2][1][0][0][0], 1)
-        np.testing.assert_array_equal(tile_3[2][2][0][0][0], 1)
