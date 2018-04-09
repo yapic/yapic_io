@@ -102,7 +102,15 @@ class IlastikConnector(TiffConnector):
             return None
 
         filename, (img, lbl, prediction) = self.ilp[label_filename]
+
+        #zyxc to czxy
         lbl = np.transpose(lbl, (3, 0, 2, 1)).astype(int)
+
+        # pad labelmatrix to same size as image
+        img_shape = self.image_dimensions(image_nr)
+        padding = [(0, d2-d1) for d2, d1 in zip(img_shape, lbl.shape)]
+        padding[0] = (0, 0)  # set padding for channel axis to 0
+        lbl = np.pad(lbl, padding, mode='constant', constant_values=0)
 
         C, original_label_value = self._mapped_label_value_to_original(label_value)
         Z, X, Y = pos_zxy
