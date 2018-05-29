@@ -438,8 +438,6 @@ class TestDataset(TestCase):
 
         np.testing.assert_array_equal(d.label_weights, val)
 
-
-    @skip
     def test_augment_tile(self):
 
 
@@ -828,11 +826,6 @@ class TestDataset(TestCase):
         p = os.path.join(base_path, '../test_data/ilastik/dimensionstest')
         img_path = os.path.join(p, 'images')
         label_path = os.path.join(p, 'x15_y10_z2_c4_classes2.ilp')
-
-        # size = (2, 15, 10)
-        # channels = [0, 1, 2, 3]
-        # labels = [1,2,3]
-        # label_region = 2
 
         c = IlastikConnector(img_path, label_path)
         d = Dataset(c)
