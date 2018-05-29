@@ -42,6 +42,41 @@ class TestTrainingBatch(TestCase):
         self.assertTrue(weights[0, 2, 7, 1, 1] == 1)
 
 
+    def test_get_ilastik_weights2(self):
+
+        pth = os.path.join(base_path, '../test_data/ilastik/dimensionstest')
+        img_path = os.path.join(pth, 'images')
+        lbl_path = os.path.join(pth, 'x15_y10_z2_c4_classes2.ilp')
+        c = IlastikConnector(img_path, lbl_path)
+
+        d = Dataset(c)
+
+        size = (2, 15, 10)  # this is the size of the whole image
+        pad = (0, 0, 0)
+
+        m = TrainingBatch(d, size, padding_zxy=pad)
+        m.augment_by_flipping(False)
+        mini = next(m)
+        weights = mini.weights()
+
+        print(weights[0, :, :, :, :])
+
+
+        # all samples of the batch should be identical,
+        # because tilesize=imsize
+        assert_array_equal(weights[0, :, :, :, :], weights[1, :, :, :, :])
+
+        # weight positions from labelvalue 1 and 2
+        pos = [[0, 0, 2, 1], [0, 0, 2, 1], [0, 0, 8, 6], [0, 0, 9, 6],
+               [0, 1, 4, 3],
+               [1, 0, 2, 2], [1, 0, 3, 2], [1, 0, 8, 7], [1, 0, 9, 7]]
+
+        for p in pos:
+            self.assertEqual(weights[0, p[0], p[1], p[2], p[3]], 1)
+            self.assertEqual(weights[1, p[0], p[1], p[2], p[3]], 1)
+
+
+
 
 
 

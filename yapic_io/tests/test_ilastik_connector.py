@@ -153,10 +153,75 @@ class TestIlastikConnector(TestCase):
         assert_array_equal(lbl[0, :13, 1:8], mat_val != 0)
     '''
 
+    def test_label_tile_purkinjedata(self):
+
+        p = os.path.join(base_path, '../test_data/ilastik/purkinjetest')
+        img_path = os.path.join(p, 'images')
+        lbl_path = os.path.join(p, 'ilastik-1.2.2post1mac.ilp')
+
+        c = IlastikConnector(img_path, lbl_path)
+        print(c.filenames)
+        print(c.image_count)
+
+        image_id = 3  # 769_cerebellum_5M41_subset_1.tif
+        pos_zxy = (0, 309, 212)
+        size_zxy = (1, 4, 5)
+
+        val = np.array([[[True, False, False, False, False],
+                         [True, True, False, False, False],
+                         [True, True, True, False, False],
+                         [True, True, True, False, False]]])
+        lbl = c.label_tile(image_id, pos_zxy, size_zxy, 2)
+        assert_array_equal(lbl, val)
+
+        val = np.array([[[False, False, False, False, True],
+                         [False, False, False, False, True],
+                         [False, False, False, True, True],
+                         [False, False, False, True, True]]])
+        lbl = c.label_tile(image_id, pos_zxy, size_zxy, 4)
+        assert_array_equal(lbl, val)
+
+    def test_labeltile_dimensions_purkinjedata(self):
+
+        p = os.path.join(base_path, '../test_data/ilastik/purkinjetest')
+        img_path = os.path.join(p, 'images')
+        lbl_path = os.path.join(p, 'ilastik-1.2.2post1mac.ilp')
+
+        c = IlastikConnector(img_path, lbl_path)
+
+        image_id = 3 # 769_cerebellum_5M41_subset_1.tif
+        pos_zxy = (0, 0, 0)
+        size_zxy = (1, 1047, 684) # whole image
+
+        lbl = c.label_tile(image_id, pos_zxy, size_zxy, 4)
+        self.assertEqual(lbl.shape, size_zxy)
+
+    def test_multi_channel_multi_z(self):
+
+        p = os.path.join(base_path, '../test_data/ilastik/dimensionstest')
+        img_path = os.path.join(p, 'images')
+        lbl_path = os.path.join(p, 'x15_y10_z2_c4_classes2.ilp')
+        c = IlastikConnector(img_path, lbl_path)
+        pos_zxy = (0, 0, 0)
+        size_zxy = (2, 15, 10)
+
+        lbl = c.label_tile(0, pos_zxy, size_zxy, 1)
+        lbl_pos = [[0, 2, 1], [0, 2, 1], [0, 8, 6], [0, 9, 6], [1, 4, 3]]
+        [self.assertTrue(lbl[pos[0], pos[1], pos[2]]) for pos in lbl_pos]
+
+        lbl = c.label_tile(0, pos_zxy, size_zxy, 2)
+        lbl_pos = [[0, 2, 2], [0, 3, 2], [0, 8, 7], [0, 9, 7]]
+        [self.assertTrue(lbl[pos[0], pos[1], pos[2]]) for pos in lbl_pos]
+
+        self.assertFalse(lbl[0, 0, 0])
+
+
+
     def test_filter_labeled(self):
 
         img_path = os.path.join(
             base_path, '../test_data/ilastik/pixels_ilastik-multiim-1.2')
+
         lbl_path = os.path.join(
             base_path, '../test_data/ilastik/ilastik-multiim-1.2.ilp')
 
