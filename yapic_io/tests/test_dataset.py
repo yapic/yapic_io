@@ -1,7 +1,8 @@
-from unittest import TestCase
+from unittest import TestCase, skip
 import os
 import numpy as np
 from yapic_io.tiff_connector import TiffConnector
+from yapic_io.ilastik_connector import IlastikConnector
 from yapic_io.connector import io_connector
 from yapic_io.dataset import Dataset
 from yapic_io.utils import get_tile_meshgrid
@@ -438,7 +439,7 @@ class TestDataset(TestCase):
         np.testing.assert_array_equal(d.label_weights, val)
 
 
-
+    @skip
     def test_augment_tile(self):
 
 
@@ -823,6 +824,23 @@ class TestDataset(TestCase):
 
         np.random.seed(None)
 
+    def test_init_dataset_ilastik(self):
+        p = os.path.join(base_path, '../test_data/ilastik/dimensionstest')
+        img_path = os.path.join(p, 'images')
+        label_path = os.path.join(p, 'x15_y10_z2_c4_classes2.ilp')
+
+        # size = (2, 15, 10)
+        # channels = [0, 1, 2, 3]
+        # labels = [1,2,3]
+        # label_region = 2
+
+        c = IlastikConnector(img_path, label_path)
+        d = Dataset(c)
+        self.assertEqual(d.n_images, 1)
+        self.assertEqual(list(d.label_counts.keys()), [1,2]) #label values
+        
+        assert_array_equal(d.label_counts[1], np.array([5]))
+        assert_array_equal(d.label_counts[2], np.array([4]))
 
 
 
