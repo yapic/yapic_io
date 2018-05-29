@@ -2,6 +2,8 @@ import tempfile
 from unittest import TestCase
 import os
 from yapic_io.tiff_connector import TiffConnector
+from yapic_io.ilastik_connector import IlastikConnector
+from yapic_io.connector import io_connector
 from yapic_io.dataset import Dataset
 from yapic_io.prediction_batch import PredictionBatch
 import numpy as np
@@ -182,6 +184,36 @@ class TestPredictionBatch(TestCase):
 
         data = np.ones((2, 3, 1, 3, 4))
         p[2].put_probmap_data(data)
+
+
+    def test_put_probmap_data_when_no_labels_available(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
+        savepath = tempfile.TemporaryDirectory()
+        c = io_connector(img_path, '', savepath=savepath.name)
+        d = Dataset(c)
+
+        print(d.label_values())
+        print(d.label_counts)
+
+        size = (1, 3, 4)
+        batch_size = 2
+
+        p = PredictionBatch(d, batch_size, size)
+
+        data = np.ones((2, 2, 1, 3, 4))
+        p[0].put_probmap_data(data)
+
+        data = np.ones((2, 2, 1, 3, 4))
+        p[1].put_probmap_data(data)
+
+        data = np.ones((2, 2, 1, 3, 4))
+        p[2].put_probmap_data(data)
+
+        val = ['40width26height3slices_rgb_class_1.tif',
+               '40width26height3slices_rgb_class_2.tif']
+        self.assertEqual(sorted(os.listdir(savepath.name)), val)
+
 
 
 

@@ -374,7 +374,7 @@ class TestDataset(TestCase):
         assert_array_equal(expected_3, t[3])
         self.assertTrue(sorted(list(t.keys())), [1, 2, 3])
 
-
+    
     def test_sync_label_counts(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
