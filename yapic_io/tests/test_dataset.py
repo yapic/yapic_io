@@ -837,11 +837,35 @@ class TestDataset(TestCase):
         c = IlastikConnector(img_path, label_path)
         d = Dataset(c)
         self.assertEqual(d.n_images, 1)
-        self.assertEqual(list(d.label_counts.keys()), [1,2]) #label values
-        
+        self.assertEqual(list(d.label_counts.keys()), [1, 2])  # label values
+
         assert_array_equal(d.label_counts[1], np.array([5]))
         assert_array_equal(d.label_counts[2], np.array([4]))
 
+    def test_random_training_tile_by_polling_ilastik(self):
+
+        p = os.path.join(base_path, '../test_data/ilastik/dimensionstest')
+        img_path = os.path.join(p, 'images')
+        label_path = os.path.join(p, 'x15_y10_z2_c4_classes2.ilp')
+
+        size = (1, 1, 1)
+        channels = [0, 1, 2, 3]
+        labels = set([1, 2])
+        label_region = 2
+
+        c = IlastikConnector(img_path, label_path)
+        d = Dataset(c)
+
+        np.random.seed(43)
+        training_tile = d._random_training_tile_by_polling(
+                                        size,
+                                        channels,
+                                        labels,
+                                        label_region=label_region)
+        print(training_tile)
+
+        weights_val = np.array([[[[0.]]], [[[1.]]]])
+        assert_array_equal(training_tile.weights, weights_val)
 
 
     def test_random_training_tile_by_polling(self):
@@ -850,7 +874,7 @@ class TestDataset(TestCase):
 
         size = (1, 4, 3)
         channels = [0, 1, 2]
-        labels = [1,2,3]
+        labels = set([1, 2, 3])
         label_region = 2
 
         c = TiffConnector(img_path, label_path)

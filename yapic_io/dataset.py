@@ -141,7 +141,6 @@ class Dataset(object):
             lbl_count = self.label_counts[label_value]
         return lbl_count / lbl_count.sum()
 
-
     def _random_training_tile_by_polling(self,
                                          size_zxy,
                                          channels,
@@ -169,13 +168,15 @@ class Dataset(object):
                                            channels, labels,
                                            pixel_padding=pixel_padding,
                                            augment_params=augment_params)
+
             if label_region is None:
                 # check if weights for any label are present
                 are_weights_in_tile = tile_data.weights.any()
             else:
+                # convert set to sorted array
+                labels = np.array(sorted(tile_data.labels))
                 # check if weights for specified label are present
-                lblregion_index = np.where(np.array(tile_data.labels) == label_region)[0]
-
+                lblregion_index = np.where(labels == label_region)[0]
                 weights_lblregion = tile_data.weights[lblregion_index]
                 are_weights_in_tile = weights_lblregion.any()
 
