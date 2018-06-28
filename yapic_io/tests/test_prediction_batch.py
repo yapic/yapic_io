@@ -2,6 +2,8 @@ import tempfile
 from unittest import TestCase
 import os
 from yapic_io.tiff_connector import TiffConnector
+from yapic_io.ilastik_connector import IlastikConnector
+from yapic_io.connector import io_connector
 from yapic_io.dataset import Dataset
 from yapic_io.prediction_batch import PredictionBatch
 import numpy as np
@@ -14,7 +16,7 @@ class TestPredictionBatch(TestCase):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
         label_path = os.path.join(base_path, '/path/to/nowhere')
         c = TiffConnector(img_path, label_path)
-        
+
         d = Dataset(c)
 
         size = (1, 1, 1)
@@ -62,7 +64,7 @@ class TestPredictionBatch(TestCase):
         print(p._all_tile_positions)
         print(len(p._all_tile_positions))
         print(sorted(list(set(p._all_tile_positions))))
-        self.assertEqual(p._all_tile_positions, [(0, (0, 0, 0)), (0, (1, 0, 0))])    
+        self.assertEqual(p._all_tile_positions, [(0, (0, 0, 0)), (0, (1, 0, 0))])
 
 
     def test_getitem(self):
@@ -79,8 +81,8 @@ class TestPredictionBatch(TestCase):
 
         #batch size is 2, so the first 2 tiles go with the first batch
         #(size two), the third tile in in the second batch. the second
-        #batch has only size 1 (is smaller than the specified batch size), 
-        #because it contains the rest. 
+        #batch has only size 1 (is smaller than the specified batch size),
+        #because it contains the rest.
 
         print(p[0].pixels().shape)
         print(p[1].pixels().shape)
@@ -88,7 +90,7 @@ class TestPredictionBatch(TestCase):
         self.assertEqual(len(p), 2)
         self.assertEqual(p[0].pixels().shape, (2, 3, 1, 6, 4))
         self.assertEqual(p[1].pixels().shape, (1, 3, 1, 6, 4))
-       
+
 
 
     def test_getitem(self):
@@ -129,7 +131,7 @@ class TestPredictionBatch(TestCase):
         label_path = os.path.join(base_path, '/path/to/nowhere')
         savepath = tempfile.TemporaryDirectory()
         c = TiffConnector(img_path, label_path, savepath=savepath.name)
-        
+
         d = Dataset(c)
 
         size = (1, 6, 4)
@@ -178,11 +180,41 @@ class TestPredictionBatch(TestCase):
         p[0].put_probmap_data(data)
 
         data = np.ones((2, 3, 1, 3, 4))
-        p[1].put_probmap_data(data)  
+        p[1].put_probmap_data(data)
 
         data = np.ones((2, 3, 1, 3, 4))
-        p[2].put_probmap_data(data)       
-    
+        p[2].put_probmap_data(data)
+
+
+    def test_put_probmap_data_when_no_labels_available(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
+        savepath = tempfile.TemporaryDirectory()
+        c = io_connector(img_path, '', savepath=savepath.name)
+        d = Dataset(c)
+
+        print(d.label_values())
+        print(d.label_counts)
+
+        size = (1, 3, 4)
+        batch_size = 2
+
+        p = PredictionBatch(d, batch_size, size)
+
+        data = np.ones((2, 2, 1, 3, 4))
+        p[0].put_probmap_data(data)
+
+        data = np.ones((2, 2, 1, 3, 4))
+        p[1].put_probmap_data(data)
+
+        data = np.ones((2, 2, 1, 3, 4))
+        p[2].put_probmap_data(data)
+
+        val = ['40width26height3slices_rgb_class_1.tif',
+               '40width26height3slices_rgb_class_2.tif']
+        self.assertEqual(sorted(os.listdir(savepath.name)), val)
+
+
 
 
     def test_put_probmap_data_multichannel_label(self):
@@ -199,7 +231,7 @@ class TestPredictionBatch(TestCase):
         print('labels')
         print(c.labelvalue_mapping)
         d = Dataset(c)
-        
+
         size = (1, 3, 4)
         batch_size = 1
 
@@ -210,7 +242,7 @@ class TestPredictionBatch(TestCase):
         data = np.ones((1, 6, 1, 3, 4))
         p[0].put_probmap_data(data)
 
-    
+
     def test_prediction_loop(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
             #mock classification function

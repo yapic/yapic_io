@@ -1,7 +1,8 @@
-from unittest import TestCase
+from unittest import TestCase, skip
 import os
 import numpy as np
 from yapic_io.tiff_connector import TiffConnector
+from yapic_io.ilastik_connector import IlastikConnector
 from yapic_io.connector import io_connector
 from yapic_io.dataset import Dataset
 from yapic_io.utils import get_tile_meshgrid
@@ -373,7 +374,7 @@ class TestDataset(TestCase):
         assert_array_equal(expected_3, t[3])
         self.assertTrue(sorted(list(t.keys())), [1, 2, 3])
 
-
+    
     def test_sync_label_counts(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(base_path, '../test_data/tiffconnector_1/labels/')
@@ -436,8 +437,6 @@ class TestDataset(TestCase):
         val = {1: 0.5121951219512196, 2: 0.14634146341463417, 3: 0.34146341463414637}
 
         np.testing.assert_array_equal(d.label_weights, val)
-
-
 
     def test_augment_tile(self):
 
@@ -823,7 +822,43 @@ class TestDataset(TestCase):
 
         np.random.seed(None)
 
+    def test_init_dataset_ilastik(self):
+        p = os.path.join(base_path, '../test_data/ilastik/dimensionstest')
+        img_path = os.path.join(p, 'images')
+        label_path = os.path.join(p, 'x15_y10_z2_c4_classes2.ilp')
 
+        c = IlastikConnector(img_path, label_path)
+        d = Dataset(c)
+        self.assertEqual(d.n_images, 1)
+        self.assertEqual(list(d.label_counts.keys()), [1, 2])  # label values
+
+        assert_array_equal(d.label_counts[1], np.array([5]))
+        assert_array_equal(d.label_counts[2], np.array([4]))
+
+    def test_random_training_tile_by_polling_ilastik(self):
+
+        p = os.path.join(base_path, '../test_data/ilastik/dimensionstest')
+        img_path = os.path.join(p, 'images')
+        label_path = os.path.join(p, 'x15_y10_z2_c4_classes2.ilp')
+
+        size = (1, 1, 1)
+        channels = [0, 1, 2, 3]
+        labels = set([1, 2])
+        label_region = 2
+
+        c = IlastikConnector(img_path, label_path)
+        d = Dataset(c)
+
+        np.random.seed(43)
+        training_tile = d._random_training_tile_by_polling(
+                                        size,
+                                        channels,
+                                        labels,
+                                        label_region=label_region)
+        print(training_tile)
+
+        weights_val = np.array([[[[0.]]], [[[1.]]]])
+        assert_array_equal(training_tile.weights, weights_val)
 
 
     def test_random_training_tile_by_polling(self):
@@ -832,7 +867,7 @@ class TestDataset(TestCase):
 
         size = (1, 4, 3)
         channels = [0, 1, 2]
-        labels = [1,2,3]
+        labels = set([1, 2, 3])
         label_region = 2
 
         c = TiffConnector(img_path, label_path)

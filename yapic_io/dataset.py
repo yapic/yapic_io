@@ -30,12 +30,18 @@ class Dataset(object):
     '''
 
     def __init__(self, pixel_connector):
+        '''
+        :param pixel_connector: Connector object for data binding of
+                        image pixel data and labels.
+        :type pixel_connector: Connector
+
+        '''
         self.pixel_connector = pixel_connector
         self.n_images = pixel_connector.image_count()
         self.label_counts = self.load_label_counts()
 
         # self.label_weights dict is complementary to self.label_counts
-        self.label_weights = { label: 1 for label in self.label_counts.keys() }
+        self.label_weights = {label: 1 for label in self.label_counts.keys()}
 
         # max nr of trials to get a random training tile in polling mode
         self.max_pollings = 30
@@ -122,7 +128,8 @@ class Dataset(object):
         img_shape_zxy = self.image_dimensions(img_nr)[1:]
         img_maxpos_zxy = np.array(img_shape_zxy) - tile_size_zxy
 
-        msg = 'Tile of size {} does not fit in image of size {}'.format(tile_size_zxy, img_shape_zxy)
+        msg = 'Tile of size {} does not fit in image of size {}'.format(
+                    tile_size_zxy, img_shape_zxy)
         assert (img_maxpos_zxy > -1).all(), msg
 
         pos_zxy = randint_array(img_maxpos_zxy + 1)
@@ -140,7 +147,6 @@ class Dataset(object):
         else:
             lbl_count = self.label_counts[label_value]
         return lbl_count / lbl_count.sum()
-
 
     def _random_training_tile_by_polling(self,
                                          size_zxy,
@@ -169,13 +175,15 @@ class Dataset(object):
                                            channels, labels,
                                            pixel_padding=pixel_padding,
                                            augment_params=augment_params)
+
             if label_region is None:
                 # check if weights for any label are present
                 are_weights_in_tile = tile_data.weights.any()
             else:
+                # convert set to sorted array
+                labels = np.array(sorted(tile_data.labels))
                 # check if weights for specified label are present
-                lblregion_index = np.where(np.array(tile_data.labels) == label_region)[0]
-
+                lblregion_index = np.where(labels == label_region)[0]
                 weights_lblregion = tile_data.weights[lblregion_index]
                 are_weights_in_tile = weights_lblregion.any()
 
@@ -206,10 +214,12 @@ class Dataset(object):
             label_region = self.random_label_value(equalized=equalized)
 
         total_count = self.label_counts[label_region].sum()
-        img_nr, _, *pos_zxy = self.label_coordinate(label_region, randint(total_count))
+        img_nr, _, *pos_zxy = self.label_coordinate(label_region,
+                                                    randint(total_count))
         np.testing.assert_array_equal(len(pos_zxy), len(size_zxy))
 
-        # Now we have a label. But we can but the tile anywhere as long as the label is in it
+        # Now we have a label. But we can but the tile anywhere as long as the
+        # label is in it
 
         pos_zxy = np.array(pos_zxy)
         shape_zxy = np.array(self.image_dimensions(img_nr)[1:])
@@ -217,10 +227,11 @@ class Dataset(object):
         maxpos = np.minimum(pos_zxy, shape_zxy - size_zxy)
         minpos = np.maximum(0, pos_zxy - size_zxy + 1)
 
-        pos_zxy = [ np.random.randint(a, b + 1) for a, b in zip(minpos, maxpos) ]
+        pos_zxy = [np.random.randint(a, b + 1) for a, b in zip(minpos, maxpos)]
 
         tile_data = self.training_tile(img_nr, pos_zxy, size_zxy,
-                                       channels, labels, pixel_padding=pixel_padding,
+                                       channels, labels,
+                                       pixel_padding=pixel_padding,
                                        augment_params=augment_params)
 
         return tile_data

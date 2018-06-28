@@ -322,7 +322,7 @@ class TiffConnector(Connector):
         tile = np.stack(tile)
         tile = np.moveaxis(tile, (0,1,2,3), (0,1,3,2))
 
-        return tile
+        return tile.astype('float')
 
     def label_tile(self, image_nr, pos_zxy, size_zxy, label_value):
         '''
