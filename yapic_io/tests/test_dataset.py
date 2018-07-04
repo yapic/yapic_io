@@ -438,7 +438,7 @@ class TestDataset(TestCase):
 
         np.testing.assert_array_equal(d.label_weights, val)
 
-    def test_augment_tile(self):
+    def test__augment_tile(self):
 
 
 
@@ -513,7 +513,7 @@ class TestDataset(TestCase):
         size=np.array((1, 1, 9, 9))
         tile = get_tile_func(pos=pos, size=size, img=im)
 
-        tile_rot = ds.augment_tile(im.shape, pos, size,
+        tile_rot = ds._augment_tile(im.shape, pos, size,
                                    get_tile_func,
                                    augment_params={'rotation_angle' : 45,
                                                    'shear_angle' : 0},
@@ -568,7 +568,7 @@ class TestDataset(TestCase):
         size=np.array((1, 1, 1, 1))
         tile = get_tile_func(pos=pos, size=size, img=im)
 
-        tile_rot = ds.augment_tile(im.shape, pos, size,
+        tile_rot = ds._augment_tile(im.shape, pos, size,
                                    get_tile_func,
                                    augment_params={'rotation_angle' : 45,
                                                    'shear_angle' : 0},
@@ -632,7 +632,7 @@ class TestDataset(TestCase):
         size=np.array((1, 1, 9, 9))
         tile = get_tile_func(pos=pos, size=size, img=im)
 
-        tile_ud = ds.augment_tile(im.shape, pos, size, \
+        tile_ud = ds._augment_tile(im.shape, pos, size, \
         get_tile_func, augment_params={'flipud':True}, **{'img': im})
 
         pprint(tile)
@@ -844,7 +844,7 @@ class TestDataset(TestCase):
         size = (1, 1, 1)
         channels = [0, 1, 2, 3]
         labels = set([1, 2])
-        label_region = 2
+        ensure_labelvalue = 2
 
         c = IlastikConnector(img_path, label_path)
         d = Dataset(c)
@@ -854,7 +854,7 @@ class TestDataset(TestCase):
                                         size,
                                         channels,
                                         labels,
-                                        label_region=label_region)
+                                        ensure_labelvalue=ensure_labelvalue)
         print(training_tile)
 
         weights_val = np.array([[[[0.]]], [[[1.]]]])
@@ -868,7 +868,7 @@ class TestDataset(TestCase):
         size = (1, 4, 3)
         channels = [0, 1, 2]
         labels = set([1, 2, 3])
-        label_region = 2
+        ensure_labelvalue = 2
 
         c = TiffConnector(img_path, label_path)
         d = Dataset(c)
@@ -894,7 +894,7 @@ class TestDataset(TestCase):
         np.random.seed(43)
         training_tile = d._random_training_tile_by_polling(size, channels,
                                         labels,
-                                        label_region = label_region)
+                                        ensure_labelvalue = ensure_labelvalue)
         print(training_tile)
         pprint(training_tile.weights)
         assert_array_equal(training_tile.weights, weights_val)
@@ -915,7 +915,7 @@ class TestDataset(TestCase):
 
         training_tile = d._random_training_tile_by_polling(size, channels,
                                         labels,
-                                        label_region = None)
+                                        ensure_labelvalue = None)
         print(training_tile)
         pprint(training_tile.weights)
         assert_array_equal(training_tile.weights, weights_val)

@@ -34,7 +34,7 @@ class TestUtils(TestCase):
         a = ['hund', 'katze', 'maus']
         b = ['hund', 'mauser', 'kater', 'pferd']
 
-        mat, a, b = ut.compute_str_dist_matrix(a, b)
+        mat, a, b = ut._compute_str_dist_matrix(a, b)
         print(mat)
         print(a)
         print(b)

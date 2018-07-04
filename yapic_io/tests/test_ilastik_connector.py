@@ -20,11 +20,6 @@ class TestIlastikConnector(TestCase):
 
         return IlastikConnector(img_path, lbl_path)
 
-    def test_dimensions(self):
-        c = self.setup_storage_version_12()
-
-        assert_array_equal(c.image_dimensions(0), c.label_dimensions(0))
-
     def test_tiles(self):
         c = self.setup_storage_version_12()
 

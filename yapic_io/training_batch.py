@@ -166,4 +166,4 @@ class TrainingBatch(Minibatch):
                                                  equalized=self.equalized,
                                                  augment_params=augment_params,
                                                  labels=self.labels,
-                                                 label_region=for_label)
+                                                 ensure_labelvalue=for_label)

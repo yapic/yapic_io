@@ -15,7 +15,7 @@ base_path = os.path.dirname(__file__)
 
 class TestTiffConnector(TestCase):
 
-    def test_handle_img_filenames(self):
+    def test__handle_img_filenames(self):
 
         folder_val = os.path.join(
             base_path, '../test_data/tiffconnector_1/im/')
@@ -28,13 +28,13 @@ class TestTiffConnector(TestCase):
         # str with wildcard
         img_path = os.path.normpath(os.path.join(
             base_path, '../test_data/tiffconnector_1/im/*.tif'))
-        folder, names = tc.handle_img_filenames(img_path)
+        folder, names = tc._handle_img_filenames(img_path)
         self.assertEqual(folder, folder_val)
         self.assertEqual(set(filenames_val), set(names))
 
         # str without wildcard
         img_path = os.path.normpath(os.path.join(base_path, '../test_data/tiffconnector_1/im'))
-        folder, names = tc.handle_img_filenames(img_path)
+        folder, names = tc._handle_img_filenames(img_path)
         self.assertEqual(folder, folder_val)
         self.assertEqual(set(filenames_val), set(names))
 
@@ -43,7 +43,7 @@ class TestTiffConnector(TestCase):
                      os.path.join(str(folder_val), '40width26height3slices_rgb.tif'),
                      os.path.join(str(folder_val), '40width26height6slices_rgb.tif')]
 
-        folder, names = tc.handle_img_filenames(filenames)
+        folder, names = tc._handle_img_filenames(filenames)
         self.assertEqual(folder, folder_val)
         self.assertEqual(set(filenames_val), set(names))
 
@@ -59,7 +59,7 @@ class TestTiffConnector(TestCase):
                          '40width26height6slices_rgb.tif']
 
         print(filenames)
-        folder, names = tc.handle_img_filenames(filenames)
+        folder, names = tc._handle_img_filenames(filenames)
         self.assertEqual(folder, folder_val)
         self.assertEqual(set(filenames_val), set(names))
 
