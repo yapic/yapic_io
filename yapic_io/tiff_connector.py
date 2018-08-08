@@ -212,10 +212,11 @@ class TiffConnector(Connector):
     def _open_probability_map_file(self, image_nr, label_value):
         # memmap is slow, so we must cache it to be fast!
         fname = self.filenames[image_nr].img
-        fname = '{}_class_{}{}'.format(fname.stem, label_value, fname.suffix)
+        fname = Path('{}_class_{}'.format(fname.stem,
+                                          label_value)).with_suffix('.tif')
+
         path = self.savepath / fname
-        if not fname.endswith('.tif'):
-            path += '.tif'
+
 
         if not path.exists():
             T = 1
