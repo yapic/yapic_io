@@ -7,9 +7,11 @@ from yapic_io.connector import io_connector
 from yapic_io.dataset import Dataset
 from yapic_io.prediction_batch import PredictionBatch
 import numpy as np
+from numpy.testing import assert_array_almost_equal
 import yapic_io.utils as ut
 base_path = os.path.dirname(__file__)
 from yapic_io import TiffConnector, Dataset, PredictionBatch
+from bigtiff import Tiff
 
 class TestPredictionBatch(TestCase):
     def test_computepos_1(self):
@@ -149,19 +151,46 @@ class TestPredictionBatch(TestCase):
         label_path = os.path.join(base_path, '/path/to/nowhere')
         savepath = tempfile.TemporaryDirectory()
         c = TiffConnector(img_path, label_path, savepath=savepath.name)
+        # savepath = os.path.join(base_path, '../test_data/')
+        # c = TiffConnector(img_path, label_path, savepath=savepath)
 
         d = Dataset(c)
 
-        size = (1, 6, 4)
-        batch_size = 2
+        size = (1, 2, 2)
+        batch_size = 1
 
         p = PredictionBatch(d, batch_size, size)
+        print(len(p))
 
-        data = np.ones((2, 2, 1, 6, 4))
-        p[0].put_probmap_data(data)
+        pixel_val = 0
+        for mb in p:
+            pixel_val += 10
+            data = np.ones((1, 2, 1, 2, 2)) * pixel_val
+            mb.put_probmap_data(data)
 
-        data = np.ones((1, 2, 1, 6, 4))
-        p[1].put_probmap_data(data)
+        pixelmap = Tiff.memmap_tcz(os.path.join(savepath.name,
+                                   '6width4height3slices_rgb_class_1.tif'))
+        # zslice 0
+        val_0 = np.array([[10., 10., 30., 30., 50., 50.],
+                          [10., 10., 30., 30., 50., 50.],
+                          [20., 20., 40., 40., 60., 60.],
+                          [20., 20., 40., 40., 60., 60.]])
+        assert_array_almost_equal(pixelmap[0][0][0], val_0)
+
+        # zslice 1
+        val_1 = np.array([[70.,  70.,  90.,  90., 110., 110.],
+                          [70.,  70.,  90.,  90., 110., 110.],
+                          [80.,  80., 100., 100., 120., 120.],
+                          [80.,  80., 100., 100., 120., 120.]])
+        assert_array_almost_equal(pixelmap[0][0][1], val_1)
+
+        # zslice 2
+        val_2 = np.array([[130., 130., 150., 150., 170., 170.],
+                          [130., 130., 150., 150., 170., 170.],
+                          [140., 140., 160., 160., 180., 180.],
+                          [140., 140., 160., 160., 180., 180.]])
+        assert_array_almost_equal(pixelmap[0][0][2], val_2)
+
 
 
     def test_put_probmap_data_3(self):
