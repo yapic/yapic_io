@@ -100,10 +100,10 @@ class TiffConnector(Connector):
 
         assert img_filenames is not None, 'no filenames for pixel images found'
 
-        if lbl_filenames is not None:
-            pairs = ut.find_best_matching_pairs(img_filenames, lbl_filenames)
-        else:
+        if lbl_filenames is None or len(lbl_filenames) == 0:
             pairs = [(img, None) for img in img_filenames]
+        else:
+            pairs = ut.find_best_matching_pairs(img_filenames, lbl_filenames)
 
         self.filenames = [FilePair(Path(img), Path(lbl) if lbl else None) for img, lbl in pairs]
 
