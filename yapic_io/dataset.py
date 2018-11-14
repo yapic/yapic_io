@@ -189,7 +189,10 @@ class Dataset(object):
 
             if are_weights_in_tile:
                 msg = 'Needed {} trials to fetch random tile containing labelvalue {}'.format(counter, label_region or '<any>')
-                logger.info(msg)
+                if counter == 0:
+                    logger.debug(msg)
+                else:
+                    logger.info(msg)
                 return tile_data
 
         msg = 'Could not fetch random tile containing labelvalue {} within {} trials'
