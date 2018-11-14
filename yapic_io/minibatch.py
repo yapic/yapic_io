@@ -117,8 +117,7 @@ class Minibatch(object):
         elif self.normalize_mode == 'local':
             # (data - minval) / (maxval - minval)
             # percentiles are used to be robust against outliers
-            max_ref = np.percentile(pixels, 99, axis=(0, 2, 3, 4))
-            min_ref = np.percentile(pixels, 1, axis=(0, 2, 3, 4))
+            min_ref, max_ref = np.percentile(pixels, [1, 99], axis=(0, 2, 3, 4))
 
             center_ref = min_ref
             scale_ref = max_ref - min_ref
