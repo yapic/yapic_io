@@ -23,7 +23,7 @@ class PredictionBatch(Minibatch):
     Parameters
     ----------
     dataset: Dataset
-        Handle for pixels and labels weights.
+        Handle for reading and writing pixels.
     batch_size: int
         Nr of tiles for one batch.
     size_zxy: (nr_zslices, nr_x, nr_y)
