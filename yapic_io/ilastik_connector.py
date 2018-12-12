@@ -45,9 +45,9 @@ class IlastikConnector(TiffConnector):
     Examples
     --------
     >>> from yapic_io.ilastik_connector import IlastikConnector
-    >>> pixel_image_dir = 'yapic_io/test_data/ilastik/pixels_ilastik-multiim-1.2/*.tif'
+    >>> img_dir = 'yapic_io/test_data/ilastik/pixels_ilastik-multiim-1.2/*.tif'
     >>> ilastik_path = 'yapic_io/test_data/ilastik/ilastik-multiim-1.2.ilp'
-    >>> c = IlastikConnector(pixel_image_dir, ilastik_path)
+    >>> c = IlastikConnector(img_dir, ilastik_path)
     ... # doctest:+ELLIPSIS
     ...
     >>> print(c)

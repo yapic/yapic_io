@@ -325,10 +325,10 @@ class Dataset(object):
         # 4d label tile with selected labels in 1st dimension
         shape_zxy = self.image_dimensions(image_nr)[1:]
         label_tile = [_augment_tile(shape_zxy, pos_zxy, size_zxy,
-                                   self._get_weights_tile,
-                                   augment_params=augment_params,
-                                   image_nr=image_nr,
-                                   label_value=l)
+                                    self._get_weights_tile,
+                                    augment_params=augment_params,
+                                    image_nr=image_nr,
+                                    label_value=l)
                       for l in labels]
         label_tile = np.array(label_tile)
 
@@ -360,11 +360,11 @@ class Dataset(object):
         pos_padded = pos_zxy - pixel_padding
 
         tile = [_augment_tile(image_shape_zxy,
-                             np.hstack([[c], pos_padded]),
-                             np.hstack([[1], size_padded]),
-                             self.pixel_connector.get_tile,
-                             augment_params=augment_params,
-                             image_nr=image_nr)
+                              np.hstack([[c], pos_padded]),
+                              np.hstack([[1], size_padded]),
+                              self.pixel_connector.get_tile,
+                              augment_params=augment_params,
+                              image_nr=image_nr)
                 for c in channels]
 
         return np.vstack(tile)

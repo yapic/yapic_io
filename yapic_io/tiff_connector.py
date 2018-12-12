@@ -31,11 +31,11 @@ def _handle_img_filenames(img_filepath):
         folder = img_filepath if img_filepath.is_dir() else img_filepath.parent
         filenames = [fname.name for fname in sorted(folder.glob(img_filemask))]
 
-
     elif type(img_filepath) in (list, tuple):
 
         img_filenames = img_filepath
-        img_filenames = [Path(p).expanduser().resolve() if p is not None else None
+        img_filenames = [Path(p).expanduser().resolve()
+                         if p is not None else None
                          for p in img_filepath]
 
         assert len(img_filenames) > 0, 'list of image filenames is empty'
@@ -50,7 +50,8 @@ def _handle_img_filenames(img_filepath):
         folder = next(iter(folders))
         folder = folder.expanduser().resolve()
         filenames = [fname.name
-            if fname is not None else None for fname in img_filenames]
+                     if fname is not None else None
+                     for fname in img_filenames]
 
     else:
         raise NotImplementedError(
@@ -249,7 +250,6 @@ class TiffConnector(Connector):
         fname = Path('{}_class_{}.tif'.format(fname.stem, label_value))
 
         path = self.savepath / fname
-
 
         if not path.exists():
             T = 1
