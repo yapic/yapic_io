@@ -175,22 +175,6 @@ class TestTrainingBatch(TestCase):
             if counter > 10:  # m is infinite
                 break
 
-    def test_init_trainingbatch(self):
-        pixel_image_dir = os.path.join(base_path,
-                                       '../test_data/tiffconnector_1/im/')
-        label_image_dir = os.path.join(
-                        base_path,
-                        '../test_data/tiffconnector_1/labels_multichannel/')
-        savepath = tempfile.TemporaryDirectory()
-
-        tile_size = (1, 5, 4)  # size of network output layer in zxy
-        padding = (0, 2, 2)  # padding of network input layer in zxy,
-        # in respect to output layer
-
-        c = TiffConnector(pixel_image_dir, label_image_dir,
-                          savepath=savepath.name)
-        d = Dataset(c)
-
     def test_normalize_zscore(self):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
@@ -220,7 +204,7 @@ class TestTrainingBatch(TestCase):
         p_norm = m._normalize(pixels)
         self.assertTrue((p_norm == 0).all())
 
-        #add variation
+        # add variation
         pixels[:, 0, 0, 0, 0] = 2
         pixels[:, 0, 0, 0, 1] = 0
 

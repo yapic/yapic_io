@@ -374,7 +374,6 @@ class TestDataset(TestCase):
             base_path, '../test_data/tiffconnector_1/labels/')
         c = TiffConnector(img_path, label_path)
         c1, c2 = c.split(1./3.)
-        d = Dataset(c)
         d1 = Dataset(c1)
         d2 = Dataset(c2)
         d1.sync_label_counts(d2)
@@ -390,7 +389,6 @@ class TestDataset(TestCase):
         assert_array_equal(d2.label_counts[2], np.array([0, 11]))
         assert_array_equal(d2.label_counts[3], np.array([0, 3]))
 
-        d = Dataset(c)
         d1 = Dataset(c1)
         d2 = Dataset(c2)
         d2.sync_label_counts(d1)
@@ -553,7 +551,6 @@ class TestDataset(TestCase):
 
         pos = np.array((0, 0, 7, 7))
         size = np.array((1, 1, 1, 1))
-        tile = get_tile_func(pos=pos, size=size, img=im)
 
         tile_rot = ds._augment_tile(im.shape, pos, size,
                                     get_tile_func,
@@ -608,7 +605,6 @@ class TestDataset(TestCase):
 
         pos = np.array((0, 0, 3, 3))
         size = np.array((1, 1, 9, 9))
-        tile = get_tile_func(pos=pos, size=size, img=im)
 
         tile_ud = ds._augment_tile(
                     im.shape, pos, size,
@@ -774,8 +770,8 @@ class TestDataset(TestCase):
 
         # this tile is larger than the image
         with self.assertRaises(AssertionError):
-            pos_izxy = d._random_pos_izxy(label_value=1,
-                                          tile_size_zxy=(3, 40, 27))
+            d._random_pos_izxy(label_value=1,
+                               tile_size_zxy=(3, 40, 27))
         np.random.seed(None)
 
     def test_init_dataset_ilastik(self):
