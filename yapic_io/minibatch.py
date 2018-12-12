@@ -22,6 +22,11 @@ class Minibatch(object):
     padding_zxy: (z, x, y)
         Growing of pixel tile in z, x and y (to define size of classifier input
         template relative to output template size size_zxy).
+
+    See Also
+    --------
+    yapic.io.training_batch
+    yapic_io.prediction_batch
     '''
     def __init__(self, dataset, batch_size, size_zxy, padding_zxy=(0, 0, 0)):
 
