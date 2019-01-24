@@ -20,11 +20,6 @@ class TestIlastikConnector(TestCase):
 
         return IlastikConnector(img_path, lbl_path)
 
-    def test_dimensions(self):
-        c = self.setup_storage_version_12()
-
-        assert_array_equal(c.image_dimensions(0), c.label_dimensions(0))
-
     def test_tiles(self):
         c = self.setup_storage_version_12()
 
@@ -72,9 +67,6 @@ class TestIlastikConnector(TestCase):
 
         self.assertEqual(actual_counts, expected_counts)
 
-        # print(c.load_label_matrix(0).shape)
-        #assert False
-
     def test_constructor(self):
         img_path = os.path.join(
             base_path, '../test_data/ilastik/pixels_ilastik-multiim-1.2')
@@ -82,28 +74,40 @@ class TestIlastikConnector(TestCase):
             base_path, '../test_data/ilastik/ilastik-multiim-1.2.ilp')
         c = IlastikConnector(img_path, lbl_path)
 
-        lbl_identifiers = [Path('pixels_ilastik-multiim-1.2/20width_23height_3slices_2channels.tif'),
-                           Path('pixels_ilastik-multiim-1.2/34width_28height_2slices_2channels.tif'),
-                           Path('pixels_ilastik-multiim-1.2/6width_4height_3slices_2channels.tif')]
+        lbl_identifiers = \
+            [Path(('pixels_ilastik-multiim-1.2/'
+                   '20width_23height_3slices_2channels.tif')),
+             Path(('pixels_ilastik-multiim-1.2/'
+                   '34width_28height_2slices_2channels.tif')),
+             Path(('pixels_ilastik-multiim-1.2/'
+                   '6width_4height_3slices_2channels.tif'))]
 
         assert_array_equal(lbl_identifiers, [lbl for im, lbl in c.filenames])
 
     def test_constructor_with_subset(self):
 
-        # by passing a list of tiff filenames to IlastikConnector (rather than a wildcard)
-        # an image subset of the ilastik project can be selected
+        # by passing a list of tiff filenames to IlastikConnector
+        # (rather than a wildcard) an image subset of the ilastik project
+        # can be selected
 
         tiff_dir = os.path.join(
             base_path, '../test_data/ilastik/pixels_ilastik-multiim-1.2')
-        selected_tiffs = [os.path.join(tiff_dir, '20width_23height_3slices_2channels.tif'),
-                          os.path.join(tiff_dir, '6width_4height_3slices_2channels.tif')]
+        selected_tiffs = [os.path.join(
+                          tiff_dir,
+                          '20width_23height_3slices_2channels.tif'),
+                          os.path.join(
+                          tiff_dir,
+                          '6width_4height_3slices_2channels.tif')]
 
         lbl_path = os.path.join(
             base_path, '../test_data/ilastik/ilastik-multiim-1.2.ilp')
         c = IlastikConnector(selected_tiffs, lbl_path)
 
-        lbl_identifiers = [Path('pixels_ilastik-multiim-1.2/20width_23height_3slices_2channels.tif'),
-                           Path('pixels_ilastik-multiim-1.2/6width_4height_3slices_2channels.tif')]
+        lbl_identifiers = \
+            [Path(('pixels_ilastik-multiim-1.2/'
+                   '20width_23height_3slices_2channels.tif')),
+             Path(('pixels_ilastik-multiim-1.2/'
+                   '6width_4height_3slices_2channels.tif'))]
 
         pprint(c.filenames)
         assert_array_equal(lbl_identifiers, [lbl for im, lbl in c.filenames])
@@ -189,9 +193,9 @@ class TestIlastikConnector(TestCase):
 
         c = IlastikConnector(img_path, lbl_path)
 
-        image_id = 3 # 769_cerebellum_5M41_subset_1.tif
+        image_id = 3  # 769_cerebellum_5M41_subset_1.tif
         pos_zxy = (0, 0, 0)
-        size_zxy = (1, 1047, 684) # whole image
+        size_zxy = (1, 1047, 684)  # whole image
 
         lbl = c.label_tile(image_id, pos_zxy, size_zxy, 4)
         self.assertEqual(lbl.shape, size_zxy)
@@ -215,8 +219,6 @@ class TestIlastikConnector(TestCase):
 
         self.assertFalse(lbl[0, 0, 0])
 
-
-
     def test_filter_labeled(self):
 
         img_path = os.path.join(
@@ -228,12 +230,17 @@ class TestIlastikConnector(TestCase):
         c = IlastikConnector(img_path, lbl_path)
         c_filtered = c.filter_labeled()
 
-        labelnames = [Path('pixels_ilastik-multiim-1.2/20width_23height_3slices_2channels.tif'),
-                      Path('pixels_ilastik-multiim-1.2/34width_28height_2slices_2channels.tif'),
-                      Path('pixels_ilastik-multiim-1.2/6width_4height_3slices_2channels.tif')]
+        labelnames = [Path(('pixels_ilastik-multiim-1.2/'
+                            '20width_23height_3slices_2channels.tif')),
+                      Path(('pixels_ilastik-multiim-1.2/'
+                            '34width_28height_2slices_2channels.tif')),
+                      Path(('pixels_ilastik-multiim-1.2/'
+                            '6width_4height_3slices_2channels.tif'))]
 
-        labelnames_flt = [Path('pixels_ilastik-multiim-1.2/20width_23height_3slices_2channels.tif'),
-                          Path('pixels_ilastik-multiim-1.2/34width_28height_2slices_2channels.tif')]
+        labelnames_flt = [Path(('pixels_ilastik-multiim-1.2/'
+                                '20width_23height_3slices_2channels.tif')),
+                          Path(('pixels_ilastik-multiim-1.2/'
+                                '34width_28height_2slices_2channels.tif'))]
 
         assert_array_equal(labelnames, [lbl for im, lbl in c.filenames])
         assert_array_equal(labelnames_flt, [
@@ -249,4 +256,5 @@ class TestIlastikConnector(TestCase):
 
         c1, c2 = c.split(0.3)
 
-        assert_array_equal(c1.image_count() + c2.image_count(), c.image_count())
+        assert_array_equal(c1.image_count() + c2.image_count(),
+                           c.image_count())

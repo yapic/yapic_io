@@ -23,3 +23,8 @@ yapic_io/tests/__pycache__/
 
 # compiled docs
 doc/build
+
+# doc rst files
+doc/source/modules.rst
+doc/source/yapic_io.rst
+doc/source/yapic_io.tests.rst

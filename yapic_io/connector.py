@@ -3,7 +3,31 @@ import logging
 import os
 logger = logging.getLogger(os.path.basename(__file__))
 
+
 def io_connector(image_path, label_path, *args, **kwds):
+    '''
+    Returns either a TiffConnector or an IlastikConnector, depending on
+    input files.
+
+    Parameters
+    ----------
+    image_path : str or list of str
+        Either wildcard or list of paths to pixel data in tiff format.
+    label_path : str of list of str
+        Either wildcard or list of paths to pixel data in tiff format
+        returns a TiffConnector. If a path to a single Ilastik ilp
+        file is given, an IlastikConnector is returned.
+
+    Returns
+    -------
+    Connector
+        Either IlastikConnector or TiffConnector
+
+    See Also
+    --------
+    yapic_io.tiff_connector.TiffConnector
+    yapic_io.ilastik_connector.IlastikConnector
+    '''
     from yapic_io.tiff_connector import TiffConnector
     from yapic_io.ilastik_connector import IlastikConnector
 
@@ -21,25 +45,19 @@ class Connector(metaclass=ABCMeta):
     training and prediction.
 
     - Connects to a fixed collection of images and corresponding labels
-
     - Provides methods for getting sizes of all images
-
     - Provides methods for getting image subsets and label coordinates.
 
 
     Prerequisites for the Image data:
 
     - Images are 4D datasets with following dimensions: (channel, z, x, y)
-
     - All images must have the same nr of channels but can vary in z, x, and y.
-
     - Time series are not supported. However, time frames can be modeled as
       individual images.
-
-    - Images with lower dimensions can be modeled. E.g. grayscale single plane images
+    - Images with lower dimensions can be modeled. E.g. grayscale single plane
+      images
       have the shape (1, 1, width, height).
-
-
 
     The Connector methods are used by the Dataset class.
     '''
@@ -62,54 +80,75 @@ class Connector(metaclass=ABCMeta):
     @abstractmethod
     def image_count(self):
         '''
-        :returns: the number of images in the dataset
+        Get number of images.
+
+        Returns
+        -------
+        int
+            Number of images in the dataset.
         '''
         pass
 
     @abstractmethod
     def label_count_for_image(self, image_nr):
         '''
-        returns for each label value the number of labels for this image
+        Returns for each label value the number of labels for this image
 
-        label_counts = {
-             label_value_1 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...],
-             label_value_2 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...],
-             label_value_3 : [nr_labels_image_0, nr_labels_image_1, nr_labels_image_2, ...],
-             ...
-        }
+        Parameters
+        ----------
+        image_nr : int
+            Index of image.
 
-        :param image_nr: index of image
-        :returns label_counts: dict with counts per label and per image, see example above
+        Returns
+        -------
+        dict
+            Counts per label and per image.
         '''
         pass
 
     @abstractmethod
     def get_tile(self, image_nr=None, pos=None, size=None):
         '''
-        returns 4D subsection of one image in following dimension order:
-        (channel, zslice, x, y)
+        Get 4D subsection of an image.
 
-        :param image_nr: index of image
-        :param pos: upper left position of subsection
-        :type pos: 4 element tuple of integers (channel, zslice, x, y)
-        :returns: 4D subsection of image as numpy array
+        Parameters
+        ----------
+        image_nr : int
+            Index of image.
+        pos : (channel, zslice, x, y)
+            Upper left position of subsection
+
+        Returns
+        -------
+        numpy.ndarray
+            4D subsection of image as numpy array
         '''
         pass
 
     @abstractmethod
     def label_tile(self, image_nr, pos_zxy, size_zxy, label_value):
         '''
-        returns a 3d zxy boolean matrix where positions of the requested label
-        are indicated with True. only mapped labelvalues can be requested.
+        Get 3d zxy boolean matrix where positions of the requested label
+        are indicated with True. Only mapped labelvalues can be requested.
 
         dimension order: (z, x, y)
 
-        :param image_nr: index of image
-        :param pos_zxy: upper left position of subsection (zslice, x, y)
-        :type pos_zxy: 4 element tuple of integers (zslice, x, y)
-        :param label_value: the id of the label
-        :type label_value: integer
-        :returns: 3D subsection of labelmatrix as boolean numpy array
+        Parameters
+        ----------
+        image_nr : int
+            Index of image.
+        pos_zxy : (zslice, x, y)
+            Upper left position of subsection.
+        size_zxy : (nr_zslices, nr_x, nr_y)
+            Upper left position of subsection.
+        label_value : int
+            Id of the label.
+
+        Returns
+        -------
+        numpy.ndarray
+            3D subsection of labelmatrix as boolean mask in dimension order
+            (z, x, y)
         '''
 
         pass
@@ -118,26 +157,41 @@ class Connector(metaclass=ABCMeta):
     def put_tile(self, pixels, pos_zxy, image_nr, label_value):
         '''
         Puts probabilities (pixels) for a certain label to the data storage.
+
         These probabilities are prediction values from a classifier (i.e. the
         output of the classier)
 
-        :param pixels: 3D matrix of probability values
-        :type pixels: 3D numpy array of floats with shape (z, x, y)
-        :param pos_zxy: upper left position of pixels in source image_nr
-        :type pos_zxy: tuple of length 3 (z, x, y) with integer values
-        :param image_nr: index of image
-        :param label_value: the id of the label
-        :type label_value: integer
-        :returns: bool (True if successful)
+        Parameters
+        ----------
+        pixels : numpy.ndarray
+            3D matrix of probability values with shape (z, x, y)
+        pos_zxy : (z, x, y)
+            Upper left position of pixels in source image_nr.
+        image_nr : int
+            Index of image.
+        label_value : int
+            Id of the label.
+
+        Returns
+        -------
+        bool
+            True in case of successful write.
         '''
 
     @abstractmethod
     def image_dimensions(self, image_nr):
         '''
-        returns dimensions of the dataset.
-        dims is a 4-element-tuple:
+        Get dimensions of the dataset.
 
-        :param image_nr: index of image
-        :returns (nr_channels, nr_zslices, nr_x, nr_y)
+
+        Parameters
+        ----------
+        image_nr : int
+            index of image
+
+        Returns
+        -------
+        (nr_channels, nr_zslices, nr_x, nr_y)
+            Image shape.
         '''
         pass

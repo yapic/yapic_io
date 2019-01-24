@@ -9,14 +9,14 @@ import warnings
 from itertools import zip_longest
 from pathlib import Path
 from bigtiff import Tiff, PlaceHolder
-
 from yapic_io.connector import Connector
+
 logger = logging.getLogger(os.path.basename(__file__))
 
 FilePair = collections.namedtuple('FilePair', ['img', 'lbl'])
 
 
-def handle_img_filenames(img_filepath):
+def _handle_img_filenames(img_filepath):
     '''
     - checks if list of image filepaths, a single wildcard filepath
       or a single filepath without a wildcard is given.
@@ -31,11 +31,11 @@ def handle_img_filenames(img_filepath):
         folder = img_filepath if img_filepath.is_dir() else img_filepath.parent
         filenames = [fname.name for fname in sorted(folder.glob(img_filemask))]
 
-
     elif type(img_filepath) in (list, tuple):
 
         img_filenames = img_filepath
-        img_filenames = [Path(p).expanduser().resolve() if p is not None else None
+        img_filenames = [Path(p).expanduser().resolve()
+                         if p is not None else None
                          for p in img_filepath]
 
         assert len(img_filenames) > 0, 'list of image filenames is empty'
@@ -50,7 +50,8 @@ def handle_img_filenames(img_filepath):
         folder = next(iter(folders))
         folder = folder.expanduser().resolve()
         filenames = [fname.name
-            if fname is not None else None for fname in img_filenames]
+                     if fname is not None else None
+                     for fname in img_filenames]
 
     else:
         raise NotImplementedError(
@@ -62,10 +63,34 @@ def handle_img_filenames(img_filepath):
 
 class TiffConnector(Connector):
     '''
-    implementation of Connector for normal sized tiff images (up to 4 dimensions)
-    and corresponding label masks (up to 4 dimensions) in tiff format.
+    Implementation of Connector for tiff images up to 4 dimensions and
+    corresponding label masks up to 4 dimensions in tiff format.
 
-    Initiate a new TiffConnector as follows:
+    Parameters
+    ----------
+    img_filepath : str or list of str
+        Path to source pixel images (use wildcards for filtering)
+        or a list of filenames.
+    label_filepath : str or list of str
+        Path to label images (use wildcards for filtering)
+        or a list of filenames.
+    savepath : str, optional
+        Directory to save pixel classifiaction results as probability
+        images.
+
+    Notes
+    -----
+    Label images and pixel images have to be equal in zxy dimensions,
+    but can differ in nr of channels.
+
+    Labels can be read from multichannel images. This is needed for
+    networks with multiple output layers. Each channel is assigned one
+    output layer. Different labels from different channels can overlap
+    (can share identical xyz positions).
+
+    Examples
+    --------
+    Create a TiffConnector object with pixel and label data.
 
     >>> from yapic_io.tiff_connector import TiffConnector
     >>> pixel_image_dir = 'yapic_io/test_data/tiffconnector_1/im/*.tif'
@@ -77,25 +102,16 @@ class TiffConnector(Connector):
     label filepath: yapic_io/test_data/tiffconnector_1/labels
     nr of images: 3
     labelvalue_mapping: [{91: 1, 109: 2, 150: 3}]
+
+    See Also
+    --------
+    yapic_io.ilastik_connector.IlastikConnector
     '''
 
     def __init__(self, img_filepath, label_filepath, savepath=None):
-        '''
-        :param img_filepath: path to source pixel images (use wildcards for filtering)
-                             or a list of filenames
-        :param label_filepath: path to label images (use wildcards for filtering)
-                               or a list of filenames
-        :param savepath: path for output probability images
-        Label images and pixel images have to be equal in zxy dimensions, but can differ
-        in nr of channels.
 
-        Labels can be read from multichannel images. This is needed for networks
-        with multiple output layers. Each channel is assigned one output layer.
-        Different labels from different channels can overlap (can share identical
-        xyz positions).
-        '''
-        self.img_path, img_filenames = handle_img_filenames(img_filepath)
-        self.label_path, lbl_filenames = self.handle_lbl_filenames(
+        self.img_path, img_filenames = _handle_img_filenames(img_filepath)
+        self.label_path, lbl_filenames = self._handle_lbl_filenames(
             label_filepath)
 
         assert img_filenames is not None, 'no filenames for pixel images found'
@@ -105,24 +121,23 @@ class TiffConnector(Connector):
         else:
             pairs = ut.find_best_matching_pairs(img_filenames, lbl_filenames)
 
-        self.filenames = [FilePair(Path(img), Path(lbl) if lbl else None) for img, lbl in pairs]
+        self.filenames = [FilePair(Path(img), Path(lbl) if lbl else None)
+                          for img, lbl in pairs]
 
         logger.info('Pixel and label files are assigned as follows:')
         logger.info('\n'.join('{p.img} <-> {p.lbl}'.format(p=pair)
                               for pair in self.filenames))
 
-        self.labelvalue_mapping = None  # list of dicts of original and assigned labelvalues
-        # reason: assign unique labelvalues
-        # [{orig_label1: 1, orig_label2: 2}, {orig_label1: 3, orig_label2: 4}, ...]
-        self.savepath = Path(savepath) if savepath is not None else None  # path for probability maps
+        self.savepath = Path(savepath) if savepath is not None else None
 
         original_labels = self.original_label_values_for_all_images()
-        self.labelvalue_mapping = self.calc_label_values_mapping(original_labels)
+        self.labelvalue_mapping = self.calc_label_values_mapping(
+                                            original_labels)
 
         self.check_label_matrix_dimensions()
 
-    def handle_lbl_filenames(self, label_filepath):
-        return handle_img_filenames(label_filepath)
+    def _handle_lbl_filenames(self, label_filepath):
+        return _handle_img_filenames(label_filepath)
 
     def __repr__(self):
 
@@ -137,10 +152,14 @@ class TiffConnector(Connector):
                                             self.labelvalue_mapping)
         return infostring
 
-
     def filter_labeled(self):
         '''
-        Returns a new TiffConnector containing only images that have labels
+        Removes images without labels.
+
+        Returns
+        -------
+        TiffConnector
+            Connector object containing only images with labels.
         '''
         img_fnames = [self.img_path / img for img, lbl in self.filenames
                       if lbl is not None]
@@ -163,36 +182,52 @@ class TiffConnector(Connector):
         np.random.set_state(state)
 
         img_fnames1 = [self.img_path / img
-                       for img, lbl in itertools.compress(self.filenames, mask)]
+                       for img, lbl in itertools.compress(self.filenames,
+                                                          mask)]
 
         img_fnames2 = [self.img_path / img
-                       for img, lbl in itertools.compress(self.filenames, ~mask)]
-
-
+                       for img, lbl in itertools.compress(self.filenames,
+                                                          ~mask)]
 
         if len(img_fnames1) == 0:
-            warnings.warn(
-                'TiffConnector.split({}): First connector is empty!'.format(fraction))
+            msg = ('TiffConnector.split({}): ' +
+                   'First connector is empty!').format(fraction)
+            warnings.warn(msg)
+
         if len(img_fnames2) == 0:
-            warnings.warn(
-                'TiffConnector.split({}): Second connector is empty!'.format(fraction))
+            msg = ('TiffConnector.split({}): ' +
+                   'Second connector is empty!').format(fraction)
+            warnings.warn(msg)
 
         return img_fnames1, img_fnames2, mask
 
     def split(self, fraction, random_seed=42):
         '''
-        Split the images pseudo-randomly into two subsets (both TiffConnectors).
-        The first of size `(1-fraction)*N_images`, the other of size `fraction*N_images`
+        Split the images pseudo-randomly into two Connector subsets.
+
+        The first of size `(1-fraction)*N_images`, the other of size
+        `fraction*N_images`
+
+        Parameters
+        ----------
+        fraction : float
+        random_seed : float, optional
+
+        Returns
+        -------
+        connector_1, connector_2
         '''
 
-        img_fnames1, img_fnames2, mask = self._split_img_fnames(fraction,
-                                                                random_seed=random_seed)
-
+        img_fnames1, img_fnames2, mask = self._split_img_fnames(
+                                                fraction,
+                                                random_seed=random_seed)
 
         lbl_fnames1 = [self.label_path / lbl if lbl is not None else None
-                       for img, lbl in itertools.compress(self.filenames, mask)]
+                       for img, lbl in itertools.compress(self.filenames,
+                                                          mask)]
         lbl_fnames2 = [self.label_path / lbl if lbl is not None else None
-                       for img, lbl in itertools.compress(self.filenames, ~mask)]
+                       for img, lbl in itertools.compress(self.filenames,
+                                                          ~mask)]
 
         conn1 = TiffConnector(img_fnames1, lbl_fnames1, savepath=self.savepath)
         conn2 = TiffConnector(img_fnames2, lbl_fnames2, savepath=self.savepath)
@@ -216,13 +251,12 @@ class TiffConnector(Connector):
 
         path = self.savepath / fname
 
-
         if not path.exists():
             T = 1
             C = 1
             _, Z, X, Y = self.image_dimensions(image_nr)
             images = [PlaceHolder((Y, X, 1), 'float32')] * Z
-            Tiff.write(images, io=str(path), imagej_shape=(T,C,Z))
+            Tiff.write(images, io=str(path), imagej_shape=(T, C, Z))
 
         return Tiff.memmap_tcz(path)
 
@@ -238,7 +272,7 @@ class TiffConnector(Connector):
         Z, X, Y = pos_zxy
         ZZ, XX, YY = np.array(pos_zxy) + pixels.shape
         for z in range(Z, ZZ):
-            slices[T,C,z][Y:YY, X:XX] = pixels[z - Z, ...].T
+            slices[T, C, z][Y:YY, X:XX] = pixels[z - Z, ...].T
 
     @lru_cache(maxsize=10)
     def _open_image_file(self, image_nr):
@@ -247,36 +281,42 @@ class TiffConnector(Connector):
         return Tiff.memmap_tcz(path)
 
     def image_dimensions(self, image_nr):
-        '''
-        returns dimensions of the dataset.
-        dims is a 4-element-tuple:
 
-        :param image_nr: index of image
-        :returns (nr_channels, nr_zslices, nr_x, nr_y)
-        '''
         img = self._open_image_file(image_nr)
-        Y, X = img[0,0,0].shape
-        return np.hstack([img.shape[1:], (X,Y)])
+        Y, X = img[0, 0, 0].shape
+        return np.hstack([img.shape[1:], (X, Y)])
 
     def label_matrix_dimensions(self, image_nr):
         '''
-        returns dimensions of the label image.
-        dims is a 4-element-tuple:
+        Get dimensions of the label image.
 
-        :param image_nr: index of image
-        :returns (nr_channels, nr_zslices, nr_x, nr_y)
+
+        Parameters
+        ----------
+        image_nr : int
+            index of image
+
+        Returns
+        -------
+        (nr_channels, nr_zslices, nr_x, nr_y)
+            Labelmatrix shape.
         '''
         lbl = self._open_label_file(image_nr)
         if lbl is None:
             return
 
-        Y, X = lbl[0,0,0].shape
-        return np.hstack([lbl.shape[1:], (X,Y)])
+        Y, X = lbl[0, 0, 0].shape
+        return np.hstack([lbl.shape[1:], (X, Y)])
 
     def check_label_matrix_dimensions(self):
         '''
-        check if label matrix dimensions fit to image dimensions, i.e.
-        everything identical except nr of channels (label mat always 1)
+        Check if label matrix dimensions fit to image dimensions, i.e.
+        everything identical except nr of channels (label mat always 1).
+
+        Raises
+        ------
+        AssertionError
+            If label matrix dimensions don't fit to image dimensions.
         '''
         N_channels = None
 
@@ -296,8 +336,11 @@ class TiffConnector(Connector):
             if N_channels is None:
                 N_channels = ch
 
-            np.testing.assert_equal(N_channels, ch, 'Label channels inconsistent for {}'.format(lbl_fname))
-            np.testing.assert_array_equal(lbl_dim, img_dim, 'Invalid image dims for {} and {}'.format(img_fname, lbl_fname))
+            msg = 'Label channels inconsistent for {}'.format(lbl_fname)
+            np.testing.assert_equal(N_channels, ch, msg)
+            msg = 'Invalid image dims for {} and {}'.format(img_fname,
+                                                            lbl_fname)
+            np.testing.assert_array_equal(lbl_dim, img_dim, msg)
 
     def _mapped_label_value_to_original(self, label_value):
         '''
@@ -318,27 +361,25 @@ class TiffConnector(Connector):
         CC, ZZ, XX, YY = np.array(pos) + size
 
         slices = self._open_image_file(image_nr)
-        tile = [ [ s[Y:YY, X:XX] for s in c[Z:ZZ] ] for c in slices[T, C:CC, :] ]
+        tile = [[s[Y:YY, X:XX] for s in c[Z:ZZ]] for c in slices[T, C:CC, :]]
         tile = np.stack(tile)
-        tile = np.moveaxis(tile, (0,1,2,3), (0,1,3,2))
+        tile = np.moveaxis(tile, (0, 1, 2, 3), (0, 1, 3, 2))
 
         return tile.astype('float')
 
     def label_tile(self, image_nr, pos_zxy, size_zxy, label_value):
-        '''
-        returns a 3d zxy boolean matrix where positions of the reuqested label
-        are indicated with True. only mapped labelvalues can be requested.
-        '''
+
         T = 0
         Z, X, Y = pos_zxy
         ZZ, XX, YY = np.array(pos_zxy) + size_zxy
-        C, original_label_value = self._mapped_label_value_to_original(label_value)
+        C, original_label_value = self._mapped_label_value_to_original(
+                                        label_value)
 
         slices = self._open_label_file(image_nr)
 
-        tile = [ s[Y:YY, X:XX] for s in slices[T, C, Z:ZZ] ]
+        tile = [s[Y:YY, X:XX] for s in slices[T, C, Z:ZZ]]
         tile = np.stack(tile)
-        tile = np.moveaxis(tile, (0,1,2), (0,2,1))
+        tile = np.moveaxis(tile, (0, 1, 2), (0, 2, 1))
 
         tile = (tile == original_label_value)
         return tile
@@ -359,23 +400,33 @@ class TiffConnector(Connector):
 
         return Tiff.memmap_tcz(path)
 
-
     @staticmethod
     def calc_label_values_mapping(original_labels):
         '''
-        assign unique labelvalues to original labelvalues.
-        for multichannel label images it might happen, that identical
+        Assign unique labelvalues to original labelvalues.
+
+        For multichannel label images it might happen, that identical
         labels occur in different channels.
         to avoid conflicts, original labelvalues are mapped to unique values
         in ascending order 1, 2, 3, 4...
-
         This is defined in self.labelvalue_mapping:
 
-        [{orig_label1: 1, orig_label2: 2}, {orig_label1: 3, orig_label2: 4}, ...]
+        [{orig_label1: 1, orig_label2: 2}, {orig_label1: 3, orig_label2: 4},..]
 
         Each element of the list correponds to one label channel.
         Keys are the original labels, values are the assigned labels that
         will be seen by the Dataset object.
+
+        Parameters
+        ----------
+        original_labels : array_like
+            List of original label values.
+
+        Returns
+        -------
+        dict
+            Labelvalue mapping with original labels as key and new label as
+            value.
         '''
         new_labels = itertools.count(1)
 
@@ -391,9 +442,14 @@ class TiffConnector(Connector):
     @lru_cache(maxsize=1)
     def original_label_values_for_all_images(self):
         '''
-        returns a list of sets. each set corresponds to 1 label channel.
-        each set contains the label values of that channel.
-        E.g. `[{91, 109, 150}, {90, 100}]` for two label channels
+        Get all unique label values per image.
+
+        Returns
+        -------
+        list
+            List of sets. Each set corresponds to 1 label channel.
+            each set contains the label values of that channel.
+            E.g. `[{91, 109, 150}, {90, 100}]` for two label channels
         '''
         labels_per_channel = []
 
@@ -404,19 +460,31 @@ class TiffConnector(Connector):
 
             T = 0
             C = slices.shape[1]
-            labels = [np.unique(np.concatenate([np.unique(s) for s in slices[T,c,:]])) for c in range(C)]
+            labels = [np.unique(np.concatenate([np.unique(s)
+                                                for s in slices[T, c, :]]))
+                      for c in range(C)]
             labels = [set(labels) - {0} for labels in labels]
 
             labels_per_channel = [l1.union(l2)
-                                  for l1, l2 in zip_longest(labels_per_channel, labels, fillvalue=set())]
+                                  for l1, l2 in zip_longest(labels_per_channel,
+                                                            labels,
+                                                            fillvalue=set())]
 
         return labels_per_channel
 
-
-    @lru_cache(maxsize = 1500)
+    @lru_cache(maxsize=1500)
     def label_count_for_image(self, image_nr):
         '''
-        returns for each label value the number of labels for this image
+        Get number of labels per labelvalue for an image.
+
+        Parameters
+        ----------
+        image_nr : int
+            index of image
+
+        Returns
+        -------
+        dict
         '''
         slices = self._open_label_file(image_nr)
         if slices is None:
@@ -424,12 +492,13 @@ class TiffConnector(Connector):
 
         T = 0
         C = slices.shape[1]
-        labels = [np.unique(np.concatenate([np.unique(s) for s in slices[T,c,:]]))
+        labels = [np.unique(np.concatenate([np.unique(s)
+                                            for s in slices[T, c, :]]))
                   for c in range(C)]
 
-        original_label_count = [{ l: sum(np.count_nonzero(s == l) for s in slices[T,c,:])
-                                  for l in labels[c] if l > 0
-                                }
+        original_label_count = [{l: sum(np.count_nonzero(s == l)
+                                        for s in slices[T, c, :])
+                                 for l in labels[c] if l > 0}
                                 for c in range(C)]
         label_count = {self.labelvalue_mapping[c][l]: count
                        for c, orig in enumerate(original_label_count)
