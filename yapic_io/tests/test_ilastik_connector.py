@@ -113,10 +113,7 @@ class TestIlastikConnector(TestCase):
         assert_array_equal(lbl_identifiers, [lbl for im, lbl in c.filenames])
 
     def test_label_tile(self):
-        import warnings
-        warnings.warn(('test_label_tile() should be reimplemented when '
-                       'IlastikConnector is fixes!'), FutureWarning)
-        '''
+
         img_path = os.path.join(
             base_path, '../test_data/ilastik/pixels_ilastik-multiim-1.2')
         lbl_path = os.path.join(
@@ -155,7 +152,8 @@ class TestIlastikConnector(TestCase):
 
         lbl = c.label_tile(0, (0,0,0), (1,14,9), 1)
         assert_array_equal(lbl[0, :13, 1:8], mat_val != 0)
-    '''
+
+
 
     def test_label_tile_purkinjedata(self):
 
@@ -167,7 +165,7 @@ class TestIlastikConnector(TestCase):
         print(c.filenames)
         print(c.image_count)
 
-        image_id = 3  # 769_cerebellum_5M41_subset_1.tif
+        image_id = 0  # 769_cerebellum_5M41_subset_1.tif
         pos_zxy = (0, 309, 212)
         size_zxy = (1, 4, 5)
 
@@ -199,6 +197,34 @@ class TestIlastikConnector(TestCase):
 
         lbl = c.label_tile(image_id, pos_zxy, size_zxy, 4)
         self.assertEqual(lbl.shape, size_zxy)
+
+    def test_labeltile_for_image_without_labels(self):
+        p = os.path.join(base_path, '../test_data/ilastik/purkinjetest')
+        img_path = os.path.join(p, 'images')
+        lbl_path = os.path.join(p, 'ilastik-1.2.2post1mac.ilp')
+
+        c = IlastikConnector(img_path, lbl_path)
+        print(c.filenames)
+        print(c.image_count)
+
+        image_id = 2  # 769_cerebellum_5M41_subset_1.tif
+        pos_zxy = (0, 309, 212)
+        size_zxy = (1, 4, 5)
+
+        val = np.array([[[False, False, False, False, False],
+                         [False, False, False, False, False],
+                         [False, False, False, False, False],
+                         [False, False, False, False, False]]])
+        #print(c.ilp.n_dims(2))
+        lbl = c.label_tile(image_id, pos_zxy, size_zxy, 3)
+        assert_array_equal(lbl, val)
+
+
+
+
+
+
+
 
     def test_multi_channel_multi_z(self):
 

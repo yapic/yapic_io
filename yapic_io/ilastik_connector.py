@@ -153,32 +153,29 @@ class IlastikConnector(TiffConnector):
             (z, x, y)
         '''
 
-        label_filename = str(self.filenames[image_nr].lbl)
+        slices = np.array([[pos_zxy[0], pos_zxy[0] + size_zxy[0]],  # z
+                           [pos_zxy[2], pos_zxy[2] + size_zxy[2]],  # y
+                           [pos_zxy[1], pos_zxy[1] + size_zxy[1]],  # x
+                           [0, 1]])  # c
 
-        if label_filename is None:
-            msg = 'No label matrix file found for image file #{}.'
-            logger.warning(msg.format(image_nr))
-            return None
+        if self.ilp.n_dims(image_nr) == 0:  # no labels in image
+            return np.zeros(size_zxy) > 0
 
-        _, (img, lbl, _) = self.ilp[label_filename]
+        elif self.ilp.n_dims(image_nr) == 4:  # z-stacks
+            lbl = self.ilp.tile(image_nr, slices)
+
+        elif self.ilp.n_dims(image_nr) == 3:  # 2d images
+            lbl = self.ilp.tile(image_nr, slices[1:, :])
+            lbl = np.expand_dims(lbl, axis=0)  # add z axis
 
         # zyxc to czxy
         lbl = np.transpose(lbl, (3, 0, 2, 1)).astype(int)
 
-        # pad labelmatrix to same size as image
-        img_shape = self.image_dimensions(image_nr)
-        padding = [(0, d2-d1) for d2, d1 in zip(img_shape, lbl.shape)]
-        padding[0] = (0, 0)  # set padding for channel axis to 0
-        lbl = np.pad(lbl, padding, mode='constant', constant_values=0)
-
         C, original_label_value = self._mapped_label_value_to_original(
-                                          label_value)
-        Z, X, Y = pos_zxy
-        ZZ, XX, YY = np.array(pos_zxy) + size_zxy
-        lbl = lbl[C, Z:ZZ, X:XX, Y:YY]
+                                         label_value)
         lbl = (lbl == original_label_value)
 
-        return lbl
+        return lbl[0, :, :, :]
 
     def check_label_matrix_dimensions(self):
         '''
