@@ -298,3 +298,56 @@ class TestTrainingBatch(TestCase):
 
         m.augment_by_flipping(False)
         self.assertEqual(m.augmentation, {'rotate', 'shear'})
+
+
+    def test_set_pixel_dimension_order(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path,
+                                  '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path, label_path)
+        d = Dataset(c)
+
+        size = (1, 3, 4)
+        pad = (1, 2, 2)
+
+        m = TrainingBatch(d, size, padding_zxy=pad)
+
+        m.set_pixel_dimension_order('bczxy')
+        self.assertEqual([0, 1, 2, 3, 4], m.pixel_dimension_order)
+
+        m.set_pixel_dimension_order('bzxyc')
+        self.assertEqual([0, 4, 1, 2, 3], m.pixel_dimension_order)
+
+
+    def test_get_pixels_dimension_order(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path,
+                                  '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path, label_path)
+        d = Dataset(c)
+
+        size = (2, 5, 4)
+        pad = (0, 0, 0)
+
+        m = TrainingBatch(d, size, padding_zxy=pad)
+
+        b = next(m)
+
+        p = m.pixels()
+        w = m.weights()
+        self.assertEqual(p.shape, (3, 3, 2, 5, 4))
+        self.assertEqual(w.shape, (3, 3, 2, 5, 4))
+
+        m.set_pixel_dimension_order('bczxy')
+        p = m.pixels()
+        w = m.weights()
+        self.assertEqual(p.shape, (3, 3, 2, 5, 4))
+        self.assertEqual(w.shape, (3, 3, 2, 5, 4))
+
+        m.set_pixel_dimension_order('bzxyc')
+        p = m.pixels()
+        w = m.weights()
+        self.assertEqual(p.shape, (3, 2, 5, 4, 3))
+        self.assertEqual(w.shape, (3, 2, 5, 4, 3))

@@ -98,6 +98,8 @@ class PredictionBatch(Minibatch):
                            self.padding_zxy)
                   for im_nr, pos_zxy in self.current_tile_positions]
         pixels = np.array(pixels)
+        pixels = np.moveaxis(pixels, [0, 1, 2, 3, 4],
+                             self.pixel_dimension_order)
 
         return self._normalize(pixels).astype(self.float_data_type)
 

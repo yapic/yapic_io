@@ -31,6 +31,10 @@ class Minibatch(object):
     def __init__(self, dataset, batch_size, size_zxy, padding_zxy=(0, 0, 0)):
 
         self.dataset = dataset
+
+        self.pixel_dimension_order = [0, 1, 2, 3, 4]
+        self.set_pixel_dimension_order('bczxy')
+
         self._batch_size = batch_size
         self.normalize_mode = None
         self.global_norm_minmax = None
@@ -51,6 +55,33 @@ class Minibatch(object):
         self.channels = set(range(nr_channels))
         # imports all available labels by default
         self.labels = set(self.dataset.label_values())
+
+    def set_pixel_dimension_order(self, s):
+        '''
+        Parameters
+        ----------
+        s : {'bczxy', 'bzxyc'}
+            Dimension order of pixel array as returned by self.pixels()
+            and self.weights().
+            First dimension is always the batch dimension and can not be
+            changed.
+
+        Notes
+        -----
+        Keras supports pixel dimension order 'bzxyc'.
+        '''
+
+        assert s in ['bczxy',
+                     'bzxyc'], 'dimension order {} not supported'.format(s)
+
+        self.pixel_dimension_order[0] = s.find('b')
+        self.pixel_dimension_order[1] = s.find('c')
+        self.pixel_dimension_order[2] = s.find('z')
+        self.pixel_dimension_order[3] = s.find('x')
+        self.pixel_dimension_order[4] = s.find('y')
+
+        return self.pixel_dimension_order
+
 
     def set_tile_size(self, size_zxy):
         self.tile_size_zxy = size_zxy

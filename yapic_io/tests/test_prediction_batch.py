@@ -285,3 +285,22 @@ class TestPredictionBatch(TestCase):
                 mock_classifier_result = classify(pixels, counter)
                 # pass classifier results for each class to data source
                 item.put_probmap_data(mock_classifier_result)
+
+
+    def test_pixel_dimensions(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
+        savepath = tempfile.TemporaryDirectory()
+        c = io_connector(img_path, '', savepath=savepath.name)
+        d = Dataset(c)
+
+        size = (1, 5, 4)
+        batch_size = 2
+
+        p = PredictionBatch(d, batch_size, size)[0]
+
+        print(p.pixels().shape)
+        self.assertEqual((2, 3, 1, 5, 4), p.pixels().shape)
+
+        p.set_pixel_dimension_order('bzxyc')
+        self.assertEqual((2, 1, 5, 4, 3), p.pixels().shape)

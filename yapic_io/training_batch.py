@@ -160,10 +160,15 @@ class TrainingBatch(Minibatch):
             self.augmentation.discard('shear')
 
     def pixels(self):
-        return self._normalize(self._pixels).astype(self.float_data_type)
+        pix = self._normalize(self._pixels).astype(self.float_data_type)
+
+        return np.moveaxis(pix, [0, 1, 2, 3, 4],
+                           self.pixel_dimension_order)
+
 
     def weights(self):
-        return self._weights
+        return np.moveaxis(self._weights, [0, 1, 2, 3, 4],
+                           self.pixel_dimension_order)
 
     def _random_tile(self, for_label=None):
         '''
