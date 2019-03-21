@@ -10,6 +10,15 @@ class TestUtils(TestCase):
 
         res = ut.compute_pos(shape, size)
         val = [(0, 0), (0, 2), (0, 3), (3, 0), (3, 2), (3, 3)]
+
+        self.assertEqual(res, val)
+
+        res = ut.compute_pos(shape, size, sliding_window=True)
+        val = [(0, 0), (1, 0), (2, 0), (3, 0),
+               (0, 1), (1, 1), (2, 1), (3, 1),
+               (0, 2), (1, 2), (2, 2), (3, 2),
+               (0, 3), (1, 3), (2, 3), (3, 3)]
+
         self.assertEqual(res, val)
 
     def test_compute_pos_2(self):
@@ -17,8 +26,39 @@ class TestUtils(TestCase):
         size = (2, 2)
 
         res = ut.compute_pos(shape, size)
-        print(res)
         val = [(0, 0), (0, 2), (2, 0), (2, 2), (4, 0), (4, 2)]
+        self.assertEqual(val, res)
+
+        res = ut.compute_pos(shape, size, sliding_window=True)
+        val = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0),
+               (0, 1), (1, 1), (2, 1), (3, 1), (4, 1),
+               (0, 2), (1, 2), (2, 2), (3, 2), (4, 2)]
+        self.assertEqual(val, res)
+
+    def test_compute_pos_3d(self):
+
+        shape = (2, 4, 3)
+        size = (2, 4, 3)
+
+        val = [(0, 0, 0)]
+
+        res = ut.compute_pos(shape, size)
+        self.assertEqual(val, res)
+
+        res = ut.compute_pos(shape, size, sliding_window=True)
+        self.assertEqual(val, res)
+
+    def test_compute_pos_3d_2(self):
+
+        shape = (2, 4, 3)
+        size = (1, 4, 3)
+
+        val = [(0, 0, 0), (1, 0, 0)]
+
+        res = ut.compute_pos(shape, size)
+        self.assertEqual(val, res)
+
+        res = ut.compute_pos(shape, size, sliding_window=True)
         self.assertEqual(val, res)
 
     def test_compute_str_dist_matrix(self):

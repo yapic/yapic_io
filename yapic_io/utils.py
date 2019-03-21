@@ -57,10 +57,10 @@ def assert_valid_image_subset(image_shape, pos, size):
     assert not (image_shape < (pos + size)).any(), 'tile out of image bounds'
 
 
-def compute_pos(img_shape, tile_shape):
+def compute_pos(img_shape, tile_shape, sliding_window=False):
 
     '''
-    Computes all possible positions for fetching tiles of a given size (sliding
+    Computes all  positions for fetching tiles of a given size (tile
     window).
 
     If the tiles do not fit perfectly in the image, the last positions
@@ -73,6 +73,11 @@ def compute_pos(img_shape, tile_shape):
         Image shape.
     tile_shape : tuple of size ndim
         Tile shape.
+    sliding_window : boolean
+        If True, positions are calculated for overlapping tiles. The tile
+        positions are shifted by one pixel in each direction.
+        If False, positions are calculated for non overlapping tiles. However
+        the last tile could overlap with its neighbors.
 
     Returns
     -------
@@ -96,7 +101,23 @@ def compute_pos(img_shape, tile_shape):
         el[-1] = el[-1] + shift
 
     pos = list(itertools.product(*pos_per_dim))
-    return pos
+
+    if not sliding_window or len(pos) <= 1:
+        # non overlapping tile positions
+        return pos
+
+    # if sliding window: interpolate missing positions with mgrid
+    n_dims = len(img_shape)
+
+    slices = [slice(pos[0][i], pos[-1][i]+1) for i in range(n_dims)]
+    mesh = np.mgrid[slices]
+
+    mesh = np.array(mesh).swapaxes(0, -1)
+
+    n_dims = len(img_shape)
+    pos_array = mesh.reshape((np.int16(mesh.size/n_dims), n_dims))
+
+    return [tuple(e) for e in pos_array]
 
 
 def _compute_str_dist_matrix(s1, s2):
