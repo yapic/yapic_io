@@ -1,7 +1,12 @@
 import random
 import numpy as np
 from yapic_io.minibatch import Minibatch
+from yapic_io.utils import compute_pos
+import logging
+import os
 
+logger = logging.getLogger(os.path.basename(__file__))
+logger.setLevel(logging.INFO)
 
 class TrainingBatch(Minibatch):
     '''
@@ -80,6 +85,9 @@ class TrainingBatch(Minibatch):
         self.shear_range = None
         self._pixels = None
         self._weights = None
+
+        self.tile_pos_for_label = {key: self.tile_positions()
+                                   for key in self.labels}
 
     def __repr__(self):
         info = ('TrainingBatch (batch_size: {}, '
@@ -170,10 +178,39 @@ class TrainingBatch(Minibatch):
         return np.moveaxis(self._weights, [0, 1, 2, 3, 4],
                            self.pixel_dimension_order)
 
-    def _random_tile(self, for_label=None):
+    def tile_positions(self, sliding=True):
         '''
-        Pick random tile in image regions where label data is present.
+        Get all possible sliding window tile positions of the dataset.
+
+        Parameters
+        ----------
+        sliding: bool
+            If True, sliding window positions are returned. Otherwise
+            positions of non-overlapping tiles.
+
+        Returns
+        -------
+        array_like
+            List of 4-element tuples. Tuples define (image_id, z, x, y).
         '''
+
+        im_sizes = np.zeros((self.dataset.n_images, 4), dtype=np.int16)
+        tile_pos = []
+        for i in range(self.dataset.n_images):
+            img_shape = self.dataset.image_dimensions(i)[1:]
+            pos = [(i, p[0], p[1], p[2])
+                   for p in compute_pos(img_shape,
+                                        self.tile_size_zxy,
+                                        sliding_window=sliding)]
+            tile_pos += pos
+
+        return tile_pos
+
+    def _augment_params(self):
+        '''
+        select random augmentation parameters
+        '''
+
         augment_params = {}
 
         if 'flip' in self.augmentation:
@@ -192,11 +229,50 @@ class TrainingBatch(Minibatch):
         if 'shear' in self.augmentation:
             augment_params['shear_angle'] = random.uniform(*self.shear_range)
 
-        return self.dataset.random_training_tile(
-                                self.tile_size_zxy,
-                                self.channels,
-                                pixel_padding=self.padding_zxy,
-                                equalized=self.equalized,
-                                augment_params=augment_params,
-                                labels=self.labels,
-                                ensure_labelvalue=for_label)
+        return augment_params
+
+    def _random_tile(self, for_label):
+        '''
+        Pick random tile in image regions where label data is present.
+        '''
+
+        # random pollng loop
+        for counter in range(100):
+
+            pos = self.tile_pos_for_label[for_label]
+            choice = np.random.choice(range(len(pos)))
+            pos_selected = pos[choice]
+            image_nr = pos_selected[0]
+            pos_zxy = pos_selected[1:]
+
+            labels = np.array(sorted(self.labels))
+            channels = np.array(sorted(self.channels))
+            tile_data = self.dataset.training_tile(
+                                    image_nr,
+                                    pos_zxy,
+                                    self.tile_size_zxy,
+                                    channels,
+                                    labels,
+                                    pixel_padding=self.padding_zxy,
+                                    augment_params=self._augment_params())
+
+            # check if weights for specified label are present
+            lblregion_index = np.where(tile_data.labels == for_label)
+            weights_lblregion = tile_data.weights[lblregion_index]
+            are_weights_in_tile = weights_lblregion.any()
+
+            if are_weights_in_tile:
+                msg = ('Needed {} trials to fetch random tile containing ' +
+                       'labelvalue {}').format(counter,
+                                               for_label)
+                logger.info(msg)
+                return tile_data
+
+            else:
+                # remove tile position for the label, since no labels here
+                self.tile_pos_for_label[for_label].pop(choice)
+
+        msg = ('Could not fetch random tile containing labelvalue {} ' +
+               'within {} trials').format(for_label, counter)
+        logger.warning(msg)
+        return tile_data

@@ -61,6 +61,27 @@ class TestUtils(TestCase):
         res = ut.compute_pos(shape, size, sliding_window=True)
         self.assertEqual(val, res)
 
+
+    def test_compute_pos_3d_3(self):
+
+        shape = (6, 4, 3)
+        size = (2, 4, 3)
+
+        val = [(0, 0, 0), (2, 0, 0), (4, 0, 0)]
+
+        res = ut.compute_pos(shape, size)
+        self.assertEqual(val, res)
+
+        val = [(0, 0, 0), (1, 0, 0), (2, 0, 0), (3, 0, 0), (4, 0, 0)]
+
+        res = ut.compute_pos(shape, size, sliding_window=True)
+        self.assertEqual(val, res)
+
+
+
+
+
+
     def test_compute_str_dist_matrix(self):
 
         a = ['hund', 'katze', 'maus']
