@@ -376,7 +376,9 @@ class TiffConnector(Connector):
                                         label_value)
 
         slices = self._open_label_file(image_nr)
-
+        if slices is None:
+            # return tile with False values
+            return np.zeros(size_zxy) != 0
         tile = [s[Y:YY, X:XX] for s in slices[T, C, Z:ZZ]]
         tile = np.stack(tile)
         tile = np.moveaxis(tile, (0, 1, 2), (0, 2, 1))

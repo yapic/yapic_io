@@ -103,7 +103,7 @@ class TestTrainingBatch(TestCase):
 
         m = TrainingBatch(d, size, padding_zxy=pad)
 
-        m._random_tile()
+        m._random_tile(for_label=1)
 
     def test_getitem(self):
 
@@ -351,3 +351,31 @@ class TestTrainingBatch(TestCase):
         w = m.weights()
         self.assertEqual(p.shape, (3, 2, 5, 4, 3))
         self.assertEqual(w.shape, (3, 2, 5, 4, 3))
+
+    def test_tile_positions_decay(self):
+
+        img_path = os.path.join(
+            base_path,
+            '../test_data/ilastik/pixels_ilastik-multiim-1.2')
+        label_path = os.path.join(
+            base_path,
+            '../test_data/ilastik/ilastik-multiim-1.2.ilp')
+        c = IlastikConnector(img_path, label_path)
+        d = Dataset(c)
+
+        size = (2, 6, 4)
+        pad = (0, 0, 0)
+
+        m = TrainingBatch(d, size, padding_zxy=pad)
+
+        n_pos_lbl_1 = len(m.tile_pos_for_label[1])
+        n_pos_lbl_2 = len(m.tile_pos_for_label[2])
+
+        for _ in range(800):
+            next(m)
+
+        n_pos_lbl_1_after = len(m.tile_pos_for_label[1])
+        n_pos_lbl_2_after = len(m.tile_pos_for_label[2])
+
+        self.assertTrue(n_pos_lbl_1 > n_pos_lbl_1_after)
+        self.assertTrue(n_pos_lbl_2 > n_pos_lbl_2_after)
