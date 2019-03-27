@@ -232,6 +232,10 @@ class TrainingBatch(Minibatch):
         return augment_params
 
     def remove_unlabeled_tiles(self):
+        '''
+        Scans all pixels and labels for all tiles. Removes all tile positions
+        that do not contain labels.
+        '''
 
         labels = np.array(sorted(self.labels))
         channels = np.array(sorted(self.channels))
