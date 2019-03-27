@@ -231,6 +231,40 @@ class TrainingBatch(Minibatch):
 
         return augment_params
 
+    def remove_unlabeled_tiles(self):
+
+        labels = np.array(sorted(self.labels))
+        channels = np.array(sorted(self.channels))
+
+        for label in labels:
+            logger.info('scanning tiles for label {}...'.format(label))
+            positions = self.tile_pos_for_label[label]
+            n_pos = len(positions)
+
+            for i, pos in enumerate(positions):
+                image_nr = pos[0]
+                pos_zxy = pos[1:]
+
+                tile_data = self.dataset.training_tile(
+                                        image_nr,
+                                        pos_zxy,
+                                        self.tile_size_zxy,
+                                        channels,
+                                        labels,
+                                        pixel_padding=self.padding_zxy,
+                                        augment_params=None)
+
+                if not _are_weights_in_tile(tile_data, label):
+                    # remove tile position for the label, since no labels here
+                    self.tile_pos_for_label[label].pop(i)
+            n_pos_after = len(self.tile_pos_for_label[label])
+
+            logger.info('removed {} tiles of {} for label {} ({}%)'.format(
+                n_pos_after, n_pos, label, round(n_pos_after/n_pos*100., 2)))
+
+
+
+
     def _random_tile(self, for_label):
         '''
         Pick random tile in image regions where label data is present.
@@ -256,12 +290,8 @@ class TrainingBatch(Minibatch):
                                     pixel_padding=self.padding_zxy,
                                     augment_params=self._augment_params())
 
-            # check if weights for specified label are present
-            lblregion_index = np.where(tile_data.labels == for_label)
-            weights_lblregion = tile_data.weights[lblregion_index]
-            are_weights_in_tile = weights_lblregion.any()
 
-            if are_weights_in_tile:
+            if _are_weights_in_tile(tile_data, for_label):
                 msg = ('Needed {} trials to fetch random tile containing ' +
                        'labelvalue {}').format(counter,
                                                for_label)
@@ -276,3 +306,13 @@ class TrainingBatch(Minibatch):
                'within {} trials').format(for_label, counter)
         logger.warning(msg)
         return tile_data
+
+
+
+def _are_weights_in_tile(tile_data, for_label):
+    '''
+    check if weights for specified label are present
+    '''
+    lblregion_index = np.where(tile_data.labels == for_label)
+    weights_lblregion = tile_data.weights[lblregion_index]
+    return weights_lblregion.any()
