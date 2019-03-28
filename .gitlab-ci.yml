@@ -11,6 +11,7 @@ install:
   image: yapic-nopython
   stage: test
   script:
+    - pip install --upgrade pip
     - pip install Cython
     - if [ ${RUN_NIGHTLY_BUILD} ]; then pip install ${CI_PROJECT_DIR}; fi
 
@@ -19,6 +20,7 @@ run_cpu_tests:
   image: yapic-python
   stage: test
   script:
+    - pip install --upgrade pip
     - pip install Cython
     - pip install -e ${CI_PROJECT_DIR}
     - pip install nose
@@ -36,6 +38,7 @@ docs:
   image: yapic-python
   stage: deploy
   script:
+    - pip install --upgrade pip
     - pip install Cython
     - pip install -e ${CI_PROJECT_DIR}
     - pip install -r requirements_doc.txt
