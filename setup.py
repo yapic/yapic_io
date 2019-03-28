@@ -27,10 +27,6 @@ setup(name='yapic_io',
       author_email='manuel.schoelling@dzne.de, christoph.moehl@dzne.de',
       packages=['yapic_io'],
       zip_safe=False,
-      dependency_links=[
-          'git+http://animate-x3.dzne.ds/idaf/pyilastik.git@master#egg=pyilastik-0.0.1',
-          'git+http://animate-x3.dzne.ds/idaf/tiff.git@master#egg=bigtiff-0.1.1',
-      ],
       install_requires=reqs,
       test_suite='nose.collector',
       tests_require=['coverage', 'nose-timer', 'nose'])

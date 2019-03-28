@@ -11,16 +11,18 @@ install:
   image: yapic-nopython
   stage: test
   script:
+    - pip install --upgrade pip
     - pip install Cython
-    - if [ ${RUN_NIGHTLY_BUILD} ]; then pip install --process-dependency-links ${CI_PROJECT_DIR}; fi
+    - if [ ${RUN_NIGHTLY_BUILD} ]; then pip install ${CI_PROJECT_DIR}; fi
 
 
 run_cpu_tests:
   image: yapic-python
   stage: test
   script:
+    - pip install --upgrade pip
     - pip install Cython
-    - pip install -e ${CI_PROJECT_DIR} --process-dependency-links
+    - pip install -e ${CI_PROJECT_DIR}
     - pip install nose
     - cd ${CI_PROJECT_DIR}
     - nosetests --with-doctest --with-timer --with-coverage --cover-package=yapic_io
@@ -36,9 +38,10 @@ docs:
   image: yapic-python
   stage: deploy
   script:
+    - pip install --upgrade pip
     - pip install Cython
-    - pip install -e ${CI_PROJECT_DIR} --process-dependency-links
-    - pip install -r requirements_doc.txt --process-dependency-links
+    - pip install -e ${CI_PROJECT_DIR}
+    - pip install -r requirements_doc.txt
     - cd ${CI_PROJECT_DIR}/doc
     - sphinx-apidoc -o source ../yapic_io
     - pip freeze

@@ -1,6 +1,6 @@
 from unittest import TestCase
 import yapic_io.utils as ut
-
+import numpy as np
 
 class TestUtils(TestCase):
 
@@ -77,6 +77,43 @@ class TestUtils(TestCase):
         res = ut.compute_pos(shape, size, sliding_window=True)
         self.assertEqual(val, res)
 
+
+    def test_remove_overlapping_pos(self):
+
+        pos = [(1, 1), (1, 3), (5, 4), (6, 2)]
+        a = (3, 3)
+        shape = (3, 2)
+
+        is_overlap = ut.find_overlapping_tiles(a, pos, shape)
+
+        np.testing.assert_array_equal(np.array([False, True, True, False]),
+                                      is_overlap)
+
+
+        pos = [(0, 1, 1), (0, 1, 3), (0, 5, 4), (0, 6, 2)]
+        a = (0, 3, 3)
+        shape = (1, 3, 2)
+
+        is_overlap = ut.find_overlapping_tiles(a, pos, shape)
+
+        np.testing.assert_array_equal(np.array([False, True, True, False]),
+                                      is_overlap)
+
+
+
+    def test_segregate_pos(self):
+
+        pos = [(1, 1), (1, 3), (3, 3), (5, 4), (6, 2), (10, 10), (20, 20)]
+        shape = (3, 2)
+        indices = [2, 5, 6]
+
+        p1, p2 = ut.segregate_tile_pos(pos, shape, indices)
+
+        v1 = [(1, 1), (6, 2)]
+        v2 = [(3, 3), (10, 10), (20, 20)]
+
+        self.assertEqual(p1, v1)
+        self.assertEqual(p2, v2)
 
 
 

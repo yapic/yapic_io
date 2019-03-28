@@ -120,6 +120,36 @@ def compute_pos(img_shape, tile_shape, sliding_window=False):
     return [tuple(e) for e in pos_array]
 
 
+def find_overlapping_tiles(a, pos, shape):
+
+    a = np.asarray(a)
+    pos = np.asarray(pos)
+
+    is_overlap = []
+    for dim in range(pos.shape[-1]):
+        is_overlap.append(
+            np.stack([pos[:, dim] <= a[dim] + shape[dim]-1,
+                      pos[:, dim] + shape[dim]-1 >= a[dim]]).all(axis=0))
+    return np.stack(is_overlap).all(axis=0)
+
+
+def segregate_tile_pos(pos, shape, choices):
+    '''
+    splits a vector of positions in two vectors and removes all overlapping
+    posisions.
+    '''
+    pos = np.asarray(pos)
+
+    p1 = np.delete(pos, choices, axis=0)
+    p2 = pos[choices, :]
+
+    for a in p2:
+        is_overlap_ind = find_overlapping_tiles(a, p1, shape)
+        p1 = np.delete(p1, np.nonzero(is_overlap_ind), axis=0)
+
+    return [tuple(e) for e in p1], [tuple(e) for e in p2]
+
+
 def _compute_str_dist_matrix(s1, s2):
     '''
     - compute matrix of string distances for two lists of strings

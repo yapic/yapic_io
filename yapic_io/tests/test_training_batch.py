@@ -379,3 +379,62 @@ class TestTrainingBatch(TestCase):
 
         self.assertTrue(n_pos_lbl_1 > n_pos_lbl_1_after)
         self.assertTrue(n_pos_lbl_2 > n_pos_lbl_2_after)
+
+    def test_remove_unlabeled_tiles(self):
+
+        img_path = os.path.join(
+            base_path,
+            '../test_data/ilastik/pixels_ilastik-multiim-1.2')
+        label_path = os.path.join(
+            base_path,
+            '../test_data/ilastik/ilastik-multiim-1.2.ilp')
+        c = IlastikConnector(img_path, label_path)
+        d = Dataset(c)
+
+        size = (2, 6, 4)
+        pad = (0, 0, 0)
+
+        m = TrainingBatch(d, size, padding_zxy=pad)
+
+        n_pos_lbl_1 = len(m.tile_pos_for_label[1])
+        n_pos_lbl_2 = len(m.tile_pos_for_label[2])
+
+        m.remove_unlabeled_tiles()
+
+        n_pos_lbl_1_after = len(m.tile_pos_for_label[1])
+        n_pos_lbl_2_after = len(m.tile_pos_for_label[2])
+
+        self.assertTrue(n_pos_lbl_1 > n_pos_lbl_1_after)
+        self.assertTrue(n_pos_lbl_2 > n_pos_lbl_2_after)
+
+    def test_split(self):
+
+        img_path = os.path.join(
+            base_path,
+            '../test_data/ilastik/pixels_ilastik-multiim-1.2')
+        label_path = os.path.join(
+            base_path,
+            '../test_data/ilastik/ilastik-multiim-1.2.ilp')
+        c = IlastikConnector(img_path, label_path)
+        d = Dataset(c)
+
+        size = (1, 1, 1)
+        pad = (0, 0, 0)
+
+        m = TrainingBatch(d, size, padding_zxy=pad)
+        m2 = m.split(0.3)
+
+        self.assertTrue(
+            len(m.tile_pos_for_label[1]) > len(m2.tile_pos_for_label[1]))
+
+        self.assertTrue(
+            len(m.tile_pos_for_label[2]) > len(m2.tile_pos_for_label[2]))
+
+        # check for no overlap
+        self.assertEqual(
+            0,
+            len(set(m.tile_pos_for_label[1]) & set(m2.tile_pos_for_label[1])))
+
+        self.assertEqual(
+            0,
+            len(set(m2.tile_pos_for_label[1]) & set(m.tile_pos_for_label[1])))
