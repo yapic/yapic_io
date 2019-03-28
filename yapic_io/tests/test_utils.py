@@ -77,6 +77,16 @@ class TestUtils(TestCase):
         res = ut.compute_pos(shape, size, sliding_window=True)
         self.assertEqual(val, res)
 
+    def test_compute_pos_large_tile(self):
+
+        shape = (500, 500)
+        size = (50,  50)
+
+        res = ut.compute_pos(shape, size)
+
+        print(res)
+
+        res = ut.compute_pos(shape, size, sliding_window=True)
 
     def test_remove_overlapping_pos(self):
 
@@ -89,7 +99,6 @@ class TestUtils(TestCase):
         np.testing.assert_array_equal(np.array([False, True, True, False]),
                                       is_overlap)
 
-
         pos = [(0, 1, 1), (0, 1, 3), (0, 5, 4), (0, 6, 2)]
         a = (0, 3, 3)
         shape = (1, 3, 2)
@@ -98,8 +107,6 @@ class TestUtils(TestCase):
 
         np.testing.assert_array_equal(np.array([False, True, True, False]),
                                       is_overlap)
-
-
 
     def test_segregate_pos(self):
 
