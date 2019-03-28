@@ -111,11 +111,10 @@ def compute_pos(img_shape, tile_shape, sliding_window=False):
 
     slices = [slice(pos[0][i], pos[-1][i]+1) for i in range(n_dims)]
     mesh = np.mgrid[slices]
-
     mesh = np.array(mesh).swapaxes(0, -1)
 
     n_dims = len(img_shape)
-    pos_array = mesh.reshape((np.int16(mesh.size/n_dims), n_dims))
+    pos_array = mesh.reshape((np.int(mesh.size/n_dims), n_dims))
 
     return [tuple(e) for e in pos_array]
 

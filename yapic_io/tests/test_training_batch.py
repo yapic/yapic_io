@@ -438,3 +438,19 @@ class TestTrainingBatch(TestCase):
         self.assertEqual(
             0,
             len(set(m2.tile_pos_for_label[1]) & set(m.tile_pos_for_label[1])))
+
+    def test_shape_data(self):
+
+        img_path = os.path.join(
+            base_path,
+            '../test_data/shapes/pixels/*')
+        label_path = os.path.join(
+            base_path,
+            '../test_data/shapes/labels.ilp')
+        c = IlastikConnector(img_path, label_path)
+        d = Dataset(c)
+
+        size = (1, 50, 50)
+        pad = (0, 0, 0)
+
+        m = TrainingBatch(d, size, padding_zxy=pad)

@@ -17,6 +17,7 @@ yapic_io/tests/__pycache__/
 
 # Python egg metadata, regenerated from source files by setuptools.
 /*.egg-info
+*.egg-info/
 
 #file from test coverage
 .coverage
