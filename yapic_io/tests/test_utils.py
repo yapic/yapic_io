@@ -101,6 +101,20 @@ class TestUtils(TestCase):
 
 
 
+    def test_segregate_pos(self):
+
+        pos = [(1, 1), (1, 3), (3, 3), (5, 4), (6, 2), (10, 10), (20, 20)]
+        shape = (3, 2)
+        indices = [2, 5, 6]
+
+        p1, p2 = ut.segregate_tile_pos(pos, shape, indices)
+
+        v1 = [(1, 1), (6, 2)]
+        v2 = [(3, 3), (10, 10), (20, 20)]
+
+        self.assertEqual(p1, v1)
+        self.assertEqual(p2, v2)
+
 
 
 

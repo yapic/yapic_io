@@ -1,12 +1,13 @@
 import random
 import numpy as np
 from yapic_io.minibatch import Minibatch
-from yapic_io.utils import compute_pos
+from yapic_io.utils import compute_pos, segregate_tile_pos
 import logging
 import os
 
 logger = logging.getLogger(os.path.basename(__file__))
 logger.setLevel(logging.INFO)
+
 
 class TrainingBatch(Minibatch):
     '''
@@ -173,7 +174,6 @@ class TrainingBatch(Minibatch):
         return np.moveaxis(pix, [0, 1, 2, 3, 4],
                            self.pixel_dimension_order)
 
-
     def weights(self):
         return np.moveaxis(self._weights, [0, 1, 2, 3, 4],
                            self.pixel_dimension_order)
@@ -194,7 +194,6 @@ class TrainingBatch(Minibatch):
             List of 4-element tuples. Tuples define (image_id, z, x, y).
         '''
 
-        im_sizes = np.zeros((self.dataset.n_images, 4), dtype=np.int16)
         tile_pos = []
         for i in range(self.dataset.n_images):
             img_shape = self.dataset.image_dimensions(i)[1:]
@@ -266,8 +265,74 @@ class TrainingBatch(Minibatch):
             logger.info('removed {} tiles of {} for label {} ({}%)'.format(
                 n_pos_after, n_pos, label, round(n_pos_after/n_pos*100., 2)))
 
+    def split(self, fraction):
+        '''
+        Remove fraction of tiles from TrainingBatch and assign it to
+        a new TrainingBatch. Can be used for separating training and
+        validation data.
+        Overlapping tile positions are removed from the parent TrainingBatch.
 
+        Parameters
+        ----------
+        fraction: float
+            Approx. fraction of data for the returned (child) TrainingBatch.
+            Between 0 and 1.
 
+        Returns
+        -------
+        array_like
+            List of 4-element tuples. Tuples define (image_id, z, x, y).
+        '''
+
+        assert fraction >= 0 and fraction <= 1
+
+        labels = np.array(sorted(self.labels))
+        shape = [1, 0, 0, 0]  # (image, z, x, y)
+        shape[1:] = self.tile_size_zxy
+
+        tile_pos_for_label_out = {}
+
+        for label in labels:
+            logger.info(
+                'splitting approximate fraction of {} for label {}'.format(
+                    fraction, label))
+            pos = self.tile_pos_for_label[label]
+            n_pos = len(pos)
+            n_pos_out = round(n_pos * fraction)
+
+            assert n_pos > 0
+            assert n_pos_out > 0
+
+            # select tile positions randomly
+            choices = np.random.choice(range(len(pos)), n_pos_out)
+
+            p1, p2 = segregate_tile_pos(pos, shape, choices)
+
+            tile_pos_for_label_out[label] = p2
+            self.tile_pos_for_label[label] = p1
+            logger.info('remaining tiles: {} ({}%)'.format(
+                len(p1), round(100. * len(p1)/(len(p1) + len(p2)), 2)))
+            logger.info('removed tiles: {} ({}%)'.format(
+                len(p2), round(100. * len(p2)/(len(p1) + len(p2)), 2)))
+
+        out = TrainingBatch(self.dataset,
+                            self.tile_size_zxy,
+                            padding_zxy=self.padding_zxy,
+                            equalized=self.equalized)
+
+        out.pixel_dimension_order = self.pixel_dimension_order
+        out._batch_size = self._batch_size
+        out.normalize_mode = self.normalize_mode
+        out.global_norm_minmax = self.global_norm_minmax
+        out.float_data_type = self.float_data_type
+        out.equalized = self.equalized
+        out.augmentation = self.augmentation
+        out.rotation_range = self.rotation_range
+        out.shear_range = self.shear_range
+
+        out.tile_pos_for_label = tile_pos_for_label_out
+
+        return out
 
     def _random_tile(self, for_label):
         '''
@@ -294,7 +359,6 @@ class TrainingBatch(Minibatch):
                                     pixel_padding=self.padding_zxy,
                                     augment_params=self._augment_params())
 
-
             if _are_weights_in_tile(tile_data, for_label):
                 msg = ('Needed {} trials to fetch random tile containing ' +
                        'labelvalue {}').format(counter,
@@ -310,7 +374,6 @@ class TrainingBatch(Minibatch):
                'within {} trials').format(for_label, counter)
         logger.warning(msg)
         return tile_data
-
 
 
 def _are_weights_in_tile(tile_data, for_label):
