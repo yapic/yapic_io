@@ -12,7 +12,6 @@ from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 base_path = os.path.dirname(__file__)
 
-
 class TestTrainingBatch(TestCase):
 
     def test_get_ilastik_weights(self):
@@ -439,7 +438,12 @@ class TestTrainingBatch(TestCase):
             0,
             len(set(m2.tile_pos_for_label[1]) & set(m.tile_pos_for_label[1])))
 
+        assert False
+
     def test_shape_data(self):
+
+        import logging
+        logging.basicConfig(level=logging.INFO)
 
         img_path = os.path.join(
             base_path,
@@ -454,3 +458,7 @@ class TestTrainingBatch(TestCase):
         pad = (0, 0, 0)
 
         m = TrainingBatch(d, size, padding_zxy=pad)
+
+        m2 = m.split(0.001)
+
+        assert False
