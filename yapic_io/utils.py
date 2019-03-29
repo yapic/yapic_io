@@ -123,9 +123,7 @@ def find_overlapping_tiles(a, pos, shape):
 
     a = np.asarray(a)
     pos = np.asarray(pos)
-    print('a: {}'.format(a))
-    print('shape: {}'.format(shape))
-    print('pos: {}'.format(pos[:10,:]))
+
     is_overlap = []
     for dim in range(pos.shape[-1]):
         is_overlap.append(
