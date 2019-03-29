@@ -123,7 +123,9 @@ def find_overlapping_tiles(a, pos, shape):
 
     a = np.asarray(a)
     pos = np.asarray(pos)
-
+    print('a: {}'.format(a))
+    print('shape: {}'.format(shape))
+    print('pos: {}'.format(pos[:10,:]))
     is_overlap = []
     for dim in range(pos.shape[-1]):
         is_overlap.append(
@@ -144,7 +146,7 @@ def segregate_tile_pos(pos, shape, choices):
 
     for a in p2:
         is_overlap_ind = find_overlapping_tiles(a, p1, shape)
-        p1 = np.delete(p1, np.nonzero(is_overlap_ind), axis=0)
+        p1 = np.delete(p1, np.nonzero(is_overlap_ind)[0], axis=0)
 
     return [tuple(e) for e in p1], [tuple(e) for e in p2]
 

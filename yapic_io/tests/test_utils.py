@@ -108,6 +108,30 @@ class TestUtils(TestCase):
         np.testing.assert_array_equal(np.array([False, True, True, False]),
                                       is_overlap)
 
+    def test_find_overlapping_tiles_4d(self):
+
+        pos = [(0, 0, 0, 0),
+               (0, 0, 1, 0),
+               (0, 0, 2, 0),
+               (0, 0, 3, 0)]
+
+        shape = (1, 1, 50, 50)
+
+        a = (1, 0, 374, 165)
+        is_overlap = ut.find_overlapping_tiles(a, pos, shape)
+        np.testing.assert_array_equal(np.array([False, False, False, False]),
+                                      is_overlap)
+
+        a = (0, 0, 4, 0)
+        is_overlap = ut.find_overlapping_tiles(a, pos, shape)
+        np.testing.assert_array_equal(np.array([True, True, True, True]),
+                                      is_overlap)
+
+        a = (1, 0, 4, 0)
+        is_overlap = ut.find_overlapping_tiles(a, pos, shape)
+        np.testing.assert_array_equal(np.array([False, False, False, False]),
+                                      is_overlap)
+
     def test_segregate_pos(self):
 
         pos = [(1, 1), (1, 3), (3, 3), (5, 4), (6, 2), (10, 10), (20, 20)]
@@ -121,10 +145,6 @@ class TestUtils(TestCase):
 
         self.assertEqual(p1, v1)
         self.assertEqual(p2, v2)
-
-
-
-
 
     def test_compute_str_dist_matrix(self):
 

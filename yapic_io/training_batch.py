@@ -1,7 +1,7 @@
 import random
 import numpy as np
 from yapic_io.minibatch import Minibatch
-from yapic_io.utils import compute_pos, segregate_tile_pos
+from yapic_io.utils import compute_pos, find_overlapping_tiles
 import logging
 import os
 
@@ -303,17 +303,35 @@ class TrainingBatch(Minibatch):
             assert n_pos > 0
             assert n_pos_out > 0
 
-            # select tile positions randomly
-            choices = np.random.choice(range(len(pos)), n_pos_out)
+            curr_fraction = 0
 
-            p1, p2 = segregate_tile_pos(pos, shape, choices)
+            pos_out = []
+            while curr_fraction < fraction:
+                # select tile positions randomly
+                choice = np.random.choice(range(len(pos)))
+                a = pos.pop(choice)
+                pos_out.append(a)
 
-            tile_pos_for_label_out[label] = p2
-            self.tile_pos_for_label[label] = p1
+                is_overlap_ind = np.nonzero(find_overlapping_tiles(
+                                                        a,
+                                                        pos,
+                                                        shape))[0]
+                is_overlap_ind = sorted(is_overlap_ind, reverse=True)
+
+                [pos.pop(ind) for ind in is_overlap_ind]
+
+                curr_fraction = float(len(pos_out))/len(pos)
+
+            tile_pos_for_label_out[label] = sorted(pos_out)
+            self.tile_pos_for_label[label] = sorted(pos)
+
+            tiles_remain = 100. * len(pos)/(len(pos) + len(pos_out))
             logger.info('remaining tiles: {} ({}%)'.format(
-                len(p1), round(100. * len(p1)/(len(p1) + len(p2)), 2)))
+                len(pos), round(tiles_remain, 2)))
+
+            tiles_removed = 100. * len(pos_out)/(len(pos) + len(pos_out))
             logger.info('removed tiles: {} ({}%)'.format(
-                len(p2), round(100. * len(p2)/(len(p1) + len(p2)), 2)))
+                len(pos_out), round(tiles_removed, 2)))
 
         out = TrainingBatch(self.dataset,
                             self.tile_size_zxy,
