@@ -438,9 +438,8 @@ class TestTrainingBatch(TestCase):
             0,
             len(set(m2.tile_pos_for_label[1]) & set(m.tile_pos_for_label[1])))
 
-        assert False
 
-    def test_shape_data(self):
+    def test_shape_data_split(self):
 
         import logging
         logging.basicConfig(level=logging.INFO)
@@ -460,5 +459,3 @@ class TestTrainingBatch(TestCase):
         m = TrainingBatch(d, size, padding_zxy=pad)
 
         m2 = m.split(0.001)
-
-        assert False
