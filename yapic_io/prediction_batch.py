@@ -153,6 +153,12 @@ class PredictionBatch(Minibatch):
         To pass 3D probmaps for a certain label, use
         ``put_probmap_data_for_label()``.
         '''
+
+        # reorder dimensions to bczxy
+        probmap_batch = np.moveaxis(probmap_batch,
+                                    self.pixel_dimension_order,
+                                    [0, 1, 2, 3, 4])
+
         assert_equal(len(probmap_batch.shape), 5, '5-dim (B,L,Z,X,Y) expected')
         B, L, *ZXY = probmap_batch.shape
         self.labels = np.arange(L) + 1 if len(self.labels) == 0 \

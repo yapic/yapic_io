@@ -108,7 +108,7 @@ class TestTransformations(TestCase):
         val = np.array(val)
         im = np.array(im)
         rot = tf.warp_image_2d_stack(im, rotation_angle, shear_angle)
-
+        print(rot)
         assert_array_equal(rot, val)
         self.assertEqual(len(rot.shape), 4)
 
