@@ -1,6 +1,7 @@
 from unittest import TestCase
 import yapic_io.utils as ut
 import numpy as np
+from numpy.testing import assert_array_equal
 
 class TestUtils(TestCase):
 
@@ -9,57 +10,68 @@ class TestUtils(TestCase):
         size = (5, 2)
 
         res = ut.compute_pos(shape, size)
-        val = [(0, 0), (0, 2), (0, 3), (3, 0), (3, 2), (3, 3)]
+        print(res)
+        val = np.array([(0, 0), (0, 2), (0, 3), (3, 0), (3, 2), (3, 3)])
 
-        self.assertEqual(res, val)
+        assert_array_equal(res, val)
 
-        res = ut.compute_pos(shape, size, sliding_window=True)
-        val = [(0, 0), (1, 0), (2, 0), (3, 0),
-               (0, 1), (1, 1), (2, 1), (3, 1),
-               (0, 2), (1, 2), (2, 2), (3, 2),
-               (0, 3), (1, 3), (2, 3), (3, 3)]
+        res = ut.compute_pos(shape, size, sliding=(1, 1))
+        val = np.array([(0, 0), (1, 0), (2, 0), (3, 0),
+                        (0, 1), (1, 1), (2, 1), (3, 1),
+                        (0, 2), (1, 2), (2, 2), (3, 2),
+                        (0, 3), (1, 3), (2, 3), (3, 3)])
 
-        self.assertEqual(res, val)
+        assert_array_equal(res, val)
 
     def test_compute_pos_2(self):
         shape = (6, 4)
         size = (2, 2)
 
         res = ut.compute_pos(shape, size)
-        val = [(0, 0), (0, 2), (2, 0), (2, 2), (4, 0), (4, 2)]
-        self.assertEqual(val, res)
+        val = np.array([(0, 0), (0, 2), (2, 0), (2, 2), (4, 0), (4, 2)])
+        assert_array_equal(val, res)
 
-        res = ut.compute_pos(shape, size, sliding_window=True)
-        val = [(0, 0), (1, 0), (2, 0), (3, 0), (4, 0),
-               (0, 1), (1, 1), (2, 1), (3, 1), (4, 1),
-               (0, 2), (1, 2), (2, 2), (3, 2), (4, 2)]
-        self.assertEqual(val, res)
+        res = ut.compute_pos(shape, size, sliding=(1, 1))
+        val = np.array([(0, 0), (1, 0), (2, 0), (3, 0), (4, 0),
+                        (0, 1), (1, 1), (2, 1), (3, 1), (4, 1),
+                        (0, 2), (1, 2), (2, 2), (3, 2), (4, 2)])
+        assert_array_equal(val, res)
+
+        res = ut.compute_pos(shape, size, sliding=(2, 2))
+        val = np.array([(0, 0), (2, 0), (4, 0),
+                        (0, 2), (2, 2),  (4, 2)])
+        assert_array_equal(val, res)
+
+        res = ut.compute_pos(shape, size, sliding=(1, 2))
+        val = np.array([(0, 0), (1, 0), (2, 0), (3, 0), (4, 0),
+                        (0, 2), (1, 2), (2, 2), (3, 2), (4, 2)])
+        assert_array_equal(val, res)
 
     def test_compute_pos_3d(self):
 
         shape = (2, 4, 3)
         size = (2, 4, 3)
 
-        val = [(0, 0, 0)]
+        val = np.array([(0, 0, 0)])
 
         res = ut.compute_pos(shape, size)
-        self.assertEqual(val, res)
+        assert_array_equal(val, res)
 
-        res = ut.compute_pos(shape, size, sliding_window=True)
-        self.assertEqual(val, res)
+        res = ut.compute_pos(shape, size, sliding=(1, 1, 1))
+        assert_array_equal(val, res)
 
     def test_compute_pos_3d_2(self):
 
         shape = (2, 4, 3)
         size = (1, 4, 3)
 
-        val = [(0, 0, 0), (1, 0, 0)]
+        val = np.array([(0, 0, 0), (1, 0, 0)])
 
         res = ut.compute_pos(shape, size)
-        self.assertEqual(val, res)
+        assert_array_equal(val, res)
 
-        res = ut.compute_pos(shape, size, sliding_window=True)
-        self.assertEqual(val, res)
+        res = ut.compute_pos(shape, size, sliding=(1, 1, 1))
+        assert_array_equal(val, res)
 
 
     def test_compute_pos_3d_3(self):
@@ -67,15 +79,15 @@ class TestUtils(TestCase):
         shape = (6, 4, 3)
         size = (2, 4, 3)
 
-        val = [(0, 0, 0), (2, 0, 0), (4, 0, 0)]
+        val = np.array([(0, 0, 0), (2, 0, 0), (4, 0, 0)])
 
         res = ut.compute_pos(shape, size)
-        self.assertEqual(val, res)
+        assert_array_equal(val, res)
 
-        val = [(0, 0, 0), (1, 0, 0), (2, 0, 0), (3, 0, 0), (4, 0, 0)]
+        val = np.array([(0, 0, 0), (1, 0, 0), (2, 0, 0), (3, 0, 0), (4, 0, 0)])
 
-        res = ut.compute_pos(shape, size, sliding_window=True)
-        self.assertEqual(val, res)
+        res = ut.compute_pos(shape, size, sliding=(1, 1, 1))
+        assert_array_equal(val, res)
 
     def test_compute_pos_large_tile(self):
 
@@ -86,7 +98,7 @@ class TestUtils(TestCase):
 
         print(res)
 
-        res = ut.compute_pos(shape, size, sliding_window=True)
+        res = ut.compute_pos(shape, size, sliding=(1, 1))
 
     def test_remove_overlapping_pos(self):
 

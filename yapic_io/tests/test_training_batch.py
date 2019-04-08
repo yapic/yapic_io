@@ -370,6 +370,8 @@ class TestTrainingBatch(TestCase):
         n_pos_lbl_1 = len(m.tile_pos_for_label[1])
         n_pos_lbl_2 = len(m.tile_pos_for_label[2])
 
+        assert not m.tile_pos_for_label[1] is m.tile_pos_for_label[2]
+
         for _ in range(800):
             next(m)
 

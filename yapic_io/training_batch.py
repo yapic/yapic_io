@@ -4,6 +4,7 @@ from yapic_io.minibatch import Minibatch
 from yapic_io.utils import compute_pos, find_overlapping_tiles
 import logging
 import os
+from functools import lru_cache
 
 logger = logging.getLogger(os.path.basename(__file__))
 logger.setLevel(logging.INFO)
@@ -49,6 +50,15 @@ class TrainingBatch(Minibatch):
     >>>
     >>> c = TiffConnector(pixel_img_dir, label_img_dir, savepath=savepath.name)
     >>> m = TrainingBatch(Dataset(c), tile_size, padding_zxy=padding)
+    compute pos for image 0 of 3
+    compute pos for image 1 of 3
+    compute pos for image 2 of 3
+    compute pos for image 0 of 3
+    compute pos for image 1 of 3
+    compute pos for image 2 of 3
+    compute pos for image 0 of 3
+    compute pos for image 1 of 3
+    compute pos for image 2 of 3
     >>> print(m)
     TrainingBatch (batch_size: 3, tile_size (zxy): (1, 5, 4), augment: {'flip'}
     >>>
@@ -87,7 +97,7 @@ class TrainingBatch(Minibatch):
         self._pixels = None
         self._weights = None
 
-        self.tile_pos_for_label = {key: self.tile_positions()
+        self.tile_pos_for_label = {key: self.tile_positions(sliding=True)
                                    for key in self.labels}
 
     def __repr__(self):
@@ -178,6 +188,7 @@ class TrainingBatch(Minibatch):
         return np.moveaxis(self._weights, [0, 1, 2, 3, 4],
                            self.pixel_dimension_order)
 
+    # @lru_cache(maxsize=10)
     def tile_positions(self, sliding=True):
         '''
         Get all possible sliding window tile positions of the dataset.
@@ -195,12 +206,23 @@ class TrainingBatch(Minibatch):
         '''
 
         tile_pos = []
+
+        # compute shift of sliding window
+        if sliding:
+            shifted_zxy = np.ceil(np.array(self.tile_size_zxy)/3).astype('int')
+            # overlap by one third
+        else:
+            shifted_zxy = None  # no overlap
+
         for i in range(self.dataset.n_images):
+            print('compute pos for image {} of {}'.format(
+                                        i,
+                                        self.dataset.n_images))
             img_shape = self.dataset.image_dimensions(i)[1:]
             pos = [(i, p[0], p[1], p[2])
                    for p in compute_pos(img_shape,
                                         self.tile_size_zxy,
-                                        sliding_window=sliding)]
+                                        sliding=shifted_zxy)]
             tile_pos += pos
 
         return tile_pos
@@ -358,11 +380,17 @@ class TrainingBatch(Minibatch):
         '''
 
         # random pollng loop
-        for counter in range(100):
-
+        counter = 0
+        while counter <= len(self.tile_pos_for_label[for_label]):
+            counter += 1
             pos = self.tile_pos_for_label[for_label]
-            choice = np.random.choice(range(len(pos)))
+
+            msg = 'no label data for label {} in dataset'.format(for_label)
+            assert len(pos) > 0, msg
+
+            choice = np.random.randint(0, len(pos))
             pos_selected = pos[choice]
+
             image_nr = pos_selected[0]
             pos_zxy = pos_selected[1:]
 
@@ -382,15 +410,17 @@ class TrainingBatch(Minibatch):
                        'labelvalue {}').format(counter,
                                                for_label)
                 logger.info(msg)
+
                 return tile_data
 
             else:
                 # remove tile position for the label, since no labels here
-                self.tile_pos_for_label[for_label].pop(choice)
+                r = self.tile_pos_for_label[for_label].pop(choice)
 
         msg = ('Could not fetch random tile containing labelvalue {} ' +
                'within {} trials').format(for_label, counter)
         logger.warning(msg)
+
         return tile_data
 
 

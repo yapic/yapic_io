@@ -3,9 +3,12 @@ from unittest import TestCase
 import os
 from yapic_io.connector import io_connector
 import numpy as np
-from numpy.testing import assert_array_almost_equal
+from numpy.testing import assert_array_almost_equal, assert_array_equal
 from yapic_io import TiffConnector, Dataset, PredictionBatch
 from bigtiff import Tiff
+from yapic_io.ilastik_connector import IlastikConnector
+
+
 base_path = os.path.dirname(__file__)
 
 
@@ -25,8 +28,10 @@ class TestPredictionBatch(TestCase):
         p = PredictionBatch(d, batch_size, size)
 
         self.assertEqual(len(p._all_tile_positions), 6 * 4 * 3)
-        self.assertEqual(len(p._all_tile_positions),
-                         len(set(p._all_tile_positions)))
+        tilepos = [(p[0], tuple(p[1])) for p in p._all_tile_positions]
+
+        self.assertEqual(len(tilepos),
+                         len(set(tilepos)))
 
     def test_computepos_2(self):
         img_path = os.path.join(
@@ -41,7 +46,11 @@ class TestPredictionBatch(TestCase):
         batch_size = 1
 
         p = PredictionBatch(d, batch_size, size)
-        self.assertEqual(p._all_tile_positions, [(0, (0, 0, 0))])
+
+        val = [(0, (0, 0, 0))]
+        for pos, valpos in zip(p._all_tile_positions, val):
+            assert_array_equal(pos[1], np.array(valpos[1]))
+            self.assertEqual(pos[0], valpos[0])
 
     def test_computepos_3(self):
         img_path = os.path.join(
@@ -56,8 +65,11 @@ class TestPredictionBatch(TestCase):
         batch_size = 1
 
         p = PredictionBatch(d, batch_size, size)
-        self.assertEqual(p._all_tile_positions,
-                         [(0, (0, 0, 0)), (0, (1, 0, 0))])
+
+        val = [(0, (0, 0, 0)), (0, (1, 0, 0))]
+        for pos, valpos in zip(p._all_tile_positions, val):
+            assert_array_equal(pos[1], np.array(valpos[1]))
+            self.assertEqual(pos[0], valpos[0])
 
     def test_getitem_1(self):
         img_path = os.path.join(
@@ -113,10 +125,17 @@ class TestPredictionBatch(TestCase):
         batch_size = 2
         p = PredictionBatch(d, batch_size, size)
 
-        self.assertEqual(p[0].current_tile_positions,
-                         [(0, (0, 0, 0)), (0, (1, 0, 0))])
-        self.assertEqual(p[1].current_tile_positions,
-                         [(0, (2, 0, 0))])
+        val = [(0, (0, 0, 0)), (0, (1, 0, 0))]
+        for pos, valpos in zip(p[0].current_tile_positions, val):
+            assert_array_equal(pos[1], np.array(valpos[1]))
+            self.assertEqual(pos[0], valpos[0])
+
+        val = [(0, (2, 0, 0))]
+        for pos, valpos in zip(p[1].current_tile_positions, val):
+            assert_array_equal(pos[1], np.array(valpos[1]))
+            self.assertEqual(pos[0], valpos[0])
+
+
 
     def test_put_probmap_data(self):
         img_path = os.path.join(
@@ -252,6 +271,49 @@ class TestPredictionBatch(TestCase):
 
         data = np.ones((1, 6, 1, 3, 4))
         p[0].put_probmap_data(data)
+
+
+    def test_put_probmap_data_dimorder_zxyc(self):
+
+        img_path = os.path.join(
+            base_path,
+            '../test_data/ilastik/dimensionstest/images/*')
+        label_path = os.path.join(
+            base_path,
+            '../test_data/ilastik/dimensionstest/x15_y10_z2_c4_classes2.ilp')
+
+        with tempfile.TemporaryDirectory() as tmpdirname:
+            c = TiffConnector(img_path, 'some/path', savepath=tmpdirname)
+            d = Dataset(c)
+
+            size = (2, 3, 5) # zxy
+            batch_size = 1
+
+            # shape: 1 batch, 4 channels, 2 z, 3 x, 5 y
+
+            p = PredictionBatch(d, batch_size, size)
+            self.assertEqual((1, 4, 2, 3, 5), p[0].pixels().shape)
+            self.assertEqual((1, 4, 2, 3, 5), p[1].pixels().shape)
+
+            p.set_pixel_dimension_order('bzxyc')
+
+            self.assertEqual((1, 2, 3, 5, 4), p[0].pixels().shape)
+            self.assertEqual((1, 2, 3, 5, 4), p[1].pixels().shape)
+
+            pixels = p[0].pixels()
+
+            for tile in p:
+                tile.put_probmap_data(pixels)
+
+
+            # assert False
+
+
+
+
+
+
+
 
     def test_prediction_loop(self):
         with tempfile.TemporaryDirectory() as tmpdirname:
