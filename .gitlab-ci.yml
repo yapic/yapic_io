@@ -7,15 +7,6 @@ stages:
   - deploy
 
 
-install:
-  image: python:3.6
-  stage: test
-  script:
-    - pip install --upgrade pip
-    - pip install Cython
-    - if [ ${RUN_NIGHTLY_BUILD} ]; then pip install ${CI_PROJECT_DIR}; fi
-
-
 run_cpu_tests:
   image: python:3.6
   stage: test
@@ -25,14 +16,8 @@ run_cpu_tests:
     - pip install -e ${CI_PROJECT_DIR}
     - pip install nose
     - cd ${CI_PROJECT_DIR}
-    - nosetests --with-doctest --with-timer --with-coverage --cover-package=yapic_io
+    - nosetests --with-doctest --with-coverage --cover-package=yapic_io
 
-
-trigger_yapic_cli:
-  image: yapic-python
-  stage: deploy
-  script:
-    - curl -X POST -F token=2d3b6e8a9681ea863cf90e6ec5d021 -F ref=master http://animate-x3.dzne.ds/api/v4/projects/12/trigger/pipeline
 
 docs:
   image: yapic-python
