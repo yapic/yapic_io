@@ -20,7 +20,7 @@ run_cpu_tests:
 
 
 docs:
-  image: yapic-python
+  image: python:3.6
   stage: deploy
   script:
     - pip install --upgrade pip
