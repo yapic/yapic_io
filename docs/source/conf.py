@@ -55,8 +55,8 @@ source_suffix = '.rst'
 master_doc = 'index'
 
 # General information about the project.
-project = u'YAPiC'
-copyright = u'2016, Christoph Moehl, Manuel Schoelling'
+project = u'yapic_io'
+copyright = u'2016, DZNE (German Center for Neurodegenerative Diseases)'
 
 # The version info for the project you're documenting, acts as replacement for
 # |version| and |release|, also used in various other places throughout the
@@ -189,7 +189,7 @@ html_static_path = ['_static']
 #html_file_suffix = None
 
 # Output file base name for HTML help builder.
-htmlhelp_basename = 'YAPiCdoc'
+htmlhelp_basename = 'YAPiC_io_doc'
 
 
 # -- Options for LaTeX output ---------------------------------------------
@@ -209,7 +209,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-  ('index', 'YAPiC.tex', u'YAPiC Documentation',
+  ('index', 'yapic_io.tex', u'yapic_io Documentation',
    u'Christoph Moehl, Manuel Schoelling', 'manual'),
 ]
 
@@ -253,8 +253,9 @@ man_pages = [
 # (source start file, target name, title, author,
 #  dir menu entry, description, category)
 texinfo_documents = [
-  ('index', 'YAPiC', u'YAPiC Documentation',
-   u'Christoph Moehl, Manuel Schoelling', 'YAPiC', 'One line description of project.',
+  ('index', 'yapic_io', u'yapic_io Documentation',
+   u'Christoph Moehl, Manuel Schoelling', 'yapic_io',
+   'io data handling module for various image sources. Mainly to provide data interface for supervised pixel classification tools',
    'Miscellaneous'),
 ]
 

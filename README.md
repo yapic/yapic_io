@@ -1,10 +1,15 @@
 [![Build Status](https://travis-ci.com/yapic/yapic_io.svg?branch=master)](https://travis-ci.com/yapic/yapic_io)
+[![Documentation Status](https://readthedocs.org/projects/yapic-io/badge/?version=latest)](https://yapic-io.readthedocs.io/en/latest/?badge=latest)
 
-Documentation
-=============
+# yapic_io
+
+
 
 
 yapic_io provides flexible data binding to image collections of arbitrary size.
+
+
+Read the documentation [here](https://yapic-io.readthedocs.io/en/latest/).
 
 
 Its aim is to provide a convenient image data interface for training of
@@ -37,8 +42,7 @@ Following problems occuring with training/classification are handeled by yapic_i
 
 
 
-Code example
-============
+## Example
 
 Classifier training:
 
