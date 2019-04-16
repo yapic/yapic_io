@@ -14,7 +14,7 @@ reqs = [str(ir.req) for ir in install_reqs]
 
 
 def readme():
-    README_rst = os.path.join(os.path.dirname(__file__), 'README.rst')
+    README_rst = os.path.join(os.path.dirname(__file__), 'README.md')
     with open(README_rst) as f:
         return f.read()
 
