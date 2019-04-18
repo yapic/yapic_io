@@ -9,9 +9,6 @@
 yapic_io provides flexible data binding to image collections of arbitrary size.
 
 
-Read the documentation [here](https://yapic-io.readthedocs.io/en/latest/).
-
-
 Its aim is to provide a convenient image data interface for training of
 fully convolutional neural networks, as well as automatic handling of
 prediction data output for a trained classifier.
@@ -109,6 +106,15 @@ Prediction:
 ...     counter += 1 #counter for generation of mockdata
 >>>
 ```
+
+## Buils API docs
+
+```
+cd docs
+sphinx-apidoc -o source ../yapic_io
+make html
+```
+
 
 Developed by the CRFS (Core Research Facilities) of the DZNE (German Center
 for Neurodegenerative Diseases).

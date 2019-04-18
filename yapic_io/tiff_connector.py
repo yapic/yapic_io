@@ -115,6 +115,7 @@ class TiffConnector(Connector):
             label_filepath)
 
         assert img_filenames is not None, 'no filenames for pixel images found'
+        assert len(img_filenames) != 0, 'no filenames for pixel images found'
 
         if lbl_filenames is None or len(lbl_filenames) == 0:
             pairs = [(img, None) for img in img_filenames]
