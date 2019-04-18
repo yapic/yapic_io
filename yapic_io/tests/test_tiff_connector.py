@@ -132,8 +132,10 @@ class TestTiffConnector(TestCase):
 
     def test_load_filenames_emptyfolder(self):
         img_path = os.path.join(base_path, '../test_data/empty_folder/')
-        c = TiffConnector(img_path, 'path/to/nowhere/')
-        self.assertEqual(len(c.filenames), 0)
+
+        with self.assertRaises(AssertionError):
+            c = TiffConnector(img_path, 'path/to/nowhere/')
+
 
     def test_image_dimensions(self):
         img_path = os.path.join(
