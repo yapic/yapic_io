@@ -9,6 +9,7 @@
 .eggs/
 
 # Setuptools distribution folder.
+/build/
 /dist/
 /build/lib/yapic_io/
 #output data from tests

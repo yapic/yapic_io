@@ -9,3 +9,8 @@ install:
 # command to run tests
 script:
   - nosetests
+deploy:
+  provider: pypi
+  user: cmohl
+  on:
+    all_branches: true
