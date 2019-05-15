@@ -5,7 +5,7 @@ install:
 - pip install nose
 - pip install .
 script:
-- nosetests
+- nosetests yapic_io/tests/test_dataset.py
 deploy:
   provider: pypi
   user: cmohl
