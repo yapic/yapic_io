@@ -1,16 +1,15 @@
 language: python
 python:
-  - "3.6"
-
-# command to install dependencies
+- '3.6'
 install:
-  - pip install nose
-  - pip install .
-# command to run tests
+- pip install nose
+- pip install .
 script:
-  - nosetests
+- nosetests
 deploy:
   provider: pypi
   user: cmohl
   on:
     all_branches: true
+  password:
+    secure: b3pfRuxREcFlNBMcm56eTbl1P+SmFd6morFAqBEEGIBg2nbfAjNhWhewolQBPcJVO+iGMRKsAWGj5HlanzyJ6q3p97G9M6l52YmqlEIU/RzJVXGOYXZ6RgvjrYTmiuajxqotfmz3goQNhO4Q4CVkgeJ9OlmtHyChBoXukWfk20lKFhPTJxEKp9Lw+GD1H9ToQwk5lLF4rvS6wxP1XULDdlc4EAmGtRzhHb+sJ+VDdi45C4pV9da79vEkxBX/v/Zva/40tvCNIkKCsi9m+yNbS+ZSa+dAvDNrC63QgWb4d2H4pTX2sBXK4uxOLe8FmDz1Zh9yboEfHe5belarRPPGoP1YQU8q0XQm7px8LDMPabWGVEWEqXcV2MZIvelxVRS8S8lddWt7LVvB9orSzB+M777uR7ERXAtKs9yl3769SBXB+382qgqyvaqiVRLRk27pX3K2f50XavAimoLRwcpiIeNOh+zohEYAsIfbpFsWAhwktBdkmIrYCraHp1WcX6AmRXPAojuSdLa3RyExNWTYyC3Xu06jkzEdsbrqjl8hT/h5LTOyGEWBu9LzU8b/mKE9+pFjtIo0STahwuzTU22Ids6gFcokk6sL7K8+YY+NtyPP0qDMYjBdH6JZ9z6Acmo3kqQQiG9k0O9Qp3vCT6ZENf2wCFuZ1yqIObsRfVV6t9Q=
