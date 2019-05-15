@@ -2,15 +2,11 @@ import os
 
 from setuptools import setup
 
-try:  # for pip >= 10
-    from pip._internal.req import parse_requirements
-except ImportError:  # for pip <= 9.0.3
-    from pip.req import parse_requirements
-
-
-requirements_txt = os.path.join(os.path.dirname(__file__), 'requirements.txt')
-install_reqs = parse_requirements(requirements_txt, session=False)
-reqs = [str(ir.req) for ir in install_reqs]
+reqs = ['numpy>=1.13.1',
+        'munkres>=1.0.8',
+        'scikit_image>=0.12.3',
+        'pyilastik>=0.0.5',
+        'bigtiff>=0.1.2']
 
 
 def readme():
