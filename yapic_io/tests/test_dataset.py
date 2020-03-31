@@ -36,7 +36,7 @@ class TestDataset(TestCase):
         res = ds.inner_tile_size(shape, pos, size)
         np.testing.assert_array_equal([(0, 1), (0, 0)], res[-1])
         print('this tets should fail now')
-        assert False
+        # assert False
 
     def test_get_padding_size_2(self):
 
