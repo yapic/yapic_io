@@ -245,31 +245,49 @@ class TiffConnector(Connector):
         return len(self.filenames)
 
     @lru_cache(maxsize=10)
-    def _open_probability_map_file(self, image_nr, label_value):
+    def _open_probability_map_file(self,
+                                   image_nr,
+                                   label_value,
+                                   multichannel=False):
         # memmap is slow, so we must cache it to be fast!
         fname = self.filenames[image_nr].img
-        fname = Path('{}_class_{}.tif'.format(fname.stem, label_value))
+        T = 1  # time frame in output probmap
+        if multichannel:
+            fname = Path('{}.tif'.format(fname.stem))
+            n_classes = len(self.labelvalue_mapping[0].keys())
+            C = n_classes
+        else:
+            fname = Path('{}_class_{}.tif'.format(fname.stem, label_value))
+            C = 1  # channel in output probmap
 
         path = self.savepath / fname
 
         if not path.exists():
-            T = 1
-            C = 1
             _, Z, X, Y = self.image_dimensions(image_nr)
-            images = [PlaceHolder((Y, X, 1), 'float32')] * Z
+            images = [PlaceHolder((Y, X, C), 'float32')] * Z
             Tiff.write(images, io=str(path), imagej_shape=(T, C, Z))
 
         return Tiff.memmap_tcz(path)
 
-    def put_tile(self, pixels, pos_zxy, image_nr, label_value):
+    def put_tile(self,
+                 pixels,
+                 pos_zxy,
+                 image_nr,
+                 label_value,
+                 multichannel=False):
+
         assert self.savepath is not None
         np.testing.assert_equal(len(pos_zxy), 3)
         np.testing.assert_equal(len(pixels.shape), 3)
         pixels = np.array(pixels, dtype=np.float32)
 
-        slices = self._open_probability_map_file(image_nr, label_value)
+        slices = self._open_probability_map_file(image_nr,
+                                                 label_value,
+                                                 multichannel=multichannel)
 
         T = C = 0
+        if multichannel:
+            C = label_value - 1
         Z, X, Y = pos_zxy
         ZZ, XX, YY = np.array(pos_zxy) + pixels.shape
         for z in range(Z, ZZ):
