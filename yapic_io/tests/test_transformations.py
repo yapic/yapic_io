@@ -45,9 +45,8 @@ class TestTransformations(TestCase):
         validation = np.array(validation)
 
         rot = tf.warp_image_2d(im, rotation_angle, shear_angle)
-        print(validation)
-        print(rot)
-        self.assertTrue((rot == validation).all())
+
+        assert_array_equal(rot.astype(int), validation)
 
     def test_warp_image_2d_stack(self):
 
@@ -72,7 +71,7 @@ class TestTransformations(TestCase):
         im = np.array(im)
         rot = tf.warp_image_2d_stack(im, rotation_angle, shear_angle)
 
-        self.assertTrue((rot == val).all())
+        assert_array_equal(rot.astype(int), val)
         self.assertEqual(len(rot.shape), 3)
 
     def test_warp_image_2d_stack_4d(self):
@@ -109,7 +108,7 @@ class TestTransformations(TestCase):
         im = np.array(im)
         rot = tf.warp_image_2d_stack(im, rotation_angle, shear_angle)
         print(rot)
-        assert_array_equal(rot, val)
+        assert_array_equal(rot.astype(int), val)
         self.assertEqual(len(rot.shape), 4)
 
     def test_flip_image_2d_4dstack(self):
