@@ -170,6 +170,7 @@ class IlastikConnector(TiffConnector):
 
         # zyxc to czxy
         lbl = np.transpose(lbl, (3, 0, 2, 1)).astype(int)
+        
 
         C, original_label_value = self._mapped_label_value_to_original(
                                          label_value)
