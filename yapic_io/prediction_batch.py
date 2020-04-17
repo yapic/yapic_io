@@ -81,9 +81,24 @@ class PredictionBatch(Minibatch):
                          size_zxy,
                          padding_zxy=padding_zxy)
         self.current_batch_pos = 0
+        self.multichannel = False
 
         if size_zxy:
             self.set_tile_size(size_zxy)
+
+    def multichannel_output_on(self):
+        '''
+        Probability maps are saved in multichannel images, one channel for each
+        class.
+        '''
+        self.multichannel = True
+
+    def multichannel_output_off(self):
+        '''
+        Probability maps are saved separate singlechannel images, one image for
+        each class with suffix _class{class_nr}.tif.
+        '''
+        self.multichannel = False
 
     def set_tile_size(self, size_zxy):
         super().set_tile_size(size_zxy)
@@ -171,10 +186,12 @@ class PredictionBatch(Minibatch):
         for probmap, (image_nr, pos_zxy) in zip(probmap_batch,
                                                 self.current_tile_positions):
             for label_ch, label in zip(probmap, self.labels):
-                self.dataset.pixel_connector.put_tile(label_ch,
-                                                      pos_zxy,
-                                                      image_nr,
-                                                      label)
+                self.dataset.pixel_connector.put_tile(
+                    label_ch,
+                    pos_zxy,
+                    image_nr,
+                    label,
+                    multichannel=self.multichannel)
 
     def _compute_pos_zxy(self):
         '''

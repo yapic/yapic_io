@@ -281,6 +281,61 @@ class TestTiffConnector(TestCase):
 
         self.assertEqual(count, {2: 11, 3: 3})
 
+    def test_put_tile_multichannel(self):
+        img_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/im/*.tif')
+        label_path = os.path.join(
+            base_path, '../test_data/tiffconnector_1/labels/*.tif')
+        savepath = tempfile.TemporaryDirectory()
+        # savepath = os.path.join(
+        #     base_path, '../test_data')
+
+        path = os.path.join(
+            savepath.name, '6width4height3slices.tif')
+
+        c = TiffConnector(img_path, label_path, savepath=savepath.name)
+
+        pixels = np.array([[[.1, .2, .3],
+                            [.4, .5, .6]]], dtype=np.float32)
+
+        label_value = 3
+        c.put_tile(pixels,
+                   pos_zxy=(0, 1, 1),
+                   image_nr=2,
+                   label_value=label_value,
+                   multichannel=True)
+
+        slices = c._open_probability_map_file(2, 3, multichannel=True)
+        print(slices.shape)
+        probim = np.array([[slices[0, label_value-1, z].T for z in range(3)]])
+
+        val = \
+            np.array([[[[0., 0., 0., 0.],
+                        [0., 0.1, 0.2, 0.3],
+                        [0., 0.4, 0.5, 0.6],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.]],
+                       [[0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.]],
+                       [[0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.],
+                        [0., 0., 0., 0.]]]], dtype=np.float32)
+        print(savepath)
+        np.testing.assert_array_equal(val, probim)
+
+        try:
+            os.remove(path)
+        except FileNotFoundError:
+            pass
+
     def test_put_tile_1(self):
         img_path = os.path.join(
             base_path, '../test_data/tiffconnector_1/im/*.tif')
