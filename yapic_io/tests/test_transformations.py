@@ -39,7 +39,7 @@ class TestTransformations(TestCase):
 
         validation = [[0, 0, 1],
                       [0, 1, 0],
-                      [1, 0, 0]]
+                      [1, 1, 0]]
 
         im = np.array(im)
         validation = np.array(validation)
@@ -62,10 +62,10 @@ class TestTransformations(TestCase):
 
         val = [[[0, 0, 1],
                 [0, 1, 0],
-                [1, 0, 0]],
+                [1, 1, 0]],
                [[0, 0, 2],
                 [0, 2, 0],
-                [2, 0, 0]]]
+                [2, 2, 0]]]
 
         val = np.array(val)
         im = np.array(im)
@@ -93,16 +93,16 @@ class TestTransformations(TestCase):
 
         val = [[[[0, 0, 1],
                  [0, 1, 0],
-                 [1, 0, 0]],
+                 [1, 1, 0]],
                 [[0, 0, 2],
                  [0, 2, 0],
-                 [2, 0, 0]]],
+                 [2, 2, 0]]],
                [[[0, 0, 1],
                  [0, 1, 0],
-                 [1, 0, 0]],
+                 [1, 1, 0]],
                 [[0, 0, 2],
                  [0, 2, 0],
-                 [2, 0, 0]]]]
+                 [2, 2, 0]]]]
 
         val = np.array(val)
         im = np.array(im)
