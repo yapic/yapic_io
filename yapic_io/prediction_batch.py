@@ -4,6 +4,7 @@ from numpy.testing import assert_equal
 import os
 import logging
 from yapic_io.minibatch import Minibatch
+import sys
 
 logger = logging.getLogger(os.path.basename(__file__))
 
@@ -185,6 +186,7 @@ class PredictionBatch(Minibatch):
 
         for probmap, (image_nr, pos_zxy) in zip(probmap_batch,
                                                 self.current_tile_positions):
+
             for label_ch, label in zip(probmap, self.labels):
                 self.dataset.pixel_connector.put_tile(
                     label_ch,
