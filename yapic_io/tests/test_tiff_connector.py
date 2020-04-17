@@ -281,7 +281,6 @@ class TestTiffConnector(TestCase):
 
         self.assertEqual(count, {2: 11, 3: 3})
 
-
     def test_put_tile_multichannel(self):
         img_path = os.path.join(
             base_path, '../test_data/tiffconnector_1/im/*.tif')
@@ -293,7 +292,6 @@ class TestTiffConnector(TestCase):
 
         path = os.path.join(
             savepath.name, '6width4height3slices.tif')
-        
 
         c = TiffConnector(img_path, label_path, savepath=savepath.name)
 
@@ -337,8 +335,6 @@ class TestTiffConnector(TestCase):
             os.remove(path)
         except FileNotFoundError:
             pass
-
-
 
     def test_put_tile_1(self):
         img_path = os.path.join(
