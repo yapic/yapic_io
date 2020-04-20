@@ -174,6 +174,10 @@ class PredictionBatch(Minibatch):
         probmap_batch = np.moveaxis(probmap_batch,
                                     self.pixel_dimension_order,
                                     [0, 1, 2, 3, 4])
+        nr_classes = probmap_batch.shape[1]
+        print('nr classes: {}'.format(nr_classes))
+        if not self.multichannel:
+            nr_classes = False
 
         assert_equal(len(probmap_batch.shape), 5, '5-dim (B,L,Z,X,Y) expected')
         B, L, *ZXY = probmap_batch.shape
@@ -193,7 +197,7 @@ class PredictionBatch(Minibatch):
                     pos_zxy,
                     image_nr,
                     label,
-                    multichannel=self.multichannel)
+                    multichannel=nr_classes)
 
     def _compute_pos_zxy(self):
         '''

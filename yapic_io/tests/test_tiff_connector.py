@@ -303,9 +303,9 @@ class TestTiffConnector(TestCase):
                    pos_zxy=(0, 1, 1),
                    image_nr=2,
                    label_value=label_value,
-                   multichannel=True)
+                   multichannel=3)
 
-        slices = c._open_probability_map_file(2, 3, multichannel=True)
+        slices = c._open_probability_map_file(2, 3, multichannel=3)
         print(slices.shape)
         probim = np.array([[slices[0, label_value-1, z].T for z in range(3)]])
 
