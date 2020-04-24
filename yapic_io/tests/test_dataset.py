@@ -483,7 +483,7 @@ class TestDataset(TestCase):
         '''
 
         def get_tile_func(pos=None, size=None, img=None):
-            return img[get_tile_meshgrid(img.shape, pos, size)]
+            return img[tuple(get_tile_meshgrid(img.shape, pos, size))]
 
         val = np.array(
             [[[[1., 1., 0., 0., 0., 0., 0., 0., 2.],
@@ -540,7 +540,7 @@ class TestDataset(TestCase):
         '''
 
         def get_tile_func(pos=None, size=None, img=None):
-            return img[get_tile_meshgrid(img.shape, pos, size)]
+            return img[tuple(get_tile_meshgrid(img.shape, pos, size))]
 
         val = np.array([[[[3.]]]])
 
@@ -583,7 +583,7 @@ class TestDataset(TestCase):
         '''
 
         def get_tile_func(pos=None, size=None, img=None):
-            return img[get_tile_meshgrid(img.shape, pos, size)]
+            return img[tuple(get_tile_meshgrid(img.shape, pos, size))]
 
         val_ud = \
             np.array([[[[0., 0., 0., 0., 3., 0., 0., 0., 0.],
