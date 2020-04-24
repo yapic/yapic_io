@@ -599,7 +599,7 @@ def _augment_tile(img_shape,
 
     tile = np.pad(tile, pad_size, mode='symmetric')
     mesh = ut.get_tile_meshgrid(tile.shape, pos_inside_transient, tile_shape)
-    tile = tile[mesh]
+    tile = tile[tuple(mesh)]
 
     if augment_fast:
         # if the requested tile is only of size 1 in x and y,
@@ -616,6 +616,6 @@ def _augment_tile(img_shape,
         tile = trafo.warp_image_2d_stack(tile, rotation_angle, shear_angle)
         mesh = ut.get_tile_meshgrid(tile.shape, orig_tile_shape,
                                     orig_tile_shape)
-        tile = tile[mesh]
+        tile = tile[tuple(mesh)]
 
     return tile
