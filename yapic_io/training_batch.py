@@ -1,10 +1,9 @@
 import random
 import numpy as np
 from yapic_io.minibatch import Minibatch
-from yapic_io.utils import compute_pos, find_overlapping_tiles
+from yapic_io.utils import compute_pos, find_overlapping_tiles, progressbar
 import logging
 import os
-from functools import lru_cache
 
 logger = logging.getLogger(os.path.basename(__file__))
 logger.setLevel(logging.INFO)
@@ -214,10 +213,8 @@ class TrainingBatch(Minibatch):
         else:
             shifted_zxy = None  # no overlap
 
-        for i in range(self.dataset.n_images):
-            print('compute pos for image {} of {}'.format(
-                                        i,
-                                        self.dataset.n_images))
+        msg = 'Compute tile positions: '
+        for i in progressbar(range(self.dataset.n_images), msg, 40):
             img_shape = self.dataset.image_dimensions(i)[1:]
             pos = [(i, p[0], p[1], p[2])
                    for p in compute_pos(img_shape,

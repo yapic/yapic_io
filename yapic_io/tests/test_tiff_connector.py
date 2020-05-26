@@ -134,8 +134,7 @@ class TestTiffConnector(TestCase):
         img_path = os.path.join(base_path, '../test_data/empty_folder/')
 
         with self.assertRaises(AssertionError):
-            c = TiffConnector(img_path, 'path/to/nowhere/')
-
+            TiffConnector(img_path, 'path/to/nowhere/')
 
     def test_image_dimensions(self):
         img_path = os.path.join(
@@ -150,6 +149,21 @@ class TestTiffConnector(TestCase):
         np.testing.assert_array_equal(c.image_dimensions(0), (3, 3, 40, 26))
         np.testing.assert_array_equal(c.image_dimensions(1), (3, 6, 40, 26))
         np.testing.assert_array_equal(c.image_dimensions(2), (3, 3, 6, 4))
+
+    def test_image_dimensions_multichannel(self):
+
+        img_path = os.path.join(
+            base_path,
+            '../test_data/tif_images/1000width_992height_4channels_16bit.tif')
+        c = TiffConnector(img_path, 'some/path')
+        assert_array_equal(c.image_dimensions(0), [4, 1, 1000, 992])
+
+        img_path = os.path.join(
+            base_path,
+            ('../test_data/tif_images/'
+             '1000width_992height_4channels_16bit_hyperstack.tif'))
+        c = TiffConnector(img_path, 'some/path')
+        assert_array_equal(c.image_dimensions(0), [4, 1, 1000, 992])
 
     def test_get_tile(self):
         img_path = os.path.join(
@@ -303,9 +317,9 @@ class TestTiffConnector(TestCase):
                    pos_zxy=(0, 1, 1),
                    image_nr=2,
                    label_value=label_value,
-                   multichannel=True)
+                   multichannel=3)
 
-        slices = c._open_probability_map_file(2, 3, multichannel=True)
+        slices = c._open_probability_map_file(2, 3, multichannel=3)
         print(slices.shape)
         probim = np.array([[slices[0, label_value-1, z].T for z in range(3)]])
 
