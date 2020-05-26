@@ -274,7 +274,8 @@ class TestTrainingBatch(TestCase):
 
     def test_normalize_multichannel(self):
 
-        img_path = os.path.join(base_path, '../test_data/normalization/pixels/*.tif')
+        img_path = os.path.join(base_path,
+                                '../test_data/normalization/pixels/*.tif')
         label_path = os.path.join(base_path,
                                   '../test_data/normalization/labels.ilp')
         c = IlastikConnector(img_path, label_path)
@@ -287,12 +288,11 @@ class TestTrainingBatch(TestCase):
 
         m.set_normalize_mode('off')
         next(m)
-        pixels_not_normalized = m.pixels()[0,:,:,:,:]
+        pixels_not_normalized = m.pixels()[0, :, :, :, :]
         m.set_normalize_mode('local_z_score')
-        pixels_normalized_zscore = m.pixels()[0,:,:,:,:]
+        pixels_normalized_zscore = m.pixels()[0, :, :, :, :]
         m.set_normalize_mode('local')
-        pixels_normalized_local = m.pixels()[0,:,:,:,:]
-
+        pixels_normalized_local = m.pixels()[0, :, :, :, :]
 
         # testing raw data values for the different channels
         assert_array_equal(np.unique(pixels_not_normalized[0, :, :, :]), [0])
@@ -302,10 +302,6 @@ class TestTrainingBatch(TestCase):
         # all values for all channels should be 0 after normalization
         assert_array_equal(np.unique(pixels_normalized_zscore), [0])
         assert_array_equal(np.unique(pixels_normalized_local), [0])
-
-
-
-
 
     def test_set_augmentation(self):
 
@@ -333,7 +329,6 @@ class TestTrainingBatch(TestCase):
         m.augment_by_flipping(False)
         self.assertEqual(m.augmentation, {'rotate', 'shear'})
 
-
     def test_set_pixel_dimension_order(self):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
@@ -353,7 +348,6 @@ class TestTrainingBatch(TestCase):
         m.set_pixel_dimension_order('bzxyc')
         self.assertEqual([0, 4, 1, 2, 3], m.pixel_dimension_order)
 
-
     def test_get_pixels_dimension_order(self):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
@@ -367,7 +361,7 @@ class TestTrainingBatch(TestCase):
 
         m = TrainingBatch(d, size, padding_zxy=pad)
 
-        b = next(m)
+        next(m)
 
         p = m.pixels()
         w = m.weights()
@@ -475,7 +469,6 @@ class TestTrainingBatch(TestCase):
             0,
             len(set(m2.tile_pos_for_label[1]) & set(m.tile_pos_for_label[1])))
 
-
     def test_shape_data_split(self):
 
         import logging
@@ -495,4 +488,4 @@ class TestTrainingBatch(TestCase):
 
         m = TrainingBatch(d, size, padding_zxy=pad)
 
-        m2 = m.split(0.001)
+        m.split(0.001)
