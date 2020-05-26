@@ -4,7 +4,6 @@ from numpy.testing import assert_equal
 import os
 import logging
 from yapic_io.minibatch import Minibatch
-import sys
 
 logger = logging.getLogger(os.path.basename(__file__))
 
@@ -175,7 +174,6 @@ class PredictionBatch(Minibatch):
                                     self.pixel_dimension_order,
                                     [0, 1, 2, 3, 4])
         nr_classes = probmap_batch.shape[1]
-        print('nr classes: {}'.format(nr_classes))
         if not self.multichannel:
             nr_classes = False
 
