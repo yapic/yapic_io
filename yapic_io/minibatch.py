@@ -1,6 +1,8 @@
 import os
 import logging
 import numpy as np
+from collections.abc import Iterable
+
 logger = logging.getLogger(os.path.basename(__file__))
 
 
@@ -101,7 +103,8 @@ class Minibatch(object):
               calculated for whole dataset
         minmax : (min, max)
             Tuple of minimum and maximum pixel value for global normalization,
-            e.g ``(0, 255)`` for 8 bit images
+            e.g ``(0, 255)`` for 8 bit images, or list of tuples, one for each
+            channel, e.g. ``[(0, 255), (0, 100), (0, 255)]``
         '''
         valid = ('local_z_score', 'local', 'off', 'global')
         msg = 'Invalid normalization mode: "{}". Valid choices: {}'
@@ -112,6 +115,22 @@ class Minibatch(object):
         if mode_str == 'global':
             assert minmax is not None, \
                                  'normalization range (min, max) required'
+
+            n_channels = self.dataset.pixel_connector.image_dimensions(0)[0]
+            assert len(minmax) == 2 or len(minmax) == n_channels
+
+            if len(minmax) == 2 and n_channels != 2:
+                for e in minmax:
+                    print(e)
+                    assert isinstance(e, int)
+
+            if len(minmax) != 2:
+                assert len(minmax) == n_channels
+                # minmax should be list of tuples
+                for e in minmax:
+                    assert isinstance(e, Iterable)
+                    assert len(e) == 2
+
             self.global_norm_minmax = minmax
 
     def _normalize(self, pixels):

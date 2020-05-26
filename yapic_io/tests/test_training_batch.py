@@ -303,6 +303,38 @@ class TestTrainingBatch(TestCase):
         assert_array_equal(np.unique(pixels_normalized_zscore), [0])
         assert_array_equal(np.unique(pixels_normalized_local), [0])
 
+    def test_normalize_global_multichannel(self):
+
+        img_path = os.path.join(base_path,
+                                '../test_data/normalization/pixels/*.tif')
+        label_path = os.path.join(base_path,
+                                  '../test_data/normalization/labels.ilp')
+        c = IlastikConnector(img_path, label_path)
+        d = Dataset(c)
+
+        size = (1, 5, 4)
+        pad = (0, 0, 0)
+
+        m = TrainingBatch(d, size, padding_zxy=pad)
+
+        m.set_normalize_mode('off')
+        next(m)
+        pxlr = m.pixels()[0, :, :, :, :]
+
+
+        minmax = [(0, 10), (0, 100)]
+        minmax = [0, 255]
+        m.set_normalize_mode('global', minmax=minmax)
+        print(m.global_norm_minmax)
+
+        pxln = m.pixels()[0, :, :, :, :]
+
+        print(pxlr)
+        print(pxln)
+        print(m.dataset.pixel_connector.image_dimensions(0))
+
+        assert False
+
     def test_set_augmentation(self):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
