@@ -290,7 +290,6 @@ class TiffConnector(Connector):
             C = label_value - 1
         Z, X, Y = pos_zxy
         ZZ, XX, YY = np.array(pos_zxy) + pixels.shape
-        print('multichannel: {}'.format(multichannel))
         for z in range(Z, ZZ):
             slices[T, C, z][Y:YY, X:XX] = pixels[z - Z, ...].T
 

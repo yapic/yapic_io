@@ -1,6 +1,8 @@
 import os
 import logging
 import numpy as np
+from collections.abc import Iterable
+
 logger = logging.getLogger(os.path.basename(__file__))
 
 
@@ -82,7 +84,6 @@ class Minibatch(object):
 
         return self.pixel_dimension_order
 
-
     def set_tile_size(self, size_zxy):
         self.tile_size_zxy = size_zxy
 
@@ -101,7 +102,8 @@ class Minibatch(object):
               calculated for whole dataset
         minmax : (min, max)
             Tuple of minimum and maximum pixel value for global normalization,
-            e.g ``(0, 255)`` for 8 bit images
+            e.g ``(0, 255)`` for 8 bit images, or list of tuples, one for each
+            channel, e.g. ``[(0, 255), (0, 100), (0, 255)]``
         '''
         valid = ('local_z_score', 'local', 'off', 'global')
         msg = 'Invalid normalization mode: "{}". Valid choices: {}'
@@ -112,6 +114,26 @@ class Minibatch(object):
         if mode_str == 'global':
             assert minmax is not None, \
                                  'normalization range (min, max) required'
+
+            n_channels = self.dataset.pixel_connector.image_dimensions(0)[0]
+
+            if len(minmax) == 2:
+                if n_channels == 2:
+                    assert (_is_twotuple_of_numerics(minmax)
+                            or _is_list_of_twotuples(minmax))
+                else:
+                    assert _is_twotuple_of_numerics(minmax)
+            else:
+                assert n_channels == len(minmax)
+                assert _is_list_of_twotuples(minmax)
+
+            msg = 'Scale reference for pixel normalization must not be zero.'
+            if _is_twotuple_of_numerics(minmax):
+                assert minmax[1] != 0, msg
+            if _is_list_of_twotuples(minmax):
+                for e in minmax:
+                    assert e[1] != 0, msg
+
             self.global_norm_minmax = minmax
 
     def _normalize(self, pixels):
@@ -122,8 +144,14 @@ class Minibatch(object):
             return pixels
 
         if self.normalize_mode == 'global':
-            center_ref = np.array(self.global_norm_minmax[0])
-            scale_ref = np.array(self.global_norm_minmax[1])
+            if _is_twotuple_of_numerics(self.global_norm_minmax):
+                # same reference for all channels
+                center_ref = np.array(self.global_norm_minmax[0])
+                scale_ref = np.array(self.global_norm_minmax[1])
+            else:
+                center_ref = np.array([e[0] for e in self.global_norm_minmax])
+                scale_ref = np.array([e[1] for e in self.global_norm_minmax])
+
         elif self.normalize_mode == 'local':
             # (data - minval) / (maxval - minval)
             # percentiles are used to be robust against outliers
@@ -133,6 +161,7 @@ class Minibatch(object):
 
             center_ref = min_ref
             scale_ref = max_ref - min_ref
+
         elif self.normalize_mode == 'local_z_score':
             # (data - mean) / std
             center_ref = pixels.mean(axis=(0, 2, 3, 4))
@@ -146,3 +175,23 @@ class Minibatch(object):
         else:
             # scale by scale reference
             return (pixels_centered / scale_ref).swapaxes(1, 4)
+
+
+def _is_twotuple_of_numerics(tp):
+    if not isinstance(tp, Iterable):
+        return False
+    if not len(tp) == 2:
+        return False
+    for e in tp:
+        if not (isinstance(e, int) or isinstance(e, float)):
+            return False
+    return True
+
+
+def _is_list_of_twotuples(ls):
+    if not isinstance(ls, Iterable):
+        return False
+    for e in ls:
+        if not _is_twotuple_of_numerics(e):
+            return False
+    return True
