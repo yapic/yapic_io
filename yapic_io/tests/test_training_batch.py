@@ -315,25 +315,18 @@ class TestTrainingBatch(TestCase):
         size = (1, 5, 4)
         pad = (0, 0, 0)
 
-        m = TrainingBatch(d, size, padding_zxy=pad)
+        minmax = [(0, 1), (0, 100), (0, 255)]
 
+        m = TrainingBatch(d, size, padding_zxy=pad)
         m.set_normalize_mode('off')
         next(m)
-        pxlr = m.pixels()[0, :, :, :, :]
 
-
-        minmax = [(0, 10), (0, 100)]
-        minmax = [0, 255]
         m.set_normalize_mode('global', minmax=minmax)
-        print(m.global_norm_minmax)
 
         pxln = m.pixels()[0, :, :, :, :]
-
-        print(pxlr)
-        print(pxln)
-        print(m.dataset.pixel_connector.image_dimensions(0))
-
-        assert False
+        assert (pxln[0, :, :, :] == 0).all()
+        assert (pxln[1, :, :, :] == 1).all()
+        assert (pxln[2, :, :, :] == 1).all()
 
     def test_set_augmentation(self):
 
