@@ -17,14 +17,25 @@ data_dir = os.path.join(base_path, '../test_data/cellvoyager')
 
 class TestCellvoyConnector(TestCase):
 
-    def test_init_cellvoy(self):
-        img_files = [ os.path.join(data_dir, 'GASPR01S01R01p01E01CD_A05_T0001F001L01A01Z01C01.tif'),
-                      os.path.join(data_dir, 'GASPR01S01R02p01E01CD_A06_T0001F012L01A01Z01C01.tif')]
-        cc = CellvoyConnector(data_dir, 'some/path')
-        print('imgdims')
-        print(cc.image_dimensions(0))
-        print('hallpo')
-        px = cc.get_tile(0, (0,0,0,0), (10, 10, 2000, 2000))
+    def test_compare_cellvoyconnector_with_tiffconnector(self):
 
-        print(px.shape)
-        assert False
+        img_files_multi = [os.path.join(
+            data_dir,
+            '../tif_images/GASPR01S01R01p01E01CD_A05_T0001F001_merge.tif')]
+
+        cc = CellvoyConnector(data_dir, 'some/path')
+        tc = TiffConnector(img_files_multi, 'some/path')
+
+        assert_array_equal(tc.image_dimensions(0), cc.image_dimensions(1))
+
+        pxt = tc.get_tile(0, (3, 0, 0, 0), (1, 1, 1000, 992))
+        pxc = cc.get_tile(1, (0, 0, 0, 0), (1, 1, 1000, 992))
+        assert_array_equal(pxc, pxt)
+
+        pxt = tc.get_tile(0, (1, 0, 0, 0), (1, 1, 1000, 992))
+        pxc = cc.get_tile(1, (1, 0, 0, 0), (1, 1, 1000, 992))
+        assert_array_equal(pxc, pxt)
+
+        pxt = tc.get_tile(0, (2, 0, 0, 0), (1, 1, 1000, 992))
+        pxc = cc.get_tile(1, (2, 0, 0, 0), (1, 1, 1000, 992))
+        assert_array_equal(pxc, pxt)

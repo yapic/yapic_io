@@ -23,13 +23,12 @@ class CellvoyConnector(TiffConnector):
     @lru_cache(maxsize=10)
     def _open_image_file(self, image_nr):
 
-        path = self.img_path / self.filenames[image_nr].img
-
         img_names = self.names_all_channels[image_nr]
-
         pixels = np.array([[io.imread(img_name)] for img_name in img_names])
-        pixels = np.swapaxes(pixels, -1, -2)
-        print(pixels.shape)
         pixels = np.expand_dims(pixels, axis=0)
-        print(pixels.shape)
         return pixels
+
+    def image_dimensions(self, image_nr):
+        dims = np.array(self. _open_image_file(image_nr)[0].shape)
+        dims[[-1, -2]] = dims[[-2, -1]]
+        return dims
