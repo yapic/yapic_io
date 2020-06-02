@@ -20,6 +20,13 @@ class CellvoyConnector(TiffConnector):
                          label_filepath,
                          savepath=savepath)
 
+        # order names_all_channels according to self.filenames
+        pxnames_tiff_connector = [str(e.img) for e in self.filenames]
+        pxnames_cellvoy = [os.path.basename(e[0])
+                           for e in self.names_all_channels]
+        idx = [pxnames_cellvoy.index(e) for e in pxnames_tiff_connector]
+        self.names_all_channels = [self.names_all_channels[i] for i in idx]
+
     @lru_cache(maxsize=10)
     def _open_image_file(self, image_nr):
 
