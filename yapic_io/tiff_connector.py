@@ -381,7 +381,6 @@ class TiffConnector(Connector):
 
         slices = self._open_image_file(image_nr)
         tile = [[s[Y:YY, X:XX] for s in c[Z:ZZ]] for c in slices[T, C:CC, :]]
-        
         tile = np.stack(tile)
         tile = np.moveaxis(tile, (0, 1, 2, 3), (0, 1, 3, 2))
 
