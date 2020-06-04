@@ -50,6 +50,13 @@ class Dataset(object):
         # max nr of trials to get a random training tile in polling mode
         self.max_pollings = 30
 
+        is_consistent, channel_cnt = self.channels_are_consistent()
+        msg = ('Varying number of channels: {}. '
+               'Channel counts must be identical '
+               'for all images in dataset. '
+               'Dataset may be incomplete.').format(channel_cnt)
+        assert is_consistent, msg
+
     def __repr__(self):
         return 'Dataset ({} images)'.format(self.n_images)
 
@@ -69,6 +76,29 @@ class Dataset(object):
         (nr_channels, nr_zslices, nr_x, nr_y)
         '''
         return self.pixel_connector.image_dimensions(image_nr)
+
+    def channels_are_consistent(self):
+        '''
+        Returns True if all images of the dataset have the same number of
+        channels. Otherwise False.
+
+        Returns
+        -------
+        boolean
+            True if channels are consistent
+        list
+            List with channel counts
+        '''
+        channel_cnt = np.unique([self.image_dimensions(i)[0]
+                                for i in range(self.n_images)])
+
+        if len(channel_cnt) == 1:
+            return True, channel_cnt
+
+        return False, channel_cnt
+
+
+
 
     def label_values(self):
         '''

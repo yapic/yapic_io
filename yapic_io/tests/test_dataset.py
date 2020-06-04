@@ -3,6 +3,7 @@ import os
 import numpy as np
 from yapic_io.tiff_connector import TiffConnector
 from yapic_io.ilastik_connector import IlastikConnector
+from yapic_io.cellvoy_connector import CellvoyConnector
 from yapic_io.connector import io_connector
 from yapic_io.dataset import Dataset
 from yapic_io.utils import get_tile_meshgrid
@@ -691,6 +692,39 @@ class TestDataset(TestCase):
 
         self.assertTrue((tile == val).all())
 
+    def test_channels_are_consistent(self):
+
+        data_dir = os.path.join(base_path, '../test_data/cellvoyager')
+        c = CellvoyConnector(data_dir, os.path.join(data_dir, 'labels_1.ilp'))
+        d = Dataset(c)
+        is_consistent, channel_cnt = d.channels_are_consistent()
+        assert is_consistent
+        assert channel_cnt == [4]
+
+        # check if assertion is raised for incomplete dataset
+        data_dir_2 = os.path.join(base_path,
+                                  '../test_data/cellvoyager_incomplete')
+        c = CellvoyConnector(data_dir_2,
+                             os.path.join(data_dir, 'labels_1.ilp'))
+        self.assertRaises(AssertionError, Dataset, c)
+
+    def test_multichannel_pixel_tile_cellvoy(self):
+
+        data_dir = os.path.join(base_path, '../test_data/cellvoyager')
+        c = CellvoyConnector(data_dir, os.path.join(data_dir, 'labels_1.ilp'))
+        d = Dataset(c)
+
+        img = 0
+        pos_zxy = (0, 0, 0)
+        size_zxy = (1, 1000, 992)
+        size_zxy = (1, 500, 500)
+        channels = [1, 2, 3, 4]
+        pd = (0, 0, 0)
+
+        tile = d.multichannel_pixel_tile(
+            img, pos_zxy, size_zxy, channels,
+            pixel_padding=pd,  augment_params={'rotation_angle': 45})
+
     def test_training_tile_1(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
         label_path = os.path.join(
@@ -709,6 +743,22 @@ class TestDataset(TestCase):
 
         np.testing.assert_array_equal(tr.pixels.shape, (1, 1, 6, 7))
         np.testing.assert_array_equal(tr.weights.shape, (2, 1, 4, 3))
+
+    def test_training_tile_cellvoy(self):
+
+        data_dir = os.path.join(base_path, '../test_data/cellvoyager')
+        c = CellvoyConnector(data_dir, os.path.join(data_dir, 'labels_1.ilp'))
+        d = Dataset(c)
+
+        img = 0
+        pos_zxy = (0, 0, 0)
+        size_zxy = (1, 4, 3)
+        channels = [1, 2, 3, 4]
+        labels = [1, 2]
+
+        tr = d.training_tile(img, pos_zxy, size_zxy, channels, labels,
+                             pixel_padding=(0, 1, 2))
+
 
     def test_random_training_tile(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')

@@ -49,15 +49,6 @@ class TrainingBatch(Minibatch):
     >>>
     >>> c = TiffConnector(pixel_img_dir, label_img_dir, savepath=savepath.name)
     >>> m = TrainingBatch(Dataset(c), tile_size, padding_zxy=padding)
-    compute pos for image 0 of 3
-    compute pos for image 1 of 3
-    compute pos for image 2 of 3
-    compute pos for image 0 of 3
-    compute pos for image 1 of 3
-    compute pos for image 2 of 3
-    compute pos for image 0 of 3
-    compute pos for image 1 of 3
-    compute pos for image 2 of 3
     >>> print(m)
     TrainingBatch (batch_size: 3, tile_size (zxy): (1, 5, 4), augment: {'flip'}
     >>>
