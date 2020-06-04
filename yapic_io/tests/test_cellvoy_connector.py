@@ -23,7 +23,7 @@ class TestCellvoyConnector(TestCase):
             data_dir,
             '../tif_images/GASPR01S01R01p01E01CD_A05_T0001F001_merge.tif')]
 
-        cc = CellvoyConnector(data_dir, 'some/path')
+        cc = CellvoyConnector(data_dir, os.path.join(data_dir, 'labels_1.ilp'))
         tc = TiffConnector(img_files_multi, 'some/path')
 
         assert_array_equal(tc.image_dimensions(0), cc.image_dimensions(1))
@@ -51,3 +51,9 @@ class TestCellvoyConnector(TestCase):
             assert_array_equal(pxc, pxt)
         except AssertionError:
             assert_array_equal(pxc2, pxt)
+
+    def test_label_tile_cellvoy(self):
+
+        cc = CellvoyConnector(data_dir, os.path.join(data_dir, 'labels_1.ilp'))
+        r = cc.original_label_values_for_all_images()
+        assert r == [{1, 2}]

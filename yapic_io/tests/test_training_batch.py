@@ -2,6 +2,7 @@ from unittest import TestCase
 import os
 from yapic_io.tiff_connector import TiffConnector
 from yapic_io.ilastik_connector import IlastikConnector
+from yapic_io.cellvoy_connector import CellvoyConnector
 from yapic_io.dataset import Dataset
 
 from yapic_io.training_batch import TrainingBatch
@@ -103,6 +104,24 @@ class TestTrainingBatch(TestCase):
         m = TrainingBatch(d, size, padding_zxy=pad)
 
         m._random_tile(for_label=1)
+
+    def test_random_tile_cellvoy(self):
+
+        data_dir = os.path.join(base_path, '../test_data/cellvoyager')
+        c = CellvoyConnector(data_dir, os.path.join(data_dir, 'labels_1.ilp'))
+        d = Dataset(c)
+
+        size = (1, 3, 4)
+        pad = (1, 2, 2)
+
+        m = TrainingBatch(d, size, padding_zxy=pad)
+
+        m._random_tile(for_label=1)
+
+
+
+
+
 
     def test_getitem(self):
 

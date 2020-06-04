@@ -1,4 +1,5 @@
 from yapic_io.tiff_connector import TiffConnector
+from yapic_io.ilastik_connector import IlastikConnector
 from skimage import io
 from functools import lru_cache
 import numpy as np
@@ -6,7 +7,7 @@ from glob import glob
 import os
 
 
-class CellvoyConnector(TiffConnector):
+class CellvoyConnector(IlastikConnector):
 
     def __init__(self, img_filepath, label_filepath, savepath=None):
 
