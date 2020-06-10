@@ -322,6 +322,22 @@ class TestTrainingBatch(TestCase):
         assert_array_equal(np.unique(pixels_normalized_zscore), [0])
         assert_array_equal(np.unique(pixels_normalized_local), [0])
 
+    def test_normalize_global_auto(self):
+
+        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
+        label_path = os.path.join(base_path,
+                                  '../test_data/tiffconnector_1/labels/')
+        c = TiffConnector(img_path, label_path)
+        d = Dataset(c)
+
+        size = (1, 5, 4)
+        pad = (0, 0, 0)
+
+        m = TrainingBatch(d, size, padding_zxy=pad)
+        assert m.global_norm_minmax is None
+        m.set_normalize_mode('global')
+        assert len(m.global_norm_minmax) == 3
+
     def test_normalize_global_multichannel(self):
 
         img_path = os.path.join(base_path,
