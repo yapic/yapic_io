@@ -21,6 +21,21 @@ def c(*a):
 
 
 class TestDataset(TestCase):
+
+    def test_pixel_statistics(self):
+
+        data_dir = os.path.join(base_path, '../test_data/cellvoyager')
+        c = CellvoyConnector(data_dir, os.path.join(data_dir, 'labels_1.ilp'))
+        d = Dataset(c)
+        channels = [0, 1, 2, 3]
+
+        stats = d.pixel_statistics([0, 1, 2, 3], n_tiles=1000)
+
+        assert len(stats) == len(channels)
+        for stat in stats:
+            assert len(stat) == 2
+            assert stat[0] < stat[1]
+
     def test_n_images(self):
 
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
@@ -718,12 +733,16 @@ class TestDataset(TestCase):
         pos_zxy = (0, 0, 0)
         size_zxy = (1, 1000, 992)
         size_zxy = (1, 500, 500)
-        channels = [1, 2, 3, 4]
+        channels = [0, 1, 2, 3]
         pd = (0, 0, 0)
 
         tile = d.multichannel_pixel_tile(
             img, pos_zxy, size_zxy, channels,
             pixel_padding=pd,  augment_params={'rotation_angle': 45})
+
+        assert not np.array_equal(tile[0, :, :, :], tile[3, :, :, :])
+        assert not np.array_equal(tile[1, :, :, :], tile[3, :, :, :])
+        assert not np.array_equal(tile[2, :, :, :], tile[3, :, :, :])
 
     def test_training_tile_1(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
@@ -753,12 +772,11 @@ class TestDataset(TestCase):
         img = 0
         pos_zxy = (0, 0, 0)
         size_zxy = (1, 4, 3)
-        channels = [1, 2, 3, 4]
+        channels = [0, 1, 2, 3]
         labels = [1, 2]
 
-        tr = d.training_tile(img, pos_zxy, size_zxy, channels, labels,
-                             pixel_padding=(0, 1, 2))
-
+        d.training_tile(img, pos_zxy, size_zxy, channels, labels,
+                        pixel_padding=(0, 1, 2))
 
     def test_random_training_tile(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')

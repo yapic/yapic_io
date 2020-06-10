@@ -7,6 +7,7 @@ from functools import lru_cache
 import logging
 import os
 import yapic_io.transformations as trafo
+import sys
 
 logger = logging.getLogger(os.path.basename(__file__))
 logger.setLevel(logging.INFO)
@@ -77,6 +78,59 @@ class Dataset(object):
         '''
         return self.pixel_connector.image_dimensions(image_nr)
 
+    def pixel_statistics(self,
+                         channels,
+                         upper=99,
+                         lower=1,
+                         tile_size_zxy=(1, 50, 50),
+                         n_tiles=1000):
+        '''
+        Performs random sampling of n tiles and calculates upper and lower
+        percentiles of pixel values. Separated for each channel.
+        This data can be used for normalization of pixel intensities.
+
+        Parameters
+        ----------
+        channels : array_like
+            List of pixel channels to be fetched.
+        upper : float
+            Upper percentile.
+        lower : float
+            Lower percentile.
+        tile_size_zxy : (nr_zslices, nr_x, nr_y)
+            Tile size.
+        n_tiles : int
+            Nr of tiles to be fetched
+
+        Returns
+        -------
+        [(lower_01, upper_01), (lower_02, upper_02), (lower_03, upper_03), ...]
+        '''
+
+        tile_size_zxy = (1, 30, 30)
+        percentiles = np.zeros((n_tiles, len(channels), 2))
+        msg = '\n\nCalculate global pixel statistics ({} tiles)...\n'.format(
+            n_tiles)
+        sys.stdout.write(msg)
+        for i in range(n_tiles):
+            image_nr, pos_zxy = self._random_pos_izxy(None, tile_size_zxy)
+            pix = self.multichannel_pixel_tile(image_nr,
+                                               pos_zxy,
+                                               tile_size_zxy,
+                                               channels)
+            percentiles[i, :, 0] = np.percentile(pix, lower, axis=[1, 2, 3])
+            percentiles[i, :, 1] = np.percentile(pix, upper, axis=[1, 2, 3])
+
+        lower_bnds = np.min(percentiles[:, :, 0], axis=0)
+        upper_bnds = np.max(percentiles[:, :, 1], axis=0)
+
+        out = [(lower, upper) for lower, upper in zip(lower_bnds, upper_bnds)]
+        msg = '{} and {} percentiles per channel: {}\n'.format(lower,
+                                                               upper,
+                                                               out)
+        sys.stdout.write(msg)
+        return out
+
     def channels_are_consistent(self):
         '''
         Returns True if all images of the dataset have the same number of
@@ -96,8 +150,6 @@ class Dataset(object):
             return True, channel_cnt
 
         return False, channel_cnt
-
-
 
 
     def label_values(self):
@@ -389,6 +441,9 @@ class Dataset(object):
         size_padded = size_zxy + 2 * pixel_padding
         pos_padded = pos_zxy - pixel_padding
 
+        for c in channels:
+            msg = 'channel {} does not exist'.format(c)
+            assert c < self.pixel_connector.image_dimensions(image_nr)[0], msg
         tile = [_augment_tile(image_shape_zxy,
                               np.hstack([[c], pos_padded]),
                               np.hstack([[1], size_padded]),
