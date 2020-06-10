@@ -112,9 +112,10 @@ class Minibatch(object):
         self.normalize_mode = mode_str
 
         if mode_str == 'global':
-            assert minmax is not None, \
-                                 'normalization range (min, max) required'
 
+            if minmax is None:
+                # calculate upper and lower percentile automatically
+                minmax = self.dataset.pixel_statistics(self.channels)
             n_channels = self.dataset.pixel_connector.image_dimensions(0)[0]
 
             if len(minmax) == 2:

@@ -78,11 +78,27 @@ class Dataset(object):
         '''
         return self.pixel_connector.image_dimensions(image_nr)
 
+
+    def _smallest_image_size_xy(self):
+        Z = 10
+        X = 500
+        Y = 500
+        for i in range(self.n_images):
+            size_z, size_x, size_y = self.image_dimensions(i)[-3:]
+            if size_z < Z:
+                Z = size_z
+            if size_x < X:
+                X = size_x
+            if size_y < Y:
+                Y = size_y
+        return (Z, X, Y)
+
+
     def pixel_statistics(self,
                          channels,
                          upper=99,
                          lower=1,
-                         tile_size_zxy=(1, 50, 50),
+                         tile_size_zxy=None,
                          n_tiles=1000):
         '''
         Performs random sampling of n tiles and calculates upper and lower
@@ -107,10 +123,11 @@ class Dataset(object):
         [(lower_01, upper_01), (lower_02, upper_02), (lower_03, upper_03), ...]
         '''
 
-        tile_size_zxy = (1, 30, 30)
+        if tile_size_zxy is None:
+            tile_size_zxy = self._smallest_image_size_xy()
         percentiles = np.zeros((n_tiles, len(channels), 2))
-        msg = '\n\nCalculate global pixel statistics ({} tiles)...\n'.format(
-            n_tiles)
+        msg = ('\n\nCalculate global pixel statistics'
+               '({} tiles of size {})...\n').format(n_tiles, tile_size_zxy)
         sys.stdout.write(msg)
         for i in range(n_tiles):
             image_nr, pos_zxy = self._random_pos_izxy(None, tile_size_zxy)
