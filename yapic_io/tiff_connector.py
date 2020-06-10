@@ -375,6 +375,9 @@ class TiffConnector(Connector):
         raise Exception(msg.format(label_value, self.labelvalue_mapping))
 
     def get_tile(self, image_nr, pos, size):
+        ut.assert_valid_image_subset(self.image_dimensions(image_nr),
+                                     pos,
+                                     size)
         T = 0
         C, Z, X, Y = pos
         CC, ZZ, XX, YY = np.array(pos) + size
