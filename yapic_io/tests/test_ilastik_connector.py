@@ -90,9 +90,7 @@ class TestIlastikConnector(TestCase):
             '../test_data/ilastik/pixels_ilastik_mutliim-1.2_additional_img')
         lbl_path = os.path.join(
             base_path, '../test_data/ilastik/ilastik-multiim-1.2.ilp')
-        c = IlastikConnector(img_path, lbl_path)
-
-
+        IlastikConnector(img_path, lbl_path)
 
     def test_constructor_with_subset(self):
 
@@ -263,7 +261,6 @@ class TestIlastikConnector(TestCase):
         [self.assertTrue(lbl[pos[0], pos[1], pos[2]]) for pos in lbl_pos]
 
         self.assertFalse(lbl[0, 0, 0])
-
 
         p = os.path.join(base_path, '../test_data/ilastik/dimensionstest')
         img_path = os.path.join(p, 'images')

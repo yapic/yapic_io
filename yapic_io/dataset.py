@@ -78,7 +78,6 @@ class Dataset(object):
         '''
         return self.pixel_connector.image_dimensions(image_nr)
 
-
     def _smallest_image_size_xy(self):
         Z = 10
         X = 500
@@ -92,7 +91,6 @@ class Dataset(object):
             if size_y < Y:
                 Y = size_y
         return (Z, X, Y)
-
 
     def pixel_statistics(self,
                          channels,
@@ -167,7 +165,6 @@ class Dataset(object):
             return True, channel_cnt
 
         return False, channel_cnt
-
 
     def label_values(self):
         '''
