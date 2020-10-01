@@ -5,7 +5,10 @@ from functools import lru_cache
 import numpy as np
 import pyilastik
 from yapic_io.tiff_connector import TiffConnector
+from pathlib import Path
+import collections
 
+FilePair = collections.namedtuple('FilePair', ['img', 'lbl'])
 logger = logging.getLogger(os.path.basename(__file__))
 
 
@@ -61,6 +64,13 @@ class IlastikConnector(TiffConnector):
     --------
     yapic_io.tiff_connector.TiffConnector
     '''
+
+    def _assemble_filenames(self, pairs):
+        self.filenames = [FilePair(Path(img), Path(lbl))
+                          for img, lbl in pairs if lbl]
+        print('filenames in ilastikconnector')
+        print(self.filenames)
+
     def _handle_lbl_filenames(self, label_filepath):
         label_path = label_filepath
         self.ilp = pyilastik.read_project(label_filepath, skip_image=True)
@@ -79,6 +89,22 @@ class IlastikConnector(TiffConnector):
                                             self.image_count(),
                                             self.labelvalue_mapping)
         return infostring
+
+    def _new_label(self,label_value):
+        labels_per_channel = []
+
+        new_list = []
+        new_list = [x for x in label_value[1] if x[1] is not None]
+
+
+        for x in label_value:
+            if label_value[1] is not None:
+                new_list.append(x)
+            else:
+                pass
+        label_value = new_list
+        return label_value
+
 
     def filter_labeled(self):
         '''
@@ -207,7 +233,8 @@ class IlastikConnector(TiffConnector):
                 msg = 'No label matrix file found for image file #{}.'
                 logger.warning(msg.format(image_nr))
                 return None
-
+            print('label filename')
+            print(label_filename)
             _, (img, lbl, _) = self.ilp[label_filename]
             lbl = np.transpose(lbl, (3, 0, 2, 1)).astype(int)
 
