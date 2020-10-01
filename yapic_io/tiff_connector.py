@@ -140,7 +140,6 @@ class TiffConnector(Connector):
         self.filenames = [FilePair(Path(img), Path(lbl) if lbl else None)
                           for img, lbl in pairs]
 
-
     def _handle_lbl_filenames(self, label_filepath):
         return _handle_img_filenames(label_filepath)
 

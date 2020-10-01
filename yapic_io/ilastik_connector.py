@@ -90,12 +90,10 @@ class IlastikConnector(TiffConnector):
                                             self.labelvalue_mapping)
         return infostring
 
-    def _new_label(self,label_value):
-        labels_per_channel = []
+    def _new_label(self, label_value):
 
         new_list = []
         new_list = [x for x in label_value[1] if x[1] is not None]
-
 
         for x in label_value:
             if label_value[1] is not None:
@@ -104,7 +102,6 @@ class IlastikConnector(TiffConnector):
                 pass
         label_value = new_list
         return label_value
-
 
     def filter_labeled(self):
         '''
