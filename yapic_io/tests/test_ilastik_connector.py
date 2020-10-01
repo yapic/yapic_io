@@ -84,6 +84,16 @@ class TestIlastikConnector(TestCase):
 
         assert_array_equal(lbl_identifiers, [lbl for im, lbl in c.filenames])
 
+    def test_incomplete_label_data(self):
+        img_path = os.path.join(
+            base_path,
+            '../test_data/ilastik/pixels_ilastik_mutliim-1.2_additional_img')
+        lbl_path = os.path.join(
+            base_path, '../test_data/ilastik/ilastik-multiim-1.2.ilp')
+        c = IlastikConnector(img_path, lbl_path)
+
+
+
     def test_constructor_with_subset(self):
 
         # by passing a list of tiff filenames to IlastikConnector

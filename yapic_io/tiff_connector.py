@@ -122,8 +122,7 @@ class TiffConnector(Connector):
         else:
             pairs = ut.find_best_matching_pairs(img_filenames, lbl_filenames)
 
-        self.filenames = [FilePair(Path(img), Path(lbl) if lbl else None)
-                          for img, lbl in pairs]
+        self._assemble_filenames(pairs)
 
         logger.info('Pixel and label files are assigned as follows:')
         logger.info('\n'.join('{p.img} <-> {p.lbl}'.format(p=pair)
@@ -136,6 +135,11 @@ class TiffConnector(Connector):
                                             original_labels)
 
         self.check_label_matrix_dimensions()
+
+    def _assemble_filenames(self, pairs):
+        self.filenames = [FilePair(Path(img), Path(lbl) if lbl else None)
+                          for img, lbl in pairs]
+
 
     def _handle_lbl_filenames(self, label_filepath):
         return _handle_img_filenames(label_filepath)
@@ -375,9 +379,6 @@ class TiffConnector(Connector):
         raise Exception(msg.format(label_value, self.labelvalue_mapping))
 
     def get_tile(self, image_nr, pos, size):
-        ut.assert_valid_image_subset(self.image_dimensions(image_nr),
-                                     pos,
-                                     size)
         T = 0
         C, Z, X, Y = pos
         CC, ZZ, XX, YY = np.array(pos) + size
