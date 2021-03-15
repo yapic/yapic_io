@@ -32,3 +32,5 @@ doc/build
 doc/source/modules.rst
 doc/source/yapic_io.rst
 doc/source/yapic_io.tests.rst
+
+.vscode/
