@@ -3,17 +3,16 @@ from pathlib import Path
 import numpy as np
 import collections
 import logging
+import os
+from itertools import zip_longest
+from functools import lru_cache
+
 # additional packages + numpy (required in NapariStorage)
 import sparse
 import typing
 import h5py
 # ___________
-import os
 
-# from itertools import zip_longest
-# from functools import lru_cache
-# import pyilastik
-# import pynapari
 
 
 FilePair = collections.namedtuple('FilePair', ['img', 'lbl'])
@@ -43,14 +42,12 @@ def reconstruct_layer(layer_array: np.array, shape: tuple) -> np.array:
 
 class NapariConnector(TiffConnector):
     def _assemble_filenames(self, pairs):
-        self.filenames = [FilePair(Path(img), Path(lbl))
+        self.filenames = [FilePair(Path(img), lbl)
                           for img, lbl in pairs if lbl]
         print('filenames in napariconnector')
         print(self.filenames)
 
     def _handle_lbl_filenames(self, label_filepath):
-        # self.ilp = pyilastik.read_project(label_filepath, skip_image=True)
-        # self.h5 = pynapari.read_project(label_filepath)
         self.h5 = NapariStorage(h5_path = label_filepath, max_dim = 4)
         lbl_filenames = self.h5.get_labels_names()
         return label_filepath, lbl_filenames
@@ -67,7 +64,6 @@ class NapariConnector(TiffConnector):
                                             self.labelvalue_mapping)
         return infostring
 
-    # _new_label method copied from IlastikConnector
     def _new_label(self, label_value):
 
         new_list = []
@@ -130,14 +126,8 @@ class NapariConnector(TiffConnector):
 
     # label_tile function will be using the TiffConnector original one (might have better performance with the Napari project file)
 
-    # no changes in check_label_matrix_dimensions (for now)
+    # no changes in check_label_matrix_dimensions
 
-    # original_label_values_for_all_images should work with the _open_label_file modification
-
-    # label_count_for_image should also work with the _open_label_file modification
-
-
-    # ____________ overwritten from TiffConnector______________
     def _open_label_file(self, image_nr):
         # might not need cache (no memmap)
         label_filename = self.filenames[image_nr].lbl
@@ -149,8 +139,117 @@ class NapariConnector(TiffConnector):
 
         logger.debug('Trying to load labelmat {} in {} Napari project'.format(label_filename, self.label_path))
 
-        return self.h5.get_array_data('labels', label_filename)
+        label_data = self.h5.get_array_data('labels', label_filename)
+        
+        label_n_dim = self.h5.n_dims('labels', label_filename)
+        
+        if label_n_dim == 2:
+            label_data = np.expand_dims(label_data, axis=-1) # channel
+            label_data = np.expand_dims(label_data, axis=0) # z dim
+        elif label_n_dim == 3:
+            label_data = np.expand_dims(label_data, axis=-1)  # channel
 
+        return label_data
+    
+    def label_matrix_dimensions(self, image_nr):
+        '''
+        Get dimensions of the label image.
+
+
+        Parameters
+        ----------
+        image_nr : int
+            index of image
+
+        Returns
+        -------
+        (nr_channels, nr_zslices, nr_x, nr_y)
+            Labelmatrix shape.
+        '''
+        lbl = self._open_label_file(image_nr)
+        if lbl is None:
+            return
+
+        output = list(lbl.shape)
+        ch = output.pop()
+        output[-2], output[-1] = output[-1], output[-2]
+        output.insert(0, ch)
+        
+        return output
+    
+    @lru_cache(maxsize=1)
+    def original_label_values_for_all_images(self):
+        '''
+        Get all unique label values per image.
+
+        Returns
+        -------
+        list
+            List of sets. Each set corresponds to 1 label channel.
+            each set contains the label values of that channel.
+            E.g. `[{91, 109, 150}, {90, 100}]` for two label channels
+        '''
+        labels_per_channel = []
+
+        for image_nr in range(self.image_count()):
+            label_filename = str(self.filenames[image_nr].lbl)
+
+            if label_filename is None:
+                msg = 'No label matrix file found for image file #{}.'
+                logger.warning(msg.format(image_nr))
+                return None
+            print('label filename')
+            print(label_filename)
+            lbl = self._open_label_file(image_nr)
+            
+            lbl = np.transpose(lbl, (3, 0, 2, 1)).astype(int)
+
+            C = lbl.shape[0]
+            labels = [np.unique(lbl[c, ...]) for c in range(C)]
+            labels = [set(labels) - {0} for labels in labels]
+
+            labels_per_channel = [l1.union(l2)
+                                  for l1, l2 in zip_longest(labels_per_channel,
+                                                            labels,
+                                                            fillvalue=set())]
+
+        return labels_per_channel
+
+    @lru_cache(maxsize=1500)
+    def label_count_for_image(self, image_nr):
+        '''
+        Get number of labels per labelvalue for an image.
+
+        Parameters
+        ----------
+        image_nr : int
+            index of image
+
+        Returns
+        -------
+        dict
+        '''
+        label_filename = str(self.filenames[image_nr].lbl)
+
+        if label_filename is None:
+            msg = 'No label matrix file found for image file #{}.'
+            logger.warning(msg.format(image_nr))
+            return None
+
+        lbl = self._open_label_file(image_nr)
+        
+        lbl = np.transpose(lbl, (3, 0, 2, 1)).astype(int)
+
+        C = lbl.shape[0]
+        labels = [np.unique(lbl[c, ...]) for c in range(C)]
+
+        original_label_count = [{l: np.count_nonzero(lbl[c, ...] == l)
+                                 for l in labels[c] if l > 0}
+                                for c in range(C)]
+        label_count = {self.labelvalue_mapping[c][l]: count
+                       for c, orig in enumerate(original_label_count)
+                       for l, count in orig.items()}
+        return label_count
 
 class NapariStorage():
     def __init__(self, h5_path, max_dim = np.inf):

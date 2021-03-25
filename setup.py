@@ -5,8 +5,10 @@ from setuptools import setup
 reqs = ['numpy>=1.13.1',
         'munkres>=1.0.8',
         'scikit_image>=0.12.3',
-        'pyilastik>=0.0.8',
-        'bigtiff>=0.1.2']
+        # 'pyilastik>=0.0.8',
+        'bigtiff>=0.1.2',
+        'sparse>=0.12.0',
+        'h5py']
 
 
 def readme():
