@@ -124,7 +124,23 @@ class NapariConnector(TiffConnector):
 
         return conn1, conn2
 
-    # label_tile function will be using the TiffConnector original one (might have better performance with the Napari project file)
+    def label_tile(self, image_nr, pos_zxy, size_zxy, label_value):
+        Z, X, Y = pos_zxy
+        ZZ, XX, YY = np.array(pos_zxy) + size_zxy
+        _, original_label_value = self._mapped_label_value_to_original(
+            label_value)
+
+        slices = self._open_label_file(image_nr)
+        if slices is None:
+            # return tile with False values
+            return np.zeros(size_zxy) != 0
+        tile = slices[Z: ZZ, Y: YY, X: XX, 0]
+        #tile = [s[Y:YY, X:XX] for s in slices[T, C, Z:ZZ]]
+        #tile = np.stack(tile)
+        tile = np.moveaxis(tile, (0, 1, 2), (0, 2, 1))
+
+        tile = (tile == original_label_value)
+        return tile
 
     # no changes in check_label_matrix_dimensions
 
