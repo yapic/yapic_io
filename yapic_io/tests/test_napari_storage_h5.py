@@ -1,18 +1,19 @@
-import napari_storage_h5 as h5na
+import os.path as osp
+from yapic_io.napari_connector import NapariStorage
 import matplotlib.pyplot as plt
 import numpy as np
 
-
-file_path = '../Data/connector_test.h5'
-im_path = '../data/single_images/leaves_1.tif'
-napari_project = h5na.NapariStorage(file_path, 3)
+TEST_PATH = osp.abspath(osp.join(osp.dirname(__file__), '..'))
+file_path = osp.join(TEST_PATH, 'test_data/napari/connector_test.h5')
+im_path = osp.join(TEST_PATH, 'test_data/napari/leaves_1.tif')
+napari_project = NapariStorage(file_path, 3)
 leaves_1_data = plt.imread(im_path)
 
 class TestNapariStorage():
     def test_get_array_data(self):
         test_data = napari_project.get_array_data('image', 'leaves_1')
         assert np.array_equal(leaves_1_data, test_data)
-    
+
     def test_excluded_layers(self):
         test_dict = napari_project.excluded_layers()
         out_dict = {'image': {'leaves_stack'},
