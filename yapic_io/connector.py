@@ -29,11 +29,15 @@ def io_connector(image_path, label_path, *args, **kwds):
     yapic_io.ilastik_connector.IlastikConnector
     '''
     from yapic_io.tiff_connector import TiffConnector
+    from yapic_io.napari_connector import NapariConnector
     from yapic_io.ilastik_connector import IlastikConnector
 
     if label_path.endswith('.ilp'):
         logger.info('Ilastik project file detected')
         return IlastikConnector(image_path, label_path, *args, **kwds)
+    elif label_path.endswith('.h5'):
+        logger.info('Napari project file detected')
+        return NapariConnector(image_path, label_path)
     else:
         logger.info('Tiff files detected.')
         return TiffConnector(image_path, label_path, *args, **kwds)
