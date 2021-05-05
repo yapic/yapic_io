@@ -17,7 +17,7 @@ def readme():
 
 
 setup(name='yapic_io',
-      version='0.1.2',
+      version='0.1.4',
       description='io data handling module for various image sources as interface for pixel classification tools',
       long_description=readme(),
       author='Manuel Schoelling, Christoph Moehl',

@@ -1,5 +1,6 @@
 [![Build Status](https://travis-ci.com/yapic/yapic_io.svg?branch=master)](https://travis-ci.com/yapic/yapic_io)
 [![Documentation Status](https://readthedocs.org/projects/yapic-io/badge/?version=latest)](https://yapic-io.readthedocs.io/en/latest/?badge=latest)
+[![PyPI](https://img.shields.io/pypi/v/yapic-io.svg?color=green)](https://pypi.org/project/yapic-io/)
 
 # yapic_io
 
