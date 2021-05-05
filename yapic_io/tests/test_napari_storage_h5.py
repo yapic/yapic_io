@@ -1,11 +1,11 @@
-import napari_storage_h5 as h5na
+from yapic_io.napari_connector import NapariStorage
 import matplotlib.pyplot as plt
 import numpy as np
 
 
 file_path = '../Data/connector_test.h5'
 im_path = '../data/single_images/leaves_1.tif'
-napari_project = h5na.NapariStorage(file_path, 3)
+napari_project = NapariStorage(file_path, 3)
 leaves_1_data = plt.imread(im_path)
 
 class TestNapariStorage():
