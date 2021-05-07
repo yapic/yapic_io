@@ -8,8 +8,10 @@ import itertools
 import warnings
 from itertools import zip_longest
 from pathlib import Path
-from bigtiff import Tiff, PlaceHolder
+# from bigtiff import Tiff, PlaceHolder
 from yapic_io.connector import Connector
+
+from tifffile import memmap
 
 logger = logging.getLogger(os.path.basename(__file__))
 
@@ -254,7 +256,7 @@ class TiffConnector(Connector):
                                    multichannel=False):
         # memmap is slow, so we must cache it to be fast!
         fname = self.filenames[image_nr].img
-        T = 1  # time frame in output probmap
+        # T = 1  # time frame in output probmap
         if multichannel:
             fname = Path('{}.tif'.format(fname.stem))
             n_classes = multichannel
@@ -265,12 +267,14 @@ class TiffConnector(Connector):
 
         path = self.savepath / fname
 
-        if not path.exists():
+        if not path.exists(): # created "empty" tif of shape 
             _, Z, X, Y = self.image_dimensions(image_nr)
-            images = [PlaceHolder((Y, X, C), 'float32')] * Z
-            Tiff.write(images, io=str(path), imagej_shape=(T, C, Z))
+            # images = [PlaceHolder((Y, X, C), 'float32')] * Z
+            # Tiff.write(images, io=str(path), imagej_shape=(T, C, Z))
+            return memmap(path, shape=(Z, Y, X, C), dtype='float32')
 
-        return Tiff.memmap_tcz(path)
+        # return Tiff.memmap_tcz(path)
+        return memmap(path)
 
     def put_tile(self,
                  pixels,
@@ -288,25 +292,31 @@ class TiffConnector(Connector):
                                                  label_value,
                                                  multichannel=multichannel)
 
-        T = C = 0
+        # T = C = 0
+        C = 0
         if multichannel:
             C = label_value - 1
         Z, X, Y = pos_zxy
         ZZ, XX, YY = np.array(pos_zxy) + pixels.shape
-        for z in range(Z, ZZ):
-            slices[T, C, z][Y:YY, X:XX] = pixels[z - Z, ...].T
+        # for z in range(Z, ZZ):
+        #     slices[T, C, z][Y:YY, X:XX] = pixels[z - Z, ...].T
+        slices[Z: ZZ, Y: YY, X: XX, C] = pixels
 
     @lru_cache(maxsize=10)
     def _open_image_file(self, image_nr):
+        """Returns memmap object with shape: z, y, x, c"""
         # memmap is slow, so we must cache it to be fast!
         path = self.img_path / self.filenames[image_nr].img
-        return Tiff.memmap_tcz(path)
+        # return Tiff.memmap_tcz(path)
+        return memmap(path) # shape order: z, y, x, c
 
     def image_dimensions(self, image_nr):
-
+        """returns a tuple representing the size of the image in the order of: c, z, x, y"""
         img = self._open_image_file(image_nr)
-        Y, X = img[0, 0, 0].shape
-        return np.hstack([img.shape[1:], (X, Y)])
+        # Y, X = img[0, 0, 0].shape
+        # return np.hstack([img.shape[1:], (X, Y)]) # shape order: c, z, x, y
+        Z, Y, X, C = img.shape
+        return (C, Z, X, Y)
 
     def label_matrix_dimensions(self, image_nr):
         '''
@@ -327,8 +337,11 @@ class TiffConnector(Connector):
         if lbl is None:
             return
 
-        Y, X = lbl[0, 0, 0].shape
-        return np.hstack([lbl.shape[1:], (X, Y)])
+        # Y, X = lbl[0, 0, 0].shape
+        # return np.hstack([lbl.shape[1:], (X, Y)])
+        
+        Z, Y, X, C = lbl.shape
+        return (C, Z, X, Y)
 
     def check_label_matrix_dimensions(self):
         '''
@@ -378,20 +391,25 @@ class TiffConnector(Connector):
         raise Exception(msg.format(label_value, self.labelvalue_mapping))
 
     def get_tile(self, image_nr, pos, size):
-        T = 0
+        """Returns a tile of image as a numpe array.
+        the output shape corresponds to: c, z, x, y"""
+        # T = 0
         C, Z, X, Y = pos
         CC, ZZ, XX, YY = np.array(pos) + size
 
         slices = self._open_image_file(image_nr)
-        tile = [[s[Y:YY, X:XX] for s in c[Z:ZZ]] for c in slices[T, C:CC, :]]
-        tile = np.stack(tile)
-        tile = np.moveaxis(tile, (0, 1, 2, 3), (0, 1, 3, 2))
+        # tile = [[s[Y:YY, X:XX] for s in c[Z:ZZ]] for c in slices[T, C:CC, :]]
+        # tile = np.stack(tile)
+        # tile = np.moveaxis(tile, (0, 1, 2, 3), (0, 1, 3, 2))
+        
+        tile = np.array(slices[Z: ZZ, Y: YY, X: XX, C: CC])
+        tile = np.moveaxis(tile, (0, 1, 2, 3), (1, 3, 2, 0))
 
         return tile.astype('float')
 
     def label_tile(self, image_nr, pos_zxy, size_zxy, label_value):
 
-        T = 0
+        # T = 0
         Z, X, Y = pos_zxy
         ZZ, XX, YY = np.array(pos_zxy) + size_zxy
         C, original_label_value = self._mapped_label_value_to_original(
@@ -401,8 +419,9 @@ class TiffConnector(Connector):
         if slices is None:
             # return tile with False values
             return np.zeros(size_zxy) != 0
-        tile = [s[Y:YY, X:XX] for s in slices[T, C, Z:ZZ]]
-        tile = np.stack(tile)
+        # tile = [s[Y:YY, X:XX] for s in slices[T, C, Z:ZZ]]
+        # tile = np.stack(tile)
+        tile = np.array(slices[Z: ZZ, Y: YY, X: XX, C])
         tile = np.moveaxis(tile, (0, 1, 2), (0, 2, 1))
 
         tile = (tile == original_label_value)
@@ -422,7 +441,8 @@ class TiffConnector(Connector):
         path = self.label_path / label_filename
         logger.debug('Trying to load labelmat %s', path)
 
-        return Tiff.memmap_tcz(path)
+        # return Tiff.memmap_tcz(path)
+        return memmap(path)  # shape order: z, y, x, c
 
     @staticmethod
     def calc_label_values_mapping(original_labels):
@@ -482,11 +502,15 @@ class TiffConnector(Connector):
             if slices is None:
                 continue
 
-            T = 0
-            C = slices.shape[1]
-            labels = [np.unique(np.concatenate([np.unique(s)
-                                                for s in slices[T, c, :]]))
-                      for c in range(C)]
+            # T = 0
+            # C = slices.shape[1]
+            # labels = [np.unique(np.concatenate([np.unique(s)
+            #                                     for s in slices[T, c, :]]))
+            #           for c in range(C)]
+            
+            C = slices.shape[-1]
+            labels = [np.unique(slices[..., c]) for c in range(C)]
+            
             labels = [set(labels) - {0} for labels in labels]
 
             labels_per_channel = [l1.union(l2)
@@ -514,16 +538,24 @@ class TiffConnector(Connector):
         if slices is None:
             return None
 
-        T = 0
-        C = slices.shape[1]
-        labels = [np.unique(np.concatenate([np.unique(s)
-                                            for s in slices[T, c, :]]))
-                  for c in range(C)]
+        # T = 0
+        # C = slices.shape[1]
+        # labels = [np.unique(np.concatenate([np.unique(s)
+        #                                     for s in slices[T, c, :]]))
+        #           for c in range(C)]
 
-        original_label_count = [{l: sum(np.count_nonzero(s == l)
-                                        for s in slices[T, c, :])
+        # original_label_count = [{l: sum(np.count_nonzero(s == l)
+        #                                 for s in slices[T, c, :])
+        #                          for l in labels[c] if l > 0}
+        #                         for c in range(C)]
+        
+        C = slices.shape[-1]
+        labels = [np.unique(slices[..., c]) for c in range(C)]
+        
+        original_label_count = [{l: np.count_nonzero(slices[..., c] == l)
                                  for l in labels[c] if l > 0}
                                 for c in range(C)]
+        
         label_count = {self.labelvalue_mapping[c][l]: count
                        for c, orig in enumerate(original_label_count)
                        for l, count in orig.items()}
