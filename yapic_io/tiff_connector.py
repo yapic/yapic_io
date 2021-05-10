@@ -302,13 +302,28 @@ class TiffConnector(Connector):
         #     slices[T, C, z][Y:YY, X:XX] = pixels[z - Z, ...].T
         slices[Z: ZZ, Y: YY, X: XX, C] = pixels
 
+    @staticmethod
+    def exp_dims(memmap_array, data_type):
+        """This function expands the dimensions of any memmap array (image/label) to fit the four default dimensions."""
+        if len(memmap_array.shape) == 2:
+            memmap_array = np.expand_dims(memmap_array, axis=-1) # channel
+            memmap_array = np.expand_dims(memmap_array, axis=0) # z dim
+        elif len(memmap_array.shape) == 3:
+            if data_type == 'image': # supose it always have channels
+                memmap_array = np.expand_dims(memmap_array, axis=0) # z dim
+            elif data_type == 'label': # supose channel can be missed
+                memmap_array = np.expand_dims(memmap_array, axis=-1)
+        return memmap_array
+                
+
     @lru_cache(maxsize=10)
     def _open_image_file(self, image_nr):
         """Returns memmap object with shape: z, y, x, c"""
         # memmap is slow, so we must cache it to be fast!
         path = self.img_path / self.filenames[image_nr].img
         # return Tiff.memmap_tcz(path)
-        return memmap(path) # shape order: z, y, x, c
+        im_data = memmap(path)
+        return self.exp_dims(im_data, 'image') # shape order: z, y, x, c
 
     def image_dimensions(self, image_nr):
         """returns a tuple representing the size of the image in the order of: c, z, x, y"""
@@ -442,7 +457,8 @@ class TiffConnector(Connector):
         logger.debug('Trying to load labelmat %s', path)
 
         # return Tiff.memmap_tcz(path)
-        return memmap(path)  # shape order: z, y, x, c
+        lbl_data = memmap(path)
+        return self.exp_dims(lbl_data, 'label')  # shape order: z, y, x, c
 
     @staticmethod
     def calc_label_values_mapping(original_labels):
