@@ -406,7 +406,7 @@ class TiffConnector(Connector):
         raise Exception(msg.format(label_value, self.labelvalue_mapping))
 
     def get_tile(self, image_nr, pos, size):
-        """Returns a tile of image as a numpe array.
+        """Returns a tile of image as a numpy array.
         the output shape corresponds to: c, z, x, y"""
         # T = 0
         C, Z, X, Y = pos
@@ -458,6 +458,19 @@ class TiffConnector(Connector):
 
         # return Tiff.memmap_tcz(path)
         lbl_data = memmap(path)
+        
+        # --------------------------------------------------------------
+        # label data with 4 dims have shape order as (z, c, y, x) why?
+        if len(lbl_data.shape) == 4:
+            lbl_data = np.moveaxis(lbl_data, (0, 1, 2, 3), (0, 3, 1, 2))
+            # Passed tests with this addition:
+            #     - test_check_label_matrix_dimensions
+            #     - test_label_tile
+            #     - test_map_label_values
+            #     - test_original_label_values
+            #     - test_getitem_multichanel_labels
+        # --------------------------------------------------------------
+        
         return self.exp_dims(lbl_data, 'label')  # shape order: z, y, x, c
 
     @staticmethod
