@@ -321,7 +321,6 @@ class TestTiffConnector(TestCase):
 
         slices = c._open_probability_map_file(2, 3, multichannel=3)
         print(slices.shape)
-        # probim = np.array([[slices[0, label_value-1, z].T for z in range(3)]])
         
         probim = np.moveaxis(slices, (0, 1, 2, 3), (1, 3, 2, 0))
         probim = probim[2:3, :, :, :]
@@ -376,8 +375,6 @@ class TestTiffConnector(TestCase):
         c.put_tile(pixels, pos_zxy=(0,   1, 1), image_nr=2, label_value=3)
 
         slices = c._open_probability_map_file(2, 3)
-        # probim = np.array([[slices[0, 0, z].T for z in range(3)]])
-        # try with the original slice in dime order C, Z, X, Y
         
         probim = np.moveaxis(slices, (0, 1, 2, 3), (1, 3, 2, 0))
 
@@ -431,7 +428,6 @@ class TestTiffConnector(TestCase):
         c.put_tile(pixels, pos_zxy=(0, 1, 1), image_nr=2, label_value=3)
 
         slices = c._open_probability_map_file(2, 3)
-        # probim = np.array([[slices[0, 0, z].T for z in range(3)]])
         
         probim = np.moveaxis(slices, (0, 1, 2, 3), (1, 3, 2, 0))
 
@@ -460,7 +456,6 @@ class TestTiffConnector(TestCase):
         c.put_tile(pixels, pos_zxy=(2, 1, 1), image_nr=2, label_value=3)
 
         slices = c._open_probability_map_file(2, 3)
-        # probim_2 = np.array([[slices[0, 0, z].T for z in range(3)]])
         
         probim_2 = np.moveaxis(slices, (0, 1, 2, 3), (1, 3, 2, 0))
 

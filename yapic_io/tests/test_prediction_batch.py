@@ -5,7 +5,6 @@ from yapic_io.connector import io_connector
 import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 from yapic_io import TiffConnector, Dataset, PredictionBatch
-# from bigtiff import Tiff
 from yapic_io.ilastik_connector import IlastikConnector
 
 from tifffile import memmap
@@ -179,21 +178,15 @@ class TestPredictionBatch(TestCase):
             pixel_val += 10
             data = np.ones((1, 2, 1, 2, 2)) * pixel_val
             mb.put_probmap_data(data)
-
-        # pixelmap = Tiff.memmap_tcz(os.path.join(savepath.name,
-        #                            '6width4height3slices_rgb_class_1.tif'))
         
         pixelmap = memmap(os.path.join(savepath.name,
                                    '6width4height3slices_rgb_class_1.tif'))
-        
-        # pixelmap = np.moveaxis(pixelmap, (0, 1, 2), (0, 2, 1))
-        
+
         # zslice 0
         val_0 = np.array([[10., 10., 30., 30., 50., 50.],
                           [10., 10., 30., 30., 50., 50.],
                           [20., 20., 40., 40., 60., 60.],
                           [20., 20., 40., 40., 60., 60.]])
-        # assert_array_almost_equal(pixelmap[0][0][0], val_0)
         assert_array_almost_equal(pixelmap[0, :, :, 0], val_0)
 
         # zslice 1
@@ -201,7 +194,6 @@ class TestPredictionBatch(TestCase):
                           [70.,  70.,  90.,  90., 110., 110.],
                           [80.,  80., 100., 100., 120., 120.],
                           [80.,  80., 100., 100., 120., 120.]])
-        # assert_array_almost_equal(pixelmap[0][0][1], val_1)
         assert_array_almost_equal(pixelmap[1, :, :, 0], val_1)
 
         # zslice 2
@@ -209,7 +201,6 @@ class TestPredictionBatch(TestCase):
                           [130., 130., 150., 150., 170., 170.],
                           [140., 140., 160., 160., 180., 180.],
                           [140., 140., 160., 160., 180., 180.]])
-        # assert_array_almost_equal(pixelmap[0][0][2], val_2)
         assert_array_almost_equal(pixelmap[2, :, :, 0], val_2)
 
     def test_put_probmap_data_3(self):
