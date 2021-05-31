@@ -11,7 +11,7 @@ from pathlib import Path
 # from bigtiff import Tiff, PlaceHolder
 from yapic_io.connector import Connector
 
-from tifffile import memmap
+from tifffile import memmap, TiffFile
 
 logger = logging.getLogger(os.path.basename(__file__))
 
@@ -298,21 +298,35 @@ class TiffConnector(Connector):
             C = label_value - 1
         Z, X, Y = pos_zxy
         ZZ, XX, YY = np.array(pos_zxy) + pixels.shape
+        
+        # Temporal dimension shift in pixels
+        # current is z, x, y but we use z, y, x
+        pixels = np.moveaxis(pixels, (0, 1, 2), (0, 2, 1))
+        
+        
         # for z in range(Z, ZZ):
         #     slices[T, C, z][Y:YY, X:XX] = pixels[z - Z, ...].T
         slices[Z: ZZ, Y: YY, X: XX, C] = pixels
 
     @staticmethod
-    def exp_dims(memmap_array, data_type):
-        """This function expands the dimensions of any memmap array (image/label) to fit the four default dimensions."""
-        if len(memmap_array.shape) == 2:
-            memmap_array = np.expand_dims(memmap_array, axis=-1) # channel
-            memmap_array = np.expand_dims(memmap_array, axis=0) # z dim
-        elif len(memmap_array.shape) == 3:
-            if data_type == 'image': # supose it always have channels
-                memmap_array = np.expand_dims(memmap_array, axis=0) # z dim
-            elif data_type == 'label': # supose channel can be missed
-                memmap_array = np.expand_dims(memmap_array, axis=-1)
+    def fix_dims(memmap_array, path):
+        """"""
+        # target dims (Z,Y,X,C)
+        with TiffFile(path) as tif:
+            axes = tif.series[0].axes
+        
+        # Adding the missed axis
+        axes = axes.translate(axes.maketrans('S', 'C')) # changing S for C (some metadata has S as channels)
+        if 'C' not in axes:
+            memmap_array = np.expand_dims(memmap_array, axis=-1)
+            axes += 'C'
+        if 'Z' not in axes:
+            memmap_array = np.expand_dims(memmap_array, axis=0)
+            axes = 'Z' + axes
+            
+        # Sorting the axes
+        dim_map = ['ZYXC'.index(dim) for dim in axes]
+        memmap_array = np.moveaxis(memmap_array, (0, 1, 2, 3), dim_map)
         return memmap_array
                 
 
@@ -323,7 +337,7 @@ class TiffConnector(Connector):
         path = self.img_path / self.filenames[image_nr].img
         # return Tiff.memmap_tcz(path)
         im_data = memmap(path)
-        return self.exp_dims(im_data, 'image') # shape order: z, y, x, c
+        return self.fix_dims(im_data, path)  # shape order: z, y, x, c
 
     def image_dimensions(self, image_nr):
         """returns a tuple representing the size of the image in the order of: c, z, x, y"""
@@ -459,19 +473,7 @@ class TiffConnector(Connector):
         # return Tiff.memmap_tcz(path)
         lbl_data = memmap(path)
         
-        # --------------------------------------------------------------
-        # label data with 4 dims have shape order as (z, c, y, x) why?
-        if len(lbl_data.shape) == 4:
-            lbl_data = np.moveaxis(lbl_data, (0, 1, 2, 3), (0, 3, 1, 2))
-            # Passed tests with this addition:
-            #     - test_check_label_matrix_dimensions
-            #     - test_label_tile
-            #     - test_map_label_values
-            #     - test_original_label_values
-            #     - test_getitem_multichanel_labels
-        # --------------------------------------------------------------
-        
-        return self.exp_dims(lbl_data, 'label')  # shape order: z, y, x, c
+        return self.fix_dims(lbl_data, path)  # shape order: z, y, x, c
 
     @staticmethod
     def calc_label_values_mapping(original_labels):
