@@ -307,7 +307,10 @@ class TiffConnector(Connector):
             axes = tif.series[0].axes
         
         # Adding the missed axis
-        axes = axes.translate(axes.maketrans('S', 'C')) # changing S for C (some metadata has S as channels)
+        dims_dict = {'T': 'Z', 'S':'C', 'Q':'C'}
+        # The letter to represent each dimension may change depending on the file generation.
+        # We will transform this representation to Z, Y, X, C to generalize the process
+        axes = axes.translate(axes.maketrans(dims_dict))
         if 'C' not in axes:
             memmap_array = np.expand_dims(memmap_array, axis=-1)
             axes += 'C'
