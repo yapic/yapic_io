@@ -230,9 +230,8 @@ class IlastikConnector(TiffConnector):
                 msg = 'No label matrix file found for image file #{}.'
                 logger.warning(msg.format(image_nr))
                 return None
-            print('label filename')
-            print(label_filename)
-            _, (img, lbl, _) = self.ilp[label_filename]
+
+            _, (img, lbl, _) = self.ilp[Path(label_filename).as_posix()]
             lbl = np.transpose(lbl, (3, 0, 2, 1)).astype(int)
 
             C = lbl.shape[0]
@@ -267,7 +266,7 @@ class IlastikConnector(TiffConnector):
             logger.warning(msg.format(image_nr))
             return None
 
-        _, (img, lbl, _) = self.ilp[label_filename]
+        _, (img, lbl, _) = self.ilp[Path(label_filename).as_posix()]
         lbl = np.transpose(lbl, (3, 0, 2, 1)).astype(int)
 
         C = lbl.shape[0]

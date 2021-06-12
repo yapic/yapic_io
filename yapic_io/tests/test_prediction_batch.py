@@ -15,9 +15,9 @@ base_path = os.path.dirname(__file__)
 
 class TestPredictionBatch(TestCase):
     def test_computepos_1(self):
-        img_path = os.path.join(
+        img_path = os.path.abspath(os.path.join(
             base_path,
-            '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
+            '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif'))
         label_path = os.path.join(base_path, '/path/to/nowhere')
 
         c = TiffConnector(img_path, label_path)
@@ -35,9 +35,9 @@ class TestPredictionBatch(TestCase):
                          len(set(tilepos)))
 
     def test_computepos_2(self):
-        img_path = os.path.join(
+        img_path = os.path.abspath(os.path.join(
             base_path,
-            '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
+            '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif'))
         label_path = os.path.join(base_path, '/path/to/nowhere')
 
         c = TiffConnector(img_path, label_path)
@@ -54,9 +54,9 @@ class TestPredictionBatch(TestCase):
             self.assertEqual(pos[0], valpos[0])
 
     def test_computepos_3(self):
-        img_path = os.path.join(
+        img_path = os.path.abspath(os.path.join(
             base_path,
-            '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
+            '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif'))
         label_path = os.path.join(base_path, '/path/to/nowhere')
 
         c = TiffConnector(img_path, label_path)
@@ -73,9 +73,9 @@ class TestPredictionBatch(TestCase):
             self.assertEqual(pos[0], valpos[0])
 
     def test_getitem_1(self):
-        img_path = os.path.join(
+        img_path = os.path.abspath(os.path.join(
             base_path,
-            '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
+            '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif'))
         label_path = os.path.join(base_path, '/path/to/nowhere')
 
         c = TiffConnector(img_path, label_path)
@@ -96,9 +96,9 @@ class TestPredictionBatch(TestCase):
         self.assertEqual(p[1].pixels().shape, (1, 3, 1, 6, 4))
 
     def test_getitem_2(self):
-        img_path = os.path.join(
+        img_path = os.path.abspath(os.path.join(
             base_path,
-            '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
+            '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif'))
         label_path = os.path.join(base_path, '/path/to/nowhere')
 
         c = TiffConnector(img_path, label_path)
@@ -114,9 +114,9 @@ class TestPredictionBatch(TestCase):
         self.assertEqual(p[0].pixels().shape, (3, 3, 1, 6, 4))
 
     def test_current_tile_positions(self):
-        img_path = os.path.join(
+        img_path = os.path.abspath(os.path.join(
             base_path,
-            '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
+            '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif'))
         label_path = os.path.join(base_path, '/path/to/nowhere')
 
         c = TiffConnector(img_path, label_path)
@@ -139,9 +139,9 @@ class TestPredictionBatch(TestCase):
 
 
     def test_put_probmap_data(self):
-        img_path = os.path.join(
+        img_path = os.path.abspath(os.path.join(
             base_path,
-            '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
+            '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif'))
         label_path = os.path.join(base_path, '/path/to/nowhere')
         savepath = tempfile.TemporaryDirectory()
 
@@ -159,9 +159,9 @@ class TestPredictionBatch(TestCase):
         p[2].put_probmap_data(data)
 
     def test_put_probmap_data_2(self):
-        img_path = os.path.join(
+        img_path = os.path.abspath(os.path.join(
             base_path,
-            '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif')
+            '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif'))
         label_path = os.path.join(base_path, '/path/to/nowhere')
         savepath = tempfile.TemporaryDirectory()
 
@@ -178,7 +178,7 @@ class TestPredictionBatch(TestCase):
             pixel_val += 10
             data = np.ones((1, 2, 1, 2, 2)) * pixel_val
             mb.put_probmap_data(data)
-        
+
         pixelmap = memmap(os.path.join(savepath.name,
                                    '6width4height3slices_rgb_class_1.tif'))
 
@@ -204,10 +204,10 @@ class TestPredictionBatch(TestCase):
         assert_array_almost_equal(pixelmap[2, :, :, 0], val_2)
 
     def test_put_probmap_data_3(self):
-        img_path = os.path.join(
-            base_path, '../test_data/tiffconnector_1/im/*')
-        label_path = os.path.join(
-            base_path, '../test_data/tiffconnector_1/labels/*')
+        img_path = os.path.abspath(os.path.join(
+            base_path, '../test_data/tiffconnector_1/im/*'))
+        label_path = os.path.abspath(os.path.join(
+            base_path, '../test_data/tiffconnector_1/labels/*'))
         savepath = tempfile.TemporaryDirectory()
 
         c = TiffConnector(img_path, label_path, savepath=savepath.name)
@@ -229,7 +229,8 @@ class TestPredictionBatch(TestCase):
 
     def test_put_probmap_data_when_no_labels_available(self):
 
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
+        img_path = os.path.abspath(os.path.join(
+            base_path, '../test_data/tiffconnector_1/im/*'))
         savepath = tempfile.TemporaryDirectory()
         c = io_connector(img_path, '', savepath=savepath.name)
         d = Dataset(c)
@@ -253,9 +254,10 @@ class TestPredictionBatch(TestCase):
         self.assertEqual(sorted(os.listdir(savepath.name)), val)
 
     def test_put_probmap_data_multichannel_label(self):
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
-        label_path = os.path.join(
-            base_path, '../test_data/tiffconnector_1/labels_multichannel/*')
+        img_path = os.path.abspath(os.path.join(
+            base_path, '../test_data/tiffconnector_1/im/*'))
+        label_path = os.path.abspath(os.path.join(
+            base_path, '../test_data/tiffconnector_1/labels_multichannel/*'))
         savepath = tempfile.TemporaryDirectory()
 
         c = TiffConnector(img_path, label_path, savepath=savepath.name)
@@ -277,12 +279,12 @@ class TestPredictionBatch(TestCase):
 
     def test_put_probmap_data_dimorder_zxyc(self):
 
-        img_path = os.path.join(
+        img_path = os.path.abspath(os.path.join(
             base_path,
-            '../test_data/ilastik/dimensionstest/images/*')
-        label_path = os.path.join(
+            '../test_data/ilastik/dimensionstest/images/*'))
+        label_path = os.path.abspath(os.path.join(
             base_path,
-            '../test_data/ilastik/dimensionstest/x15_y10_z2_c4_classes2.ilp')
+            '../test_data/ilastik/dimensionstest/x15_y10_z2_c4_classes2.ilp'))
 
         with tempfile.TemporaryDirectory() as tmpdirname:
             c = TiffConnector(img_path, 'some/path', savepath=tmpdirname)
@@ -353,7 +355,8 @@ class TestPredictionBatch(TestCase):
 
     def test_pixel_dimensions(self):
 
-        img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/*')
+        img_path = os.path.abspath(os.path.join(
+            base_path, '../test_data/tiffconnector_1/im/*'))
         savepath = tempfile.TemporaryDirectory()
         c = io_connector(img_path, '', savepath=savepath.name)
         d = Dataset(c)

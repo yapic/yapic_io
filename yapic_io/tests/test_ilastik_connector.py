@@ -83,7 +83,7 @@ class TestIlastikConnector(TestCase):
                    '6width_4height_3slices_2channels.tif'))]
 
         assert_array_equal(lbl_identifiers, [lbl for im, lbl in c.filenames])
-
+        
     def test_incomplete_label_data(self):
         img_path = os.path.join(
             base_path,
