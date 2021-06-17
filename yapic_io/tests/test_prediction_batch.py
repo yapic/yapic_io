@@ -1,11 +1,10 @@
-import tempfile
 from unittest import TestCase
 import os
 from yapic_io.connector import io_connector
 import numpy as np
 from numpy.testing import assert_array_almost_equal, assert_array_equal
 from yapic_io import TiffConnector, Dataset, PredictionBatch
-from yapic_io.ilastik_connector import IlastikConnector
+import pytest
 
 from tifffile import memmap
 
@@ -14,6 +13,11 @@ base_path = os.path.dirname(__file__)
 
 
 class TestPredictionBatch(TestCase):
+
+    @pytest.fixture(autouse=True)
+    def setup(self, tmpdir):
+        self.tmpdir = tmpdir.strpath
+
     def test_computepos_1(self):
         img_path = os.path.abspath(os.path.join(
             base_path,
@@ -136,16 +140,13 @@ class TestPredictionBatch(TestCase):
             assert_array_equal(pos[1], np.array(valpos[1]))
             self.assertEqual(pos[0], valpos[0])
 
-
-
     def test_put_probmap_data(self):
         img_path = os.path.abspath(os.path.join(
             base_path,
             '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif'))
         label_path = os.path.join(base_path, '/path/to/nowhere')
-        savepath = tempfile.TemporaryDirectory()
 
-        c = TiffConnector(img_path, label_path, savepath=savepath.name)
+        c = TiffConnector(img_path, label_path, savepath=self.tmpdir)
         d = Dataset(c)
 
         size = (1, 6, 4)
@@ -163,9 +164,8 @@ class TestPredictionBatch(TestCase):
             base_path,
             '../test_data/tiffconnector_1/im/6width4height3slices_rgb.tif'))
         label_path = os.path.join(base_path, '/path/to/nowhere')
-        savepath = tempfile.TemporaryDirectory()
 
-        c = TiffConnector(img_path, label_path, savepath=savepath.name)
+        c = TiffConnector(img_path, label_path, savepath=self.tmpdir)
         d = Dataset(c)
 
         size = (1, 2, 2)
@@ -179,8 +179,8 @@ class TestPredictionBatch(TestCase):
             data = np.ones((1, 2, 1, 2, 2)) * pixel_val
             mb.put_probmap_data(data)
 
-        pixelmap = memmap(os.path.join(savepath.name,
-                                   '6width4height3slices_rgb_class_1.tif'))
+        pixelmap = memmap(os.path.join(self.tmpdir,
+                          '6width4height3slices_rgb_class_1.tif'))
 
         # zslice 0
         val_0 = np.array([[10., 10., 30., 30., 50., 50.],
@@ -208,9 +208,8 @@ class TestPredictionBatch(TestCase):
             base_path, '../test_data/tiffconnector_1/im/*'))
         label_path = os.path.abspath(os.path.join(
             base_path, '../test_data/tiffconnector_1/labels/*'))
-        savepath = tempfile.TemporaryDirectory()
 
-        c = TiffConnector(img_path, label_path, savepath=savepath.name)
+        c = TiffConnector(img_path, label_path, savepath=self.tmpdir)
         d = Dataset(c)
 
         size = (1, 3, 4)
@@ -231,8 +230,8 @@ class TestPredictionBatch(TestCase):
 
         img_path = os.path.abspath(os.path.join(
             base_path, '../test_data/tiffconnector_1/im/*'))
-        savepath = tempfile.TemporaryDirectory()
-        c = io_connector(img_path, '', savepath=savepath.name)
+
+        c = io_connector(img_path, '', savepath=self.tmpdir)
         d = Dataset(c)
 
         size = (1, 3, 4)
@@ -251,16 +250,15 @@ class TestPredictionBatch(TestCase):
 
         val = ['40width26height3slices_rgb_class_1.tif',
                '40width26height3slices_rgb_class_2.tif']
-        self.assertEqual(sorted(os.listdir(savepath.name)), val)
+        self.assertEqual(sorted(os.listdir(self.tmpdir)), val)
 
     def test_put_probmap_data_multichannel_label(self):
         img_path = os.path.abspath(os.path.join(
             base_path, '../test_data/tiffconnector_1/im/*'))
         label_path = os.path.abspath(os.path.join(
             base_path, '../test_data/tiffconnector_1/labels_multichannel/*'))
-        savepath = tempfile.TemporaryDirectory()
 
-        c = TiffConnector(img_path, label_path, savepath=savepath.name)
+        c = TiffConnector(img_path, label_path, savepath=self.tmpdir)
         d = Dataset(c)
 
         original_labels = c.original_label_values_for_all_images()
@@ -276,89 +274,70 @@ class TestPredictionBatch(TestCase):
         data = np.ones((1, 6, 1, 3, 4))
         p[0].put_probmap_data(data)
 
-
     def test_put_probmap_data_dimorder_zxyc(self):
 
         img_path = os.path.abspath(os.path.join(
             base_path,
             '../test_data/ilastik/dimensionstest/images/*'))
-        label_path = os.path.abspath(os.path.join(
-            base_path,
-            '../test_data/ilastik/dimensionstest/x15_y10_z2_c4_classes2.ilp'))
 
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            c = TiffConnector(img_path, 'some/path', savepath=tmpdirname)
-            d = Dataset(c)
+        c = TiffConnector(img_path, 'some/path', savepath=self.tmpdir)
+        d = Dataset(c)
 
-            size = (2, 3, 5) # zxy
-            batch_size = 1
+        size = (2, 3, 5)  # zxy
+        batch_size = 1
 
-            # shape: 1 batch, 4 channels, 2 z, 3 x, 5 y
+        # shape: 1 batch, 4 channels, 2 z, 3 x, 5 y
 
-            p = PredictionBatch(d, batch_size, size)
-            self.assertEqual((1, 4, 2, 3, 5), p[0].pixels().shape)
-            self.assertEqual((1, 4, 2, 3, 5), p[1].pixels().shape)
+        p = PredictionBatch(d, batch_size, size)
+        self.assertEqual((1, 4, 2, 3, 5), p[0].pixels().shape)
+        self.assertEqual((1, 4, 2, 3, 5), p[1].pixels().shape)
 
-            p.set_pixel_dimension_order('bzxyc')
+        p.set_pixel_dimension_order('bzxyc')
 
-            self.assertEqual((1, 2, 3, 5, 4), p[0].pixels().shape)
-            self.assertEqual((1, 2, 3, 5, 4), p[1].pixels().shape)
+        self.assertEqual((1, 2, 3, 5, 4), p[0].pixels().shape)
+        self.assertEqual((1, 2, 3, 5, 4), p[1].pixels().shape)
 
-            pixels = p[0].pixels()
+        pixels = p[0].pixels()
 
-            for tile in p:
-                tile.put_probmap_data(pixels)
-
-
-            # assert False
-
-
-
-
-
-
-
+        for tile in p:
+            tile.put_probmap_data(pixels)
 
     def test_prediction_loop(self):
-        with tempfile.TemporaryDirectory() as tmpdirname:
-            # mock classification function
-            def classify(pixels, value):
-                return np.ones(pixels.shape) * value
+        # mock classification function
+        def classify(pixels, value):
+            return np.ones(pixels.shape) * value
 
-            # define data locations
-            pixel_image_dir = os.path.join(
-                base_path, '../test_data/tiffconnector_1/im/*.tif')
-            label_image_dir = os.path.join(
-                base_path, '../test_data/tiffconnector_1/labels/*.tif')
-            savepath = tmpdirname
+        # define data locations
+        pixel_image_dir = os.path.join(
+            base_path, '../test_data/tiffconnector_1/im/*.tif')
+        label_image_dir = os.path.join(
+            base_path, '../test_data/tiffconnector_1/labels/*.tif')
 
-            tile_size = (1, 5, 4)  # size of network output layer in zxy
-            padding = (0, 0, 0)  # padding of network input layer in zxy,
-            # in respect to output layer
+        tile_size = (1, 5, 4)  # size of network output layer in zxy
+        padding = (0, 0, 0)  # padding of network input layer in zxy,
+        # in respect to output layer
 
-            # Make training_batch mb and prediction interface p with
-            # TiffConnector binding.
-            c = TiffConnector(pixel_image_dir,
-                              label_image_dir, savepath=savepath)
-            p = PredictionBatch(Dataset(c), 2, tile_size, padding_zxy=padding)
+        # Make training_batch mb and prediction interface p with
+        # TiffConnector binding.
+        c = TiffConnector(pixel_image_dir,
+                          label_image_dir, savepath=self.tmpdir)
+        p = PredictionBatch(Dataset(c), 2, tile_size, padding_zxy=padding)
 
-            self.assertEqual(len(p), 255)
-            self.assertEqual(p.labels, {1, 2, 3})
+        self.assertEqual(len(p), 255)
+        self.assertEqual(p.labels, {1, 2, 3})
 
-            # classify the whole bound dataset
-            for counter, item in enumerate(p):
-                pixels = item.pixels()  # input for classifier
-                mock_classifier_result = classify(pixels, counter)
-                # pass classifier results for each class to data source
-                item.put_probmap_data(mock_classifier_result)
-
+        # classify the whole bound dataset
+        for counter, item in enumerate(p):
+            pixels = item.pixels()  # input for classifier
+            mock_classifier_result = classify(pixels, counter)
+            # pass classifier results for each class to data source
+            item.put_probmap_data(mock_classifier_result)
 
     def test_pixel_dimensions(self):
 
         img_path = os.path.abspath(os.path.join(
             base_path, '../test_data/tiffconnector_1/im/*'))
-        savepath = tempfile.TemporaryDirectory()
-        c = io_connector(img_path, '', savepath=savepath.name)
+        c = io_connector(img_path, '', savepath=self.tmpdir)
         d = Dataset(c)
 
         size = (1, 5, 4)
