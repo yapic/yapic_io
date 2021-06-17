@@ -536,7 +536,6 @@ class TestDataset(TestCase):
         print(val)
         assert_array_equal(val, tile_rot)
         
-
     @pytest.mark.skipif(sys.platform != 'linux', reason="Linux tests")
     def test_augment_tile_2(self):
 

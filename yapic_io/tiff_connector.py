@@ -267,7 +267,7 @@ class TiffConnector(Connector):
 
         path = self.savepath / fname
 
-        if not path.exists(): # created "empty" tif of shape
+        if not path.exists():  # created "empty" tif of shape
             _, Z, X, Y = self.image_dimensions(image_nr)
             return memmap(path, shape=(Z, Y, X, C), dtype='float32')
 
