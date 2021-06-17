@@ -370,11 +370,6 @@ class TestTiffConnector(TestCase):
         path = os.path.join(
             self.tmpdir, '6width4height3slices_rgb_class_3.tif')
 
-        try:
-            os.remove(path)
-        except FileNotFoundError:
-            pass
-
         c.put_tile(pixels, pos_zxy=(0,   1, 1), image_nr=2, label_value=3)
 
         slices = c._open_probability_map_file(2, 3)
@@ -403,11 +398,6 @@ class TestTiffConnector(TestCase):
 
         np.testing.assert_array_equal(val, probim)
 
-        try:
-            os.remove(path)
-        except FileNotFoundError:
-            pass
-
     def test_put_tile_2(self):
         img_path = os.path.join(
             base_path, '../test_data/tiffconnector_1/im/*.tif')
@@ -421,11 +411,6 @@ class TestTiffConnector(TestCase):
 
         path = os.path.join(
             self.tmpdir, '6width4height3slices_rgb_class_3.tif')
-
-        try:
-            os.remove(path)
-        except FileNotFoundError:
-            pass
 
         c.put_tile(pixels, pos_zxy=(0, 1, 1), image_nr=2, label_value=3)
 
@@ -482,11 +467,6 @@ class TestTiffConnector(TestCase):
                         [0., 0., 0., 0.]]]], dtype=np.float32)
 
         np.testing.assert_array_equal(val_2, probim_2)
-
-        try:
-            os.remove(path)
-        except FileNotFoundError:
-            pass
 
     def test_original_label_values(self):
         img_path = os.path.join(
