@@ -11,6 +11,8 @@ import yapic_io.dataset as ds
 from pprint import pprint
 import logging
 from numpy.testing import assert_array_equal, assert_array_almost_equal
+import sys
+import pytest
 logger = logging.getLogger(os.path.basename(__file__))
 logger.setLevel(logging.WARNING)
 base_path = os.path.dirname(__file__)
@@ -451,6 +453,7 @@ class TestDataset(TestCase):
 
         np.testing.assert_array_equal(d.label_weights, val)
 
+    @pytest.mark.skipif(sys.platform != 'linux', reason="Linux tests")
     def test__augment_tile(self):
 
         '''
@@ -533,6 +536,7 @@ class TestDataset(TestCase):
         print(val)
         assert_array_equal(val, tile_rot)
 
+    @pytest.mark.skipif(sys.platform != 'linux', reason="Linux tests")
     def test_augment_tile_2(self):
 
         '''

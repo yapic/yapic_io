@@ -6,14 +6,18 @@ from numpy.testing import assert_array_equal
 from yapic_io.tiff_connector import TiffConnector
 import yapic_io.tiff_connector as tc
 import logging
-import tempfile
 from pathlib import Path
+import pytest
 logger = logging.getLogger(os.path.basename(__file__))
 
 base_path = os.path.dirname(__file__)
 
 
 class TestTiffConnector(TestCase):
+
+    @pytest.fixture(autouse=True)
+    def setup(self, tmpdir):
+        self.tmpdir = tmpdir.strpath
 
     def test__handle_img_filenames(self):
 
@@ -300,14 +304,14 @@ class TestTiffConnector(TestCase):
             base_path, '../test_data/tiffconnector_1/im/*.tif')
         label_path = os.path.join(
             base_path, '../test_data/tiffconnector_1/labels/*.tif')
-        savepath = tempfile.TemporaryDirectory()
+
         # savepath = os.path.join(
         #     base_path, '../test_data')
 
         path = os.path.join(
-            savepath.name, '6width4height3slices.tif')
+            self.tmpdir, '6width4height3slices.tif')
 
-        c = TiffConnector(img_path, label_path, savepath=savepath.name)
+        c = TiffConnector(img_path, label_path, savepath=self.tmpdir)
 
         pixels = np.array([[[.1, .2, .3],
                             [.4, .5, .6]]], dtype=np.float32)
@@ -321,7 +325,7 @@ class TestTiffConnector(TestCase):
 
         slices = c._open_probability_map_file(2, 3, multichannel=3)
         print(slices.shape)
-        
+
         probim = np.moveaxis(slices, (0, 1, 2, 3), (1, 3, 2, 0))
         probim = probim[2:3, :, :, :]
 
@@ -344,7 +348,7 @@ class TestTiffConnector(TestCase):
                         [0., 0., 0., 0.],
                         [0., 0., 0., 0.],
                         [0., 0., 0., 0.]]]], dtype=np.float32)
-        print(savepath)
+
         np.testing.assert_array_equal(val, probim)
 
         try:
@@ -357,25 +361,19 @@ class TestTiffConnector(TestCase):
             base_path, '../test_data/tiffconnector_1/im/*.tif')
         label_path = os.path.join(
             base_path, '../test_data/tiffconnector_1/labels/*.tif')
-        savepath = tempfile.TemporaryDirectory()
 
-        c = TiffConnector(img_path, label_path, savepath=savepath.name)
+        c = TiffConnector(img_path, label_path, savepath=self.tmpdir)
 
         pixels = np.array([[[.1, .2, .3],
                             [.4, .5, .6]]], dtype=np.float32)
 
         path = os.path.join(
-            savepath.name, '6width4height3slices_rgb_class_3.tif')
-
-        try:
-            os.remove(path)
-        except FileNotFoundError:
-            pass
+            self.tmpdir, '6width4height3slices_rgb_class_3.tif')
 
         c.put_tile(pixels, pos_zxy=(0,   1, 1), image_nr=2, label_value=3)
 
         slices = c._open_probability_map_file(2, 3)
-        
+
         probim = np.moveaxis(slices, (0, 1, 2, 3), (1, 3, 2, 0))
 
         val = \
@@ -400,35 +398,24 @@ class TestTiffConnector(TestCase):
 
         np.testing.assert_array_equal(val, probim)
 
-        try:
-            os.remove(path)
-        except FileNotFoundError:
-            pass
-
     def test_put_tile_2(self):
         img_path = os.path.join(
             base_path, '../test_data/tiffconnector_1/im/*.tif')
         label_path = os.path.join(
             base_path, '../test_data/tiffconnector_1/labels/*.tif')
-        savepath = tempfile.TemporaryDirectory()
 
-        c = TiffConnector(img_path, label_path, savepath=savepath.name)
+        c = TiffConnector(img_path, label_path, savepath=self.tmpdir)
 
         pixels = np.array([[[.1, .2, .3],
                             [.4, .5, .6]]], dtype=np.float32)
 
         path = os.path.join(
-            savepath.name, '6width4height3slices_rgb_class_3.tif')
-
-        try:
-            os.remove(path)
-        except FileNotFoundError:
-            pass
+            self.tmpdir, '6width4height3slices_rgb_class_3.tif')
 
         c.put_tile(pixels, pos_zxy=(0, 1, 1), image_nr=2, label_value=3)
 
         slices = c._open_probability_map_file(2, 3)
-        
+
         probim = np.moveaxis(slices, (0, 1, 2, 3), (1, 3, 2, 0))
 
         val = \
@@ -456,7 +443,7 @@ class TestTiffConnector(TestCase):
         c.put_tile(pixels, pos_zxy=(2, 1, 1), image_nr=2, label_value=3)
 
         slices = c._open_probability_map_file(2, 3)
-        
+
         probim_2 = np.moveaxis(slices, (0, 1, 2, 3), (1, 3, 2, 0))
 
         val_2 = \
@@ -480,11 +467,6 @@ class TestTiffConnector(TestCase):
                         [0., 0., 0., 0.]]]], dtype=np.float32)
 
         np.testing.assert_array_equal(val_2, probim_2)
-
-        try:
-            os.remove(path)
-        except FileNotFoundError:
-            pass
 
     def test_original_label_values(self):
         img_path = os.path.join(

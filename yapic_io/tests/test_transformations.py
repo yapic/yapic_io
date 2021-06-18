@@ -2,6 +2,8 @@ from unittest import TestCase
 import numpy as np
 import yapic_io.transformations as tf
 from numpy.testing import assert_array_equal
+import pytest
+import sys
 
 
 class TestTransformations(TestCase):
@@ -26,6 +28,7 @@ class TestTransformations(TestCase):
                                                    rotation_angle,
                                                    shear_angle))
 
+    @pytest.mark.skipif(sys.platform != 'linux', reason="Linux tests")
     def test_warp_image_2d(self):
         '''
         test 45 degrees center rotation with 3x3 matrix
@@ -48,6 +51,7 @@ class TestTransformations(TestCase):
 
         assert_array_equal(rot.astype(int), validation)
 
+    @pytest.mark.skipif(sys.platform != 'linux', reason="Linux tests")
     def test_warp_image_2d_stack(self):
 
         rotation_angle = 45
@@ -74,6 +78,7 @@ class TestTransformations(TestCase):
         assert_array_equal(rot.astype(int), val)
         self.assertEqual(len(rot.shape), 3)
 
+    @pytest.mark.skipif(sys.platform != 'linux', reason="Linux tests")
     def test_warp_image_2d_stack_4d(self):
         rotation_angle = 45
         shear_angle = 0

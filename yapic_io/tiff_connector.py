@@ -26,10 +26,12 @@ def _handle_img_filenames(img_filepath):
     '''
 
     if type(img_filepath) in (str, Path):
-        img_filepath = Path(img_filepath).expanduser()
-        img_filemask = '*.tif' if img_filepath.is_dir() else img_filepath.name
+        img_filepath = os.path.abspath(img_filepath)
+        img_filemask = '*.tif' if os.path.isdir(img_filepath)\
+            else os.path.basename(img_filepath)
 
-        folder = img_filepath if img_filepath.is_dir() else img_filepath.parent
+        folder = Path(img_filepath if os.path.isdir(img_filepath)
+                      else os.path.dirname(img_filepath))
         filenames = [fname.name for fname in sorted(folder.glob(img_filemask))]
 
     elif type(img_filepath) in (list, tuple):
@@ -265,7 +267,7 @@ class TiffConnector(Connector):
 
         path = self.savepath / fname
 
-        if not path.exists(): # created "empty" tif of shape 
+        if not path.exists():  # created "empty" tif of shape
             _, Z, X, Y = self.image_dimensions(image_nr)
             return memmap(path, shape=(Z, Y, X, C), dtype='float32')
 
@@ -292,11 +294,11 @@ class TiffConnector(Connector):
             C = label_value - 1
         Z, X, Y = pos_zxy
         ZZ, XX, YY = np.array(pos_zxy) + pixels.shape
-        
+
         # Temporal dimension shift in pixels
         # current is z, x, y but we use z, y, x
         pixels = np.moveaxis(pixels, (0, 1, 2), (0, 2, 1))
-        
+
         slices[Z: ZZ, Y: YY, X: XX, C] = pixels
 
     @staticmethod
@@ -305,7 +307,7 @@ class TiffConnector(Connector):
         # target dims (Z,Y,X,C)
         with TiffFile(path) as tif:
             axes = tif.series[0].axes
-        
+
         # Adding the missed axis
         dims_dict = {'T': 'Z', 'S':'C', 'Q':'C'}
         # The letter to represent each dimension may change depending on the file generation.
@@ -317,12 +319,12 @@ class TiffConnector(Connector):
         if 'Z' not in axes:
             memmap_array = np.expand_dims(memmap_array, axis=0)
             axes = 'Z' + axes
-            
+
         # Sorting the axes
         dim_map = ['ZYXC'.index(dim) for dim in axes]
         memmap_array = np.moveaxis(memmap_array, (0, 1, 2, 3), dim_map)
         return memmap_array
-                
+
 
     @lru_cache(maxsize=10)
     def _open_image_file(self, image_nr):
@@ -356,7 +358,7 @@ class TiffConnector(Connector):
         lbl = self._open_label_file(image_nr)
         if lbl is None:
             return
-        
+
         Z, Y, X, C = lbl.shape
         return (C, Z, X, Y)
 
@@ -414,7 +416,7 @@ class TiffConnector(Connector):
         CC, ZZ, XX, YY = np.array(pos) + size
 
         slices = self._open_image_file(image_nr)
-        
+
         tile = np.array(slices[Z: ZZ, Y: YY, X: XX, C: CC])
         tile = np.moveaxis(tile, (0, 1, 2, 3), (1, 3, 2, 0))
 
@@ -430,7 +432,7 @@ class TiffConnector(Connector):
         if slices is None:
             # return tile with False values
             return np.zeros(size_zxy) != 0
-        
+
         tile = np.array(slices[Z: ZZ, Y: YY, X: XX, C])
         tile = np.moveaxis(tile, (0, 1, 2), (0, 2, 1))
         tile = (tile == original_label_value)
@@ -451,7 +453,7 @@ class TiffConnector(Connector):
         logger.debug('Trying to load labelmat %s', path)
 
         lbl_data = memmap(path)
-        
+
         return self.fix_dims(lbl_data, path)  # shape order: z, y, x, c
 
     @staticmethod
@@ -511,10 +513,10 @@ class TiffConnector(Connector):
             slices = self._open_label_file(image_nr)
             if slices is None:
                 continue
-            
+
             C = slices.shape[-1]
             labels = [np.unique(slices[..., c]) for c in range(C)]
-            
+
             labels = [set(labels) - {0} for labels in labels]
 
             labels_per_channel = [l1.union(l2)
@@ -541,14 +543,14 @@ class TiffConnector(Connector):
         slices = self._open_label_file(image_nr)
         if slices is None:
             return None
-        
+
         C = slices.shape[-1]
         labels = [np.unique(slices[..., c]) for c in range(C)]
-        
+
         original_label_count = [{l: np.count_nonzero(slices[..., c] == l)
                                  for l in labels[c] if l > 0}
                                 for c in range(C)]
-        
+
         label_count = {self.labelvalue_mapping[c][l]: count
                        for c, orig in enumerate(original_label_count)
                        for l, count in orig.items()}

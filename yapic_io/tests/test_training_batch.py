@@ -8,12 +8,17 @@ from yapic_io.dataset import Dataset
 from yapic_io.training_batch import TrainingBatch
 from pprint import pprint
 import numpy as np
-import tempfile
+import pytest
 from numpy.testing import assert_array_equal, assert_array_almost_equal
 
 base_path = os.path.dirname(__file__)
 
+
 class TestTrainingBatch(TestCase):
+
+    @pytest.fixture(autouse=True)
+    def setup(self, tmpdir):
+        self.tmpdir = tmpdir.strpath
 
     def test_get_ilastik_weights(self):
         img_path = os.path.join(base_path,
@@ -130,7 +135,6 @@ class TestTrainingBatch(TestCase):
                                        '../test_data/tiffconnector_1/im/')
         label_image_dir = os.path.join(base_path,
                                        '../test_data/tiffconnector_1/labels/')
-        savepath = tempfile.TemporaryDirectory()
 
         tile_size = (1, 5, 4)  # size of network output layer in zxy
         # padding of network input layer in zxy, in respect to output layer
@@ -138,7 +142,7 @@ class TestTrainingBatch(TestCase):
 
         c = TiffConnector(pixel_image_dir,
                           label_image_dir,
-                          savepath=savepath.name)
+                          savepath=self.tmpdir)
         m = TrainingBatch(Dataset(c), tile_size, padding_zxy=padding)
 
         for counter, mini in enumerate(m):
@@ -165,7 +169,6 @@ class TestTrainingBatch(TestCase):
         label_image_dir = os.path.join(
                         base_path,
                         '../test_data/tiffconnector_1/labels_multichannel/')
-        savepath = tempfile.TemporaryDirectory()
 
         tile_size = (1, 5, 4)  # size of network output layer in zxy
         # padding of network input layer in zxy, in respect to output layer
@@ -174,7 +177,7 @@ class TestTrainingBatch(TestCase):
         # make training_batch mb and prediction interface p with
         # TiffConnector binding
         c = TiffConnector(pixel_image_dir, label_image_dir,
-                          savepath=savepath.name)
+                          savepath=self.tmpdir)
         m = TrainingBatch(Dataset(c), tile_size, padding_zxy=padding)
 
         for counter, mini in enumerate(m):

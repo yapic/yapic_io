@@ -1,11 +1,21 @@
 language: python
-python:
-- '3.8'
+jobs:
+  include:
+    - name: "Python 3.8.0 on Xenial Linux"
+      python: 3.8
+    - name: "Python 3.8.0 on Windows"
+      os: windows
+      language: shell       
+      before_install:
+        - choco install python --version 3.8.0
+        - python -m pip install --upgrade pip
+      env: PATH=/c/Python38:/c/Python38/Scripts:$PATH
 install:
-- pip install nose
-- pip install .
+- pip3 install --upgrade pip
+- pip3 install pytest
+- pip3 install .
 script:
-- nosetests
+- pytest
 deploy:
   provider: pypi
   user: cmohl
@@ -13,3 +23,4 @@ deploy:
     secure: b3pfRuxREcFlNBMcm56eTbl1P+SmFd6morFAqBEEGIBg2nbfAjNhWhewolQBPcJVO+iGMRKsAWGj5HlanzyJ6q3p97G9M6l52YmqlEIU/RzJVXGOYXZ6RgvjrYTmiuajxqotfmz3goQNhO4Q4CVkgeJ9OlmtHyChBoXukWfk20lKFhPTJxEKp9Lw+GD1H9ToQwk5lLF4rvS6wxP1XULDdlc4EAmGtRzhHb+sJ+VDdi45C4pV9da79vEkxBX/v/Zva/40tvCNIkKCsi9m+yNbS+ZSa+dAvDNrC63QgWb4d2H4pTX2sBXK4uxOLe8FmDz1Zh9yboEfHe5belarRPPGoP1YQU8q0XQm7px8LDMPabWGVEWEqXcV2MZIvelxVRS8S8lddWt7LVvB9orSzB+M777uR7ERXAtKs9yl3769SBXB+382qgqyvaqiVRLRk27pX3K2f50XavAimoLRwcpiIeNOh+zohEYAsIfbpFsWAhwktBdkmIrYCraHp1WcX6AmRXPAojuSdLa3RyExNWTYyC3Xu06jkzEdsbrqjl8hT/h5LTOyGEWBu9LzU8b/mKE9+pFjtIo0STahwuzTU22Ids6gFcokk6sL7K8+YY+NtyPP0qDMYjBdH6JZ9z6Acmo3kqQQiG9k0O9Qp3vCT6ZENf2wCFuZ1yqIObsRfVV6t9Q=
   on:
     tags: true
+  skip_existing: true
