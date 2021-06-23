@@ -303,13 +303,17 @@ class TiffConnector(Connector):
 
     @staticmethod
     def fix_dims(memmap_array, path):
-        """This method will fix the dimensions of memmap_array in the order (Z, Y, X, C).
-        It will increment the dimensions if memmap_array has less than 4 dimensions.
-        It uses the tiff file metadata to guess the original dimensions order and which dimensions are missing.
+        """This method will fix the dimensions of memmap_array
+        in the order (Z, Y, X, C).
+        It will increment the dimensions if memmap_array has less than
+        4 dimensions.
+        It uses the tiff file metadata to guess the original dimensions
+        order and which dimensions are missing.
 
         Parameters
         ----------
-        memmap_array - numpy.memmap: sorted image data array in the dimension order (Z, Y, X, C)
+        memmap_array - numpy.memmap: sorted image data array in the dimension
+        order (Z, Y, X, C)
         path - string: Tiff file path
 
         Returns
@@ -322,8 +326,10 @@ class TiffConnector(Connector):
 
         # Adding the missed axis
         dims_dict = {'T': 'Z', 'S': 'C', 'Q': 'C'}
-        # The letter to represent each dimension may change depending on the file generation.
-        # We will transform this representation to Z, Y, X, C to generalize the process
+        # The letter to represent each dimension may change depending on the
+        # file generation.
+        # We will transform this representation to Z, Y, X, C to generalize
+        # the process
         axes = axes.translate(axes.maketrans(dims_dict))
         if 'C' not in axes:
             memmap_array = np.expand_dims(memmap_array, axis=-1)
@@ -346,7 +352,8 @@ class TiffConnector(Connector):
         return self.fix_dims(im_data, path)  # shape order: z, y, x, c
 
     def image_dimensions(self, image_nr):
-        """returns a tuple representing the size of the image in the order of: C, Z, X, Y"""
+        """returns a tuple representing the size of the image in the
+        order of: C, Z, X, Y"""
         img = self._open_image_file(image_nr)
         Z, Y, X, C = img.shape
         return (C, Z, X, Y)

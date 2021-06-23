@@ -120,9 +120,11 @@ class TrainingBatch(Minibatch):
         return self
 
     def effective_tiles(self):
-        """This function discards those tiles selected from slices that were not labeled. It must be used only when the pixel_connector is NapariConnector."""
+        """This function discards those tiles selected from slices that 
+        were not labeled. It must be used only when the pixel_connector
+        is NapariConnector."""
         labeled_slices = self.dataset.pixel_connector.effective_slices()
-        # list of tuples with img id as first element and z slice index as second
+        # list of tuples with (img_id, z_slice)
         slices_with_ids = []
         for img_id, value in labeled_slices.items():
             tmp = [(img_id, v) for v in value]

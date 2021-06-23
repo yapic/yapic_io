@@ -16,7 +16,8 @@ logger = logging.getLogger(os.path.basename(__file__))
 
 
 def reconstruct_layer(layer_array: np.array, shape: tuple) -> np.array:
-    """Returns a numpy array corresponding to the data reconstruction from a sparse version (COO list) of it.
+    """Returns a numpy array corresponding to the data reconstruction from a
+    sparse version (COO list) of it.
 
         Parameters
         ----------
@@ -164,7 +165,7 @@ class NapariConnector(TiffConnector):
             label_data = np.expand_dims(label_data, axis=0)  # z dim
         elif label_n_dim == 3:
             label_data = np.expand_dims(label_data, axis=-1)  # channel
-            
+
         if image_nr not in self.labeled_slices.keys():
             self.labeled_slices[image_nr] = self.h5.filled_slices(
                 'labels', label_filename)
@@ -277,9 +278,6 @@ class NapariStorage():
         self.f = h5py.File(h5_path, 'r')
         self.max_dim = max_dim
 
-    # ilastik_version is used in __getitems__ and original_dimension_order (check the order on the napari file)
-    # Will try to make the implementation without getitem (instead use get_array_data)
-
     def __iter__(self):
         '''
         Returns (filename, data, type) of the napari layer
@@ -296,7 +294,8 @@ class NapariStorage():
 
     def get_array_data(self, layer_type: str, layer_name: str) -> np.array:
         '''
-        Returns array data of Napari layer. it considers only image and label Napari layers (those supported by YAPiC)
+        Returns array data of Napari layer. it considers only image and label
+        Napari layers (those supported by YAPiC)
             the array dimensions are (?, z, y, x, c)
         '''
         try:
@@ -309,7 +308,8 @@ class NapariStorage():
                 assert layer_name in self.f[layer_type]
             except AssertionError:
                 raise ValueError(
-                    'There is no Napari layer with the name {}'.format(layer_name))
+                    'There is no Napari layer with the name {}'.format(
+                        layer_name))
 
         napari_layer = self.f[layer_type][layer_name]
         if layer_type == 'labels':
@@ -322,18 +322,20 @@ class NapariStorage():
 
     def filled_slices(self, layer_type: str, layer_name: str) -> list:
         '''
-        Returns a list of indices specifying which slices have labels (values different than 0)
+        Returns a list of indices specifying which slices have labels
+        (values different than 0)
         '''
         napari_layer = self.f[layer_type][layer_name]
         if layer_type == 'labels':
             data = np.array(napari_layer)
-            if data.shape[0] > 3: # check if the sparse label includes z-dim
+            if data.shape[0] > 3:  # check if the sparse label includes z-dim
                 return list(np.unique(data[0, :]))
-        return [0] # when the images are 2D there is only one slice
+        return [0]  # when the images are 2D there is only one slice
 
     def excluded_layers(self) -> dict:
         '''
-        Returns a dictionary of excluded layers due to the maximum dimension and not used layer types.
+        Returns a dictionary of excluded layers due to the maximum dimension
+        and not used layer types.
 
         keys = Napari layer types
         values = Set of skipped layers
@@ -364,30 +366,37 @@ class NapariStorage():
 
     def get_labels_names(self) -> list:
         '''
-        Returns a list of all available Napari label layers considering the maximum dimension.
+        Returns a list of all available Napari label layers considering
+        the maximum dimension.
         '''
-        return [lbl_name for lbl_name in self.f['labels'].keys() if self.dim_check('labels', lbl_name)]
+        return [lbl_name for lbl_name in self.f['labels'].keys()
+                if self.dim_check('labels', lbl_name)]
 
     def get_image_names(self) -> list:
         '''
-        Returns a list of all available Napari image layers considering the maximum dimension.
+        Returns a list of all available Napari image layers considering
+        the maximum dimension.
         '''
-        return [im_name for im_name in self.f['image'].keys() if self.dim_check('image', im_name)]
+        return [im_name for im_name in self.f['image'].keys()
+                if self.dim_check('image', im_name)]
 
     def __len__(self):
         '''
-        Returns the number of image and labels (Those supported by YAPiC) in the Napari project considering the maximum dimension.
+        Returns the number of image and labels (Those supported by YAPiC)
+        in the Napari project considering the maximum dimension.
         '''
         return self.number_of_labels() + self.number_of_images()
 
     def number_of_labels(self) -> int:
         '''
-        Returns the number of label layers in the Napari project considering the maximum dimension.
+        Returns the number of label layers in the Napari project
+        considering the maximum dimension.
         '''
         return len(self.get_labels_names())
 
     def number_of_images(self) -> int:
         '''
-        Returns the number of image layers in the Napari project considering the maximum dimension.
+        Returns the number of image layers in the Napari project
+        considering the maximum dimension.
         '''
         return len(self.get_image_names())
