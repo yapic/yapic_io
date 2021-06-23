@@ -6,13 +6,9 @@ import logging
 import os
 from itertools import zip_longest
 from functools import lru_cache
-
-# additional packages + numpy (required in NapariStorage)
 import sparse
 import typing
 import h5py
-# ___________
-
 
 
 FilePair = collections.namedtuple('FilePair', ['img', 'lbl'])
@@ -20,15 +16,16 @@ logger = logging.getLogger(os.path.basename(__file__))
 
 
 def reconstruct_layer(layer_array: np.array, shape: tuple) -> np.array:
-    """Returns a numpy array corresponding to the data reconstruction from a sparse version (COO list) of it.
-    
+    """Returns a numpy array corresponding to the data reconstruction from a
+    sparse version (COO list) of it.
+
         Parameters
         ----------
         layer_array: Numpy array
             Sparse array version (COO list) of the layer data
         shape: tuple
             shape of the original layer data array
-        
+
         Returns
         -------
         np.array
@@ -41,6 +38,11 @@ def reconstruct_layer(layer_array: np.array, shape: tuple) -> np.array:
 
 
 class NapariConnector(TiffConnector):
+    def __init__(self, img_filepath, label_filepath, savepath=None):
+        # Dictionary of list telling labeled slices (non-zero matrices)
+        self.labeled_slices = dict()
+        super().__init__(img_filepath, label_filepath, savepath=savepath)
+
     def _assemble_filenames(self, pairs):
         self.filenames = [FilePair(Path(img), lbl)
                           for img, lbl in pairs if lbl]
@@ -48,7 +50,7 @@ class NapariConnector(TiffConnector):
         print(self.filenames)
 
     def _handle_lbl_filenames(self, label_filepath):
-        self.h5 = NapariStorage(h5_path = label_filepath, max_dim = 4)
+        self.h5 = NapariStorage(h5_path=label_filepath, max_dim=4)
         lbl_filenames = self.h5.get_labels_names()
         return label_filepath, lbl_filenames
 
@@ -77,6 +79,9 @@ class NapariConnector(TiffConnector):
         label_value = new_list
         return label_value
 
+    def effective_slices(self):
+        return self.labeled_slices
+
     def filter_labeled(self):
         '''
         Removes images without labels.
@@ -86,11 +91,12 @@ class NapariConnector(TiffConnector):
         NapariConnector
             Connector object containing only images with labels.
         '''
-        pairs = [self.filenames[i]for i in range(self.image_count()) if self.label_count_for_image(i)]
+        pairs = [self.filenames[i]for i in range(
+            self.image_count()) if self.label_count_for_image(i)]
         tiff_sel = [self.img_path / pair.img for pair in pairs]
 
         return NapariConnector(tiff_sel, self.label_path,
-                                savepath=self.savepath)
+                               savepath=self.savepath)
 
     def split(self, fraction, random_seed=42):
         '''
@@ -113,9 +119,9 @@ class NapariConnector(TiffConnector):
             fraction, random_seed=random_seed)
 
         conn1 = NapariConnector(img_fnames1, self.label_path,
-                                 savepath=self.savepath)
+                                savepath=self.savepath)
         conn2 = NapariConnector(img_fnames2, self.label_path,
-                                 savepath=self.savepath)
+                                savepath=self.savepath)
 
         # ensures that both resulting connectors have the same
         # labelvalue mapping (issue #1)
@@ -135,17 +141,12 @@ class NapariConnector(TiffConnector):
             # return tile with False values
             return np.zeros(size_zxy) != 0
         tile = slices[Z: ZZ, Y: YY, X: XX, 0]
-        #tile = [s[Y:YY, X:XX] for s in slices[T, C, Z:ZZ]]
-        #tile = np.stack(tile)
         tile = np.moveaxis(tile, (0, 1, 2), (0, 2, 1))
 
         tile = (tile == original_label_value)
         return tile
 
-    # no changes in check_label_matrix_dimensions
-
     def _open_label_file(self, image_nr):
-        # might not need cache (no memmap)
         label_filename = self.filenames[image_nr].lbl
 
         if label_filename is None:
@@ -153,20 +154,24 @@ class NapariConnector(TiffConnector):
                 'no label matrix file found for image file %s', str(image_nr))
             return None
 
-        logger.debug('Trying to load labelmat {} in {} Napari project'.format(label_filename, self.label_path))
+        logger.debug('Trying to load labelmat {} in {} Napari project'.format(
+            label_filename, self.label_path))
 
         label_data = self.h5.get_array_data('labels', label_filename)
-        
         label_n_dim = self.h5.n_dims('labels', label_filename)
-        
+
         if label_n_dim == 2:
-            label_data = np.expand_dims(label_data, axis=-1) # channel
-            label_data = np.expand_dims(label_data, axis=0) # z dim
+            label_data = np.expand_dims(label_data, axis=-1)  # channel
+            label_data = np.expand_dims(label_data, axis=0)  # z dim
         elif label_n_dim == 3:
             label_data = np.expand_dims(label_data, axis=-1)  # channel
 
+        if image_nr not in self.labeled_slices.keys():
+            self.labeled_slices[image_nr] = self.h5.filled_slices(
+                'labels', label_filename)
+
         return label_data
-    
+
     def label_matrix_dimensions(self, image_nr):
         '''
         Get dimensions of the label image.
@@ -190,9 +195,9 @@ class NapariConnector(TiffConnector):
         ch = output.pop()
         output[-2], output[-1] = output[-1], output[-2]
         output.insert(0, ch)
-        
+
         return output
-    
+
     @lru_cache(maxsize=1)
     def original_label_values_for_all_images(self):
         '''
@@ -217,7 +222,7 @@ class NapariConnector(TiffConnector):
             print('label filename')
             print(label_filename)
             lbl = self._open_label_file(image_nr)
-            
+
             lbl = np.transpose(lbl, (3, 0, 2, 1)).astype(int)
 
             C = lbl.shape[0]
@@ -253,7 +258,7 @@ class NapariConnector(TiffConnector):
             return None
 
         lbl = self._open_label_file(image_nr)
-        
+
         lbl = np.transpose(lbl, (3, 0, 2, 1)).astype(int)
 
         C = lbl.shape[0]
@@ -267,64 +272,85 @@ class NapariConnector(TiffConnector):
                        for l, count in orig.items()}
         return label_count
 
+
 class NapariStorage():
-    def __init__(self, h5_path, max_dim = np.inf):
+    def __init__(self, h5_path, max_dim=np.inf):
         self.f = h5py.File(h5_path, 'r')
         self.max_dim = max_dim
-
-    # ilastik_version is used in __getitems__ and original_dimension_order (check the order on the napari file)
-    # Will try to make the implementation without getitem (instead use get_array_data)
 
     def __iter__(self):
         '''
         Returns (filename, data, type) of the napari layer
         '''
-        for layer_type in self.f: # check folder of Napari layer types
-            if layer_type in ['image', 'labels']: # only images and labels are required in YAPiC
-                for layer_name in self.f[layer_type]: # iterate over specific layer
+        for layer_type in self.f:  # check folder of Napari layer types
+            # only images and labels are required in YAPiC
+            if layer_type in ['image', 'labels']:
+                # iterate over specific layer
+                for layer_name in self.f[layer_type]:
                     if self.dim_check(layer_type, layer_name):
-                        layer_data = self.get_array_data(layer_type, layer_name)
+                        layer_data = self.get_array_data(
+                            layer_type, layer_name)
                         yield layer_name, layer_data, layer_type
-        
+
     def get_array_data(self, layer_type: str, layer_name: str) -> np.array:
         '''
-        Returns array data of Napari layer. it considers only image and label Napari layers (those supported by YAPiC)
+        Returns array data of Napari layer. it considers only image and label
+        Napari layers (those supported by YAPiC)
             the array dimensions are (?, z, y, x, c)
         '''
         try:
             assert layer_type in ['image', 'labels']
         except AssertionError:
-            raise ValueError('Supported Napari layers are image and labels only')
+            raise ValueError(
+                'Supported Napari layers are image and labels only')
         else:
             try:
                 assert layer_name in self.f[layer_type]
             except AssertionError:
-                raise ValueError('There is no Napari layer with the name {}'.format(layer_name))
-            
+                raise ValueError(
+                    'There is no Napari layer with the name {}'.format(
+                        layer_name))
+
         napari_layer = self.f[layer_type][layer_name]
         if layer_type == 'labels':
             original_shape = tuple(napari_layer.attrs['shape'])
-            array_data = reconstruct_layer(np.array(napari_layer), original_shape)
+            array_data = reconstruct_layer(
+                np.array(napari_layer), original_shape)
         else:
             array_data = np.array(napari_layer)
         return array_data
 
+    def filled_slices(self, layer_type: str, layer_name: str) -> list:
+        '''
+        Returns a list of indices specifying which slices have labels
+        (values different than 0)
+        '''
+        napari_layer = self.f[layer_type][layer_name]
+        if layer_type == 'labels':
+            data = np.array(napari_layer)
+            if data.shape[0] > 3:  # check if the sparse label includes z-dim
+                return list(np.unique(data[0, :]))
+        return [0]  # when the images are 2D there is only one slice
+
     def excluded_layers(self) -> dict:
         '''
-        Returns a dictionary of excluded layers due to the maximum dimension and not used layer types.
+        Returns a dictionary of excluded layers due to the maximum dimension
+        and not used layer types.
 
         keys = Napari layer types
         values = Set of skipped layers
         '''
         skipped_types = set(self.f.keys()) - {'image', 'labels'}
-        output_dict = {layer_type: set(self.f[layer_type].keys()) for layer_type in skipped_types}
+        output_dict = {layer_type: set(
+            self.f[layer_type].keys()) for layer_type in skipped_types}
         for layer_type in ['image', 'labels']:
-            tmp_names = [name for name in self.f[layer_type].keys() if not self.dim_check(layer_type, name)]
+            tmp_names = [name for name in self.f[layer_type].keys(
+            ) if not self.dim_check(layer_type, name)]
             if len(tmp_names) > 0:
                 output_dict[layer_type] = set(tmp_names)
         return output_dict
-    
-    def n_dims(self, layer_type:str, layer_name:str) -> int:
+
+    def n_dims(self, layer_type: str, layer_name: str) -> int:
         '''
         Returns the number of dimensions of Napari layer
         '''
@@ -335,35 +361,42 @@ class NapariStorage():
             shape = napari_layer.shape
         return len(shape)
 
-    def dim_check(self, layer_type:str, layer_name:str) -> bool:
+    def dim_check(self, layer_type: str, layer_name: str) -> bool:
         return bool(self.n_dims(layer_type, layer_name) <= self.max_dim)
-    
+
     def get_labels_names(self) -> list:
         '''
-        Returns a list of all available Napari label layers considering the maximum dimension.
+        Returns a list of all available Napari label layers considering
+        the maximum dimension.
         '''
-        return [lbl_name for lbl_name in self.f['labels'].keys() if self.dim_check('labels', lbl_name)]
+        return [lbl_name for lbl_name in self.f['labels'].keys()
+                if self.dim_check('labels', lbl_name)]
 
     def get_image_names(self) -> list:
         '''
-        Returns a list of all available Napari image layers considering the maximum dimension.
+        Returns a list of all available Napari image layers considering
+        the maximum dimension.
         '''
-        return [im_name for im_name in self.f['image'].keys() if self.dim_check('image', im_name)]
-    
+        return [im_name for im_name in self.f['image'].keys()
+                if self.dim_check('image', im_name)]
+
     def __len__(self):
         '''
-        Returns the number of image and labels (Those supported by YAPiC) in the Napari project considering the maximum dimension.
+        Returns the number of image and labels (Those supported by YAPiC)
+        in the Napari project considering the maximum dimension.
         '''
         return self.number_of_labels() + self.number_of_images()
-    
+
     def number_of_labels(self) -> int:
         '''
-        Returns the number of label layers in the Napari project considering the maximum dimension.
+        Returns the number of label layers in the Napari project
+        considering the maximum dimension.
         '''
         return len(self.get_labels_names())
-    
+
     def number_of_images(self) -> int:
         '''
-        Returns the number of image layers in the Napari project considering the maximum dimension.
+        Returns the number of image layers in the Napari project
+        considering the maximum dimension.
         '''
         return len(self.get_image_names())

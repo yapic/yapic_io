@@ -135,7 +135,7 @@ class TiffConnector(Connector):
 
         original_labels = self.original_label_values_for_all_images()
         self.labelvalue_mapping = self.calc_label_values_mapping(
-                                            original_labels)
+            original_labels)
 
         self.check_label_matrix_dimensions()
 
@@ -226,8 +226,8 @@ class TiffConnector(Connector):
         '''
 
         img_fnames1, img_fnames2, mask = self._split_img_fnames(
-                                                fraction,
-                                                random_seed=random_seed)
+            fraction,
+            random_seed=random_seed)
 
         lbl_fnames1 = [self.label_path / lbl if lbl is not None else None
                        for img, lbl in itertools.compress(self.filenames,
@@ -303,15 +303,33 @@ class TiffConnector(Connector):
 
     @staticmethod
     def fix_dims(memmap_array, path):
-        """"""
+        """This method will fix the dimensions of memmap_array
+        in the order (Z, Y, X, C).
+        It will increment the dimensions if memmap_array has less than
+        4 dimensions.
+        It uses the tiff file metadata to guess the original dimensions
+        order and which dimensions are missing.
+
+        Parameters
+        ----------
+        memmap_array - numpy.memmap: sorted image data array in the dimension
+        order (Z, Y, X, C)
+        path - string: Tiff file path
+
+        Returns
+        -------
+        connector_1, connector_2
+        """
         # target dims (Z,Y,X,C)
         with TiffFile(path) as tif:
             axes = tif.series[0].axes
 
         # Adding the missed axis
-        dims_dict = {'T': 'Z', 'S':'C', 'Q':'C'}
-        # The letter to represent each dimension may change depending on the file generation.
-        # We will transform this representation to Z, Y, X, C to generalize the process
+        dims_dict = {'T': 'Z', 'S': 'C', 'Q': 'C'}
+        # The letter to represent each dimension may change depending on the
+        # file generation.
+        # We will transform this representation to Z, Y, X, C to generalize
+        # the process
         axes = axes.translate(axes.maketrans(dims_dict))
         if 'C' not in axes:
             memmap_array = np.expand_dims(memmap_array, axis=-1)
@@ -325,7 +343,6 @@ class TiffConnector(Connector):
         memmap_array = np.moveaxis(memmap_array, (0, 1, 2, 3), dim_map)
         return memmap_array
 
-
     @lru_cache(maxsize=10)
     def _open_image_file(self, image_nr):
         """Returns memmap object with shape: z, y, x, c"""
@@ -335,7 +352,8 @@ class TiffConnector(Connector):
         return self.fix_dims(im_data, path)  # shape order: z, y, x, c
 
     def image_dimensions(self, image_nr):
-        """returns a tuple representing the size of the image in the order of: c, z, x, y"""
+        """returns a tuple representing the size of the image in the
+        order of: C, Z, X, Y"""
         img = self._open_image_file(image_nr)
         Z, Y, X, C = img.shape
         return (C, Z, X, Y)
@@ -426,7 +444,7 @@ class TiffConnector(Connector):
         Z, X, Y = pos_zxy
         ZZ, XX, YY = np.array(pos_zxy) + size_zxy
         C, original_label_value = self._mapped_label_value_to_original(
-                                        label_value)
+            label_value)
 
         slices = self._open_label_file(image_nr)
         if slices is None:
