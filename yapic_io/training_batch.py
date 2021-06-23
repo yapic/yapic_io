@@ -1,4 +1,5 @@
 import random
+from yapic_io.napari_connector import NapariConnector
 import numpy as np
 from yapic_io.minibatch import Minibatch
 from yapic_io.utils import compute_pos, find_overlapping_tiles, progressbar
@@ -118,6 +119,20 @@ class TrainingBatch(Minibatch):
 
         return self
 
+    def effective_tiles(self):
+        """This function discards those tiles selected from slices that were not labeled. It must be used only when the pixel_connector is NapariConnector."""
+        labeled_slices = self.dataset.pixel_connector.effective_slices()
+        # list of tuples with img id as first element and z slice index as second
+        slices_with_ids = []
+        for img_id, value in labeled_slices.items():
+            tmp = [(img_id, v) for v in value]
+            slices_with_ids += tmp
+        output = dict()
+        for label_id, tiles in self.tile_pos_for_label.items():
+            output[label_id] = [
+                tile for tile in tiles if tile[:2] in slices_with_ids]
+        return output
+
     def augment_by_flipping(self, flip_on):
         '''
         Data augmentation setting. Advantage: fast.
@@ -233,7 +248,7 @@ class TrainingBatch(Minibatch):
 
         if 'rotate' in self.augmentation:
             augment_params['rotation_angle'] = random.uniform(
-                                                   *self.rotation_range)
+                *self.rotation_range)
 
         if 'shear' in self.augmentation:
             augment_params['shear_angle'] = random.uniform(*self.shear_range)
@@ -249,6 +264,10 @@ class TrainingBatch(Minibatch):
         labels = np.array(sorted(self.labels))
         channels = np.array(sorted(self.channels))
 
+        # Removing tiles from unlabeled slices
+        if type(self.dataset.pixel_connector) == NapariConnector:
+            self.tile_pos_for_label = self.effective_tiles()
+
         for label in labels:
             logger.info('scanning tiles for label {}...'.format(label))
             positions = self.tile_pos_for_label[label]
@@ -259,13 +278,13 @@ class TrainingBatch(Minibatch):
                 pos_zxy = pos[1:]
 
                 tile_data = self.dataset.training_tile(
-                                        image_nr,
-                                        pos_zxy,
-                                        self.tile_size_zxy,
-                                        channels,
-                                        labels,
-                                        pixel_padding=self.padding_zxy,
-                                        augment_params=None)
+                    image_nr,
+                    pos_zxy,
+                    self.tile_size_zxy,
+                    channels,
+                    labels,
+                    pixel_padding=self.padding_zxy,
+                    augment_params=None)
 
                 if not _are_weights_in_tile(tile_data, label):
                     # remove tile position for the label, since no labels here
@@ -323,9 +342,9 @@ class TrainingBatch(Minibatch):
                 pos_out.append(a)
 
                 is_overlap_ind = np.nonzero(find_overlapping_tiles(
-                                                        a,
-                                                        pos,
-                                                        shape))[0]
+                    a,
+                    pos,
+                    shape))[0]
                 is_overlap_ind = sorted(is_overlap_ind, reverse=True)
 
                 [pos.pop(ind) for ind in is_overlap_ind]
@@ -385,13 +404,13 @@ class TrainingBatch(Minibatch):
             labels = np.array(sorted(self.labels))
             channels = np.array(sorted(self.channels))
             tile_data = self.dataset.training_tile(
-                                    image_nr,
-                                    pos_zxy,
-                                    self.tile_size_zxy,
-                                    channels,
-                                    labels,
-                                    pixel_padding=self.padding_zxy,
-                                    augment_params=self._augment_params())
+                image_nr,
+                pos_zxy,
+                self.tile_size_zxy,
+                channels,
+                labels,
+                pixel_padding=self.padding_zxy,
+                augment_params=self._augment_params())
 
             if _are_weights_in_tile(tile_data, for_label):
                 msg = ('Needed {} trials to fetch random tile containing ' +
