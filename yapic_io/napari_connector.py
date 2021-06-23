@@ -312,7 +312,7 @@ class NapariStorage():
                         layer_name))
 
         napari_layer = self.f[layer_type][layer_name]
-        if layer_type == 'labels':
+        if layer_type == 'labels' and napari_layer.attrs['compressed']:
             original_shape = tuple(napari_layer.attrs['shape'])
             array_data = reconstruct_layer(
                 np.array(napari_layer), original_shape)
@@ -326,10 +326,15 @@ class NapariStorage():
         (values different than 0)
         '''
         napari_layer = self.f[layer_type][layer_name]
+        data = np.array(napari_layer)
         if layer_type == 'labels':
-            data = np.array(napari_layer)
-            if data.shape[0] > 3:  # check if the sparse label includes z-dim
-                return list(np.unique(data[0, :]))
+            if napari_layer.attrs['compressed']:
+                # check if the sparse label includes z-dim
+                if napari_layer.shape[0] > 3:
+                    return list(np.unique(data[0, :]))
+            else:
+                if len(data.shape) > 2:
+                    return data.shape[0]  # non-sparse array
         return [0]  # when the images are 2D there is only one slice
 
     def excluded_layers(self) -> dict:
@@ -355,7 +360,7 @@ class NapariStorage():
         Returns the number of dimensions of Napari layer
         '''
         napari_layer = self.f[layer_type][layer_name]
-        if layer_type == 'labels':
+        if layer_type == 'labels' and napari_layer.attrs['compressed']:
             shape = napari_layer.attrs['shape']
         else:
             shape = napari_layer.shape
