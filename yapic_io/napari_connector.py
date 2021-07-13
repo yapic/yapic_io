@@ -312,10 +312,13 @@ class NapariStorage():
                         layer_name))
 
         napari_layer = self.f[layer_type][layer_name]
-        if layer_type == 'labels' and napari_layer.attrs['compressed']:
+        if layer_type == 'labels':
             original_shape = tuple(napari_layer.attrs['shape'])
-            array_data = reconstruct_layer(
-                np.array(napari_layer), original_shape)
+            if napari_layer.attrs['is_sparse']:
+                array_data = reconstruct_layer(np.array(napari_layer),
+                                               original_shape)
+            else:
+                array_data = napari_layer[:]
         else:
             array_data = np.array(napari_layer)
         return array_data
