@@ -46,7 +46,7 @@ Following problems occuring with training/classification are handeled by `yapic_
 
 **Training**:
 
-```(python)
+```python
 from yapic_io import TiffConnector, Dataset, TrainingBatch
 
 #define data locations
@@ -78,7 +78,7 @@ for mini in train_data:
 ```
 
 **Prediction**:
-```(python)
+```python
 from yapic_io import TiffConnector, Dataset, PredictionBatch
 
 #mock classification function
