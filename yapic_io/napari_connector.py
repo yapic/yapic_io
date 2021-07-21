@@ -331,7 +331,7 @@ class NapariStorage():
         napari_layer = self.f[layer_type][layer_name]
         data = np.array(napari_layer)
         if layer_type == 'labels':
-            if napari_layer.attrs['compressed']:
+            if napari_layer.attrs['is_sparse']:
                 # check if the sparse label includes z-dim
                 if napari_layer.shape[0] > 3:
                     return list(np.unique(data[0, :]))
@@ -363,7 +363,7 @@ class NapariStorage():
         Returns the number of dimensions of Napari layer
         '''
         napari_layer = self.f[layer_type][layer_name]
-        if layer_type == 'labels' and napari_layer.attrs['compressed']:
+        if layer_type == 'labels' and napari_layer.attrs['is_sparse']:
             shape = napari_layer.attrs['shape']
         else:
             shape = napari_layer.shape
