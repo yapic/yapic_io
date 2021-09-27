@@ -322,7 +322,8 @@ class NapariStorage():
         else:
             array_data = np.array(napari_layer)
         return array_data
-
+    # This function might be changed in case the hdf5
+    # compression protocol is changed! 
     def filled_slices(self, layer_type: str, layer_name: str) -> list:
         '''
         Returns a list of indices specifying which slices have labels
@@ -337,7 +338,8 @@ class NapariStorage():
                     return list(np.unique(data[0, :]))
             else:
                 if len(data.shape) > 2:
-                    return data.shape[0]  # non-sparse array
+                    return [z_slice for z_slice in range(data.shape[0]) 
+                            if len(np.unique(data[0, :])) > 1]
         return [0]  # when the images are 2D there is only one slice
 
     def excluded_layers(self) -> dict:
