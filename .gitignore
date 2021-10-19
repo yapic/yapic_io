@@ -34,3 +34,7 @@ doc/source/yapic_io.rst
 doc/source/yapic_io.tests.rst
 
 .vscode/
+
+# TOX
+.tox/
+coverage.xml
