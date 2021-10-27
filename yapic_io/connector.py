@@ -6,7 +6,7 @@ logger = logging.getLogger(os.path.basename(__file__))
 
 def io_connector(image_path, label_path, *args, **kwds):
     '''
-    Returns either a TiffConnector or an IlastikConnector, depending on
+    Returns either a TiffConnector or an NapariConnector, depending on
     input files.
 
     Parameters
@@ -16,26 +16,22 @@ def io_connector(image_path, label_path, *args, **kwds):
     label_path : str of list of str
         Either wildcard or list of paths to pixel data in tiff format
         returns a TiffConnector. If a path to a single Ilastik ilp
-        file is given, an IlastikConnector is returned.
+        file is given, an NapariConnector is returned.
 
     Returns
     -------
     Connector
-        Either IlastikConnector or TiffConnector
+        Either NapariConnector or TiffConnector
 
     See Also
     --------
     yapic_io.tiff_connector.TiffConnector
-    yapic_io.ilastik_connector.IlastikConnector
+    yapic_io.napari_connector.NapariConnector
     '''
     from yapic_io.tiff_connector import TiffConnector
     from yapic_io.napari_connector import NapariConnector
-    from yapic_io.ilastik_connector import IlastikConnector
 
-    if label_path.endswith('.ilp'):
-        logger.info('Ilastik project file detected')
-        return IlastikConnector(image_path, label_path, *args, **kwds)
-    elif label_path.endswith('.h5'):
+    if label_path.endswith('.h5'):
         logger.info('Napari project file detected')
         return NapariConnector(image_path, label_path)
     else:

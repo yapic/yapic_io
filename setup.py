@@ -5,7 +5,6 @@ from setuptools import setup
 reqs = ['numpy>=1.13.1',
         'munkres>=1.0.8',
         'scikit_image>=0.12.3',
-        'pyilastik>=0.0.9',
         'tifffile',
         'sparse>=0.12.0']
 
@@ -17,7 +16,7 @@ def readme():
 
 
 setup(name='yapic_io',
-      version='0.2.3',
+      version='0.2.4',
       description='io data handling module for various image sources as interface for pixel classification tools',
       long_description=readme(),
       long_description_content_type='text/markdown',
