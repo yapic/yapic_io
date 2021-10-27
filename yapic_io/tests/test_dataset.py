@@ -2,8 +2,7 @@ from unittest import TestCase
 import os
 import numpy as np
 from yapic_io.tiff_connector import TiffConnector
-from yapic_io.ilastik_connector import IlastikConnector
-from yapic_io.cellvoy_connector import CellvoyConnector
+from yapic_io.napari_connector import NapariConnector
 from yapic_io.connector import io_connector
 from yapic_io.dataset import Dataset
 from yapic_io.utils import get_tile_meshgrid
@@ -26,12 +25,12 @@ class TestDataset(TestCase):
 
     def test_pixel_statistics(self):
 
-        data_dir = os.path.join(base_path, '../test_data/cellvoyager')
-        c = CellvoyConnector(data_dir, os.path.join(data_dir, 'labels_1.ilp'))
+        data_dir = os.path.join(base_path, '../test_data/napari')
+        c = NapariConnector(data_dir, os.path.join(data_dir, 'connector_test.h5'))
         d = Dataset(c)
-        channels = [0, 1, 2, 3]
+        channels = [0, 1, 2]
 
-        stats = d.pixel_statistics([0, 1, 2, 3], n_tiles=1000)
+        stats = d.pixel_statistics([0, 1, 2], n_tiles=1000)
 
         assert len(stats) == len(channels)
         for stat in stats:
@@ -348,22 +347,6 @@ class TestDataset(TestCase):
         pprint(val)
         self.assertTrue((val == mat).all())
 
-    def test_load_label_counts_from_ilastik(self):
-        img_path = os.path.join(base_path, '../test_data/ilastik')
-        lbl_path = os.path.join(
-            base_path, '../test_data/ilastik/ilastik-1.2.ilp')
-
-        c = io_connector(img_path, lbl_path)
-        d = Dataset(c)
-
-        actual_counts = c.label_count_for_image(0)
-        print(actual_counts)
-        label_counts = d.load_label_counts()
-        print(label_counts)
-
-        assert_array_equal(label_counts[1], np.array([1]))
-        assert_array_equal(label_counts[2], np.array([1]))
-        assert_array_equal(label_counts[3], np.array([1]))
 
     def test_load_label_counts(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
@@ -713,40 +696,13 @@ class TestDataset(TestCase):
 
     def test_channels_are_consistent(self):
 
-        data_dir = os.path.join(base_path, '../test_data/cellvoyager')
-        c = CellvoyConnector(data_dir, os.path.join(data_dir, 'labels_1.ilp'))
+        data_dir = os.path.join(base_path, '../test_data/napari')
+        c = NapariConnector(data_dir, os.path.join(data_dir, 'connector_test.h5'))
         d = Dataset(c)
         is_consistent, channel_cnt = d.channels_are_consistent()
         assert is_consistent
-        assert channel_cnt == [4]
+        assert channel_cnt == [3]
 
-        # check if assertion is raised for incomplete dataset
-        data_dir_2 = os.path.join(base_path,
-                                  '../test_data/cellvoyager_incomplete')
-        c = CellvoyConnector(data_dir_2,
-                             os.path.join(data_dir, 'labels_1.ilp'))
-        self.assertRaises(AssertionError, Dataset, c)
-
-    def test_multichannel_pixel_tile_cellvoy(self):
-
-        data_dir = os.path.join(base_path, '../test_data/cellvoyager')
-        c = CellvoyConnector(data_dir, os.path.join(data_dir, 'labels_1.ilp'))
-        d = Dataset(c)
-
-        img = 0
-        pos_zxy = (0, 0, 0)
-        size_zxy = (1, 1000, 992)
-        size_zxy = (1, 500, 500)
-        channels = [0, 1, 2, 3]
-        pd = (0, 0, 0)
-
-        tile = d.multichannel_pixel_tile(
-            img, pos_zxy, size_zxy, channels,
-            pixel_padding=pd,  augment_params={'rotation_angle': 45})
-
-        assert not np.array_equal(tile[0, :, :, :], tile[3, :, :, :])
-        assert not np.array_equal(tile[1, :, :, :], tile[3, :, :, :])
-        assert not np.array_equal(tile[2, :, :, :], tile[3, :, :, :])
 
     def test_training_tile_1(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
@@ -767,20 +723,6 @@ class TestDataset(TestCase):
         np.testing.assert_array_equal(tr.pixels.shape, (1, 1, 6, 7))
         np.testing.assert_array_equal(tr.weights.shape, (2, 1, 4, 3))
 
-    def test_training_tile_cellvoy(self):
-
-        data_dir = os.path.join(base_path, '../test_data/cellvoyager')
-        c = CellvoyConnector(data_dir, os.path.join(data_dir, 'labels_1.ilp'))
-        d = Dataset(c)
-
-        img = 0
-        pos_zxy = (0, 0, 0)
-        size_zxy = (1, 4, 3)
-        channels = [0, 1, 2, 3]
-        labels = [1, 2]
-
-        d.training_tile(img, pos_zxy, size_zxy, channels, labels,
-                        pixel_padding=(0, 1, 2))
 
     def test_random_training_tile(self):
         img_path = os.path.join(base_path, '../test_data/tiffconnector_1/im/')
@@ -846,43 +788,6 @@ class TestDataset(TestCase):
                                tile_size_zxy=(3, 40, 27))
         np.random.seed(None)
 
-    def test_init_dataset_ilastik(self):
-        p = os.path.join(base_path, '../test_data/ilastik/dimensionstest')
-        img_path = os.path.join(p, 'images')
-        label_path = os.path.join(p, 'x15_y10_z2_c4_classes2.ilp')
-
-        c = IlastikConnector(img_path, label_path)
-        d = Dataset(c)
-        self.assertEqual(d.n_images, 1)
-        self.assertEqual(list(d.label_counts.keys()), [1, 2])  # label values
-
-        assert_array_equal(d.label_counts[1], np.array([5]))
-        assert_array_equal(d.label_counts[2], np.array([4]))
-
-    def test_random_training_tile_by_polling_ilastik(self):
-
-        p = os.path.join(base_path, '../test_data/ilastik/dimensionstest')
-        img_path = os.path.join(p, 'images')
-        label_path = os.path.join(p, 'x15_y10_z2_c4_classes2.ilp')
-
-        size = (1, 1, 1)
-        channels = [0, 1, 2, 3]
-        labels = set([1, 2])
-        ensure_labelvalue = 2
-
-        c = IlastikConnector(img_path, label_path)
-        d = Dataset(c)
-
-        np.random.seed(43)
-        training_tile = d._random_training_tile_by_polling(
-                                        size,
-                                        channels,
-                                        labels,
-                                        ensure_labelvalue=ensure_labelvalue)
-        print(training_tile)
-
-        weights_val = np.array([[[[0.]]], [[[1.]]]])
-        assert_array_equal(training_tile.weights, weights_val)
 
     def test_random_training_tile_by_polling(self):
         img_path = os.path.join(

@@ -274,34 +274,6 @@ class TestPredictionBatch(TestCase):
         data = np.ones((1, 6, 1, 3, 4))
         p[0].put_probmap_data(data)
 
-    def test_put_probmap_data_dimorder_zxyc(self):
-
-        img_path = os.path.abspath(os.path.join(
-            base_path,
-            '../test_data/ilastik/dimensionstest/images/*'))
-
-        c = TiffConnector(img_path, 'some/path', savepath=self.tmpdir)
-        d = Dataset(c)
-
-        size = (2, 3, 5)  # zxy
-        batch_size = 1
-
-        # shape: 1 batch, 4 channels, 2 z, 3 x, 5 y
-
-        p = PredictionBatch(d, batch_size, size)
-        self.assertEqual((1, 4, 2, 3, 5), p[0].pixels().shape)
-        self.assertEqual((1, 4, 2, 3, 5), p[1].pixels().shape)
-
-        p.set_pixel_dimension_order('bzxyc')
-
-        self.assertEqual((1, 2, 3, 5, 4), p[0].pixels().shape)
-        self.assertEqual((1, 2, 3, 5, 4), p[1].pixels().shape)
-
-        pixels = p[0].pixels()
-
-        for tile in p:
-            tile.put_probmap_data(pixels)
-
     def test_prediction_loop(self):
         # mock classification function
         def classify(pixels, value):

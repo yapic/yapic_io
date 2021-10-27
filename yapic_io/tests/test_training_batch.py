@@ -1,8 +1,7 @@
 from unittest import TestCase
 import os
 from yapic_io.tiff_connector import TiffConnector
-from yapic_io.ilastik_connector import IlastikConnector
-from yapic_io.cellvoy_connector import CellvoyConnector
+from yapic_io.napari_connector import NapariConnector
 from yapic_io.dataset import Dataset
 
 from yapic_io.training_batch import TrainingBatch
@@ -20,79 +19,6 @@ class TestTrainingBatch(TestCase):
     def setup(self, tmpdir):
         self.tmpdir = tmpdir.strpath
 
-    def test_get_ilastik_weights(self):
-        img_path = os.path.join(base_path,
-                                '../test_data/ilastik')
-        lbl_path = os.path.join(base_path,
-                                '../test_data/ilastik/ilastik-1.2.ilp')
-
-        c = IlastikConnector(img_path, lbl_path)
-
-        d = Dataset(c)
-
-        size = (8, 2, 4)
-        pad = (0, 0, 0)
-
-        m = TrainingBatch(d, size, padding_zxy=pad)
-        m.augment_by_flipping(False)
-        mini = next(m)
-        weights = mini.weights()
-
-        # label 1 at position (4,1,3)
-        self.assertTrue(weights[0, 0, 4, 1, 3] == 1)
-
-        # label 2 at position (1,1,1)
-        self.assertTrue(weights[0, 1, 1, 1, 1] == 1)
-
-        # label 3 at position (1,1,1)
-        self.assertTrue(weights[0, 2, 7, 1, 1] == 1)
-
-    def test_get_ilastik_weights2(self):
-
-        pth = os.path.join(base_path, '../test_data/ilastik/dimensionstest')
-        img_path = os.path.join(pth, 'images')
-        lbl_path = os.path.join(pth, 'x15_y10_z2_c4_classes2.ilp')
-        c = IlastikConnector(img_path, lbl_path)
-
-        d = Dataset(c)
-
-        size = (2, 15, 10)  # this is the size of the whole image
-        pad = (0, 0, 0)
-
-        m = TrainingBatch(d, size, padding_zxy=pad)
-        m.augment_by_flipping(False)
-        mini = next(m)
-        weights = mini.weights()
-
-        print(weights[0, :, :, :, :])
-
-        # all samples of the batch should be identical,
-        # because tilesize=imsize
-        assert_array_equal(weights[0, :, :, :, :], weights[1, :, :, :, :])
-
-        # weight positions from labelvalue 1 and 2
-        pos = [[0, 0, 2, 1], [0, 0, 2, 1], [0, 0, 8, 6], [0, 0, 9, 6],
-               [0, 1, 4, 3],
-               [1, 0, 2, 2], [1, 0, 3, 2], [1, 0, 8, 7], [1, 0, 9, 7]]
-
-        for p in pos:
-            self.assertEqual(weights[0, p[0], p[1], p[2], p[3]], 1)
-            self.assertEqual(weights[1, p[0], p[1], p[2], p[3]], 1)
-
-    def test_pixel_format_is_float(self):
-        p = os.path.join(base_path, '../test_data/ilastik/dimensionstest')
-        img_path = os.path.join(p, 'images')
-        label_path = os.path.join(p, 'x15_y10_z2_c4_classes2.ilp')
-
-        c = IlastikConnector(img_path, label_path)
-        d = Dataset(c)
-
-        size = (2, 4, 3)
-        pad = (0, 0, 0)
-        m = TrainingBatch(d, size, padding_zxy=pad)
-        mini = next(m)
-        p = mini._pixels
-        self.assertTrue(np.issubdtype(p.dtype, np.float))
 
     def test_random_tile(self):
 
@@ -109,23 +35,6 @@ class TestTrainingBatch(TestCase):
         m = TrainingBatch(d, size, padding_zxy=pad)
 
         m._random_tile(for_label=1)
-
-    def test_random_tile_cellvoy(self):
-
-        data_dir = os.path.join(base_path, '../test_data/cellvoyager')
-        c = CellvoyConnector(data_dir, os.path.join(data_dir, 'labels_1.ilp'))
-        d = Dataset(c)
-
-        size = (1, 3, 4)
-        pad = (1, 2, 2)
-
-        m = TrainingBatch(d, size, padding_zxy=pad)
-
-        m._random_tile(for_label=1)
-
-
-
-
 
 
     def test_getitem(self):
@@ -294,36 +203,6 @@ class TestTrainingBatch(TestCase):
 
         assert_array_almost_equal(val, p_norm[0, :, 0, :, :])
 
-    def test_normalize_multichannel(self):
-
-        img_path = os.path.join(base_path,
-                                '../test_data/normalization/pixels/*.tif')
-        label_path = os.path.join(base_path,
-                                  '../test_data/normalization/labels.ilp')
-        c = IlastikConnector(img_path, label_path)
-        d = Dataset(c)
-
-        size = (1, 5, 4)
-        pad = (0, 0, 0)
-
-        m = TrainingBatch(d, size, padding_zxy=pad)
-
-        m.set_normalize_mode('off')
-        next(m)
-        pixels_not_normalized = m.pixels()[0, :, :, :, :]
-        m.set_normalize_mode('local_z_score')
-        pixels_normalized_zscore = m.pixels()[0, :, :, :, :]
-        m.set_normalize_mode('local')
-        pixels_normalized_local = m.pixels()[0, :, :, :, :]
-
-        # testing raw data values for the different channels
-        assert_array_equal(np.unique(pixels_not_normalized[0, :, :, :]), [0])
-        assert_array_equal(np.unique(pixels_not_normalized[1, :, :, :]), [100])
-        assert_array_equal(np.unique(pixels_not_normalized[2, :, :, :]), [255])
-
-        # all values for all channels should be 0 after normalization
-        assert_array_equal(np.unique(pixels_normalized_zscore), [0])
-        assert_array_equal(np.unique(pixels_normalized_local), [0])
 
     def test_normalize_global_auto(self):
 
@@ -341,30 +220,6 @@ class TestTrainingBatch(TestCase):
         m.set_normalize_mode('global')
         assert len(m.global_norm_minmax) == 3
 
-    def test_normalize_global_multichannel(self):
-
-        img_path = os.path.join(base_path,
-                                '../test_data/normalization/pixels/*.tif')
-        label_path = os.path.join(base_path,
-                                  '../test_data/normalization/labels.ilp')
-        c = IlastikConnector(img_path, label_path)
-        d = Dataset(c)
-
-        size = (1, 5, 4)
-        pad = (0, 0, 0)
-
-        minmax = [(0, 1), (0, 100), (0, 255)]
-
-        m = TrainingBatch(d, size, padding_zxy=pad)
-        m.set_normalize_mode('off')
-        next(m)
-
-        m.set_normalize_mode('global', minmax=minmax)
-
-        pxln = m.pixels()[0, :, :, :, :]
-        assert (pxln[0, :, :, :] == 0).all()
-        assert (pxln[1, :, :, :] == 1).all()
-        assert (pxln[2, :, :, :] == 1).all()
 
     def test_set_augmentation(self):
 
@@ -443,112 +298,3 @@ class TestTrainingBatch(TestCase):
         self.assertEqual(p.shape, (3, 2, 5, 4, 3))
         self.assertEqual(w.shape, (3, 2, 5, 4, 3))
 
-    def test_tile_positions_decay(self):
-
-        img_path = os.path.join(
-            base_path,
-            '../test_data/ilastik/pixels_ilastik-multiim-1.2')
-        label_path = os.path.join(
-            base_path,
-            '../test_data/ilastik/ilastik-multiim-1.2.ilp')
-        c = IlastikConnector(img_path, label_path)
-        d = Dataset(c)
-
-        size = (2, 6, 4)
-        pad = (0, 0, 0)
-
-        m = TrainingBatch(d, size, padding_zxy=pad)
-
-        n_pos_lbl_1 = len(m.tile_pos_for_label[1])
-        n_pos_lbl_2 = len(m.tile_pos_for_label[2])
-
-        assert not m.tile_pos_for_label[1] is m.tile_pos_for_label[2]
-
-        for _ in range(800):
-            next(m)
-
-        n_pos_lbl_1_after = len(m.tile_pos_for_label[1])
-        n_pos_lbl_2_after = len(m.tile_pos_for_label[2])
-
-        self.assertTrue(n_pos_lbl_1 > n_pos_lbl_1_after)
-        self.assertTrue(n_pos_lbl_2 > n_pos_lbl_2_after)
-
-    def test_remove_unlabeled_tiles(self):
-
-        img_path = os.path.join(
-            base_path,
-            '../test_data/ilastik/pixels_ilastik-multiim-1.2')
-        label_path = os.path.join(
-            base_path,
-            '../test_data/ilastik/ilastik-multiim-1.2.ilp')
-        c = IlastikConnector(img_path, label_path)
-        d = Dataset(c)
-
-        size = (2, 6, 4)
-        pad = (0, 0, 0)
-
-        m = TrainingBatch(d, size, padding_zxy=pad)
-
-        n_pos_lbl_1 = len(m.tile_pos_for_label[1])
-        n_pos_lbl_2 = len(m.tile_pos_for_label[2])
-
-        m.remove_unlabeled_tiles()
-
-        n_pos_lbl_1_after = len(m.tile_pos_for_label[1])
-        n_pos_lbl_2_after = len(m.tile_pos_for_label[2])
-
-        self.assertTrue(n_pos_lbl_1 > n_pos_lbl_1_after)
-        self.assertTrue(n_pos_lbl_2 > n_pos_lbl_2_after)
-
-    def test_split(self):
-
-        img_path = os.path.join(
-            base_path,
-            '../test_data/ilastik/pixels_ilastik-multiim-1.2')
-        label_path = os.path.join(
-            base_path,
-            '../test_data/ilastik/ilastik-multiim-1.2.ilp')
-        c = IlastikConnector(img_path, label_path)
-        d = Dataset(c)
-
-        size = (1, 1, 1)
-        pad = (0, 0, 0)
-
-        m = TrainingBatch(d, size, padding_zxy=pad)
-        m2 = m.split(0.3)
-
-        self.assertTrue(
-            len(m.tile_pos_for_label[1]) > len(m2.tile_pos_for_label[1]))
-
-        self.assertTrue(
-            len(m.tile_pos_for_label[2]) > len(m2.tile_pos_for_label[2]))
-
-        # check for no overlap
-        self.assertEqual(
-            0,
-            len(set(m.tile_pos_for_label[1]) & set(m2.tile_pos_for_label[1])))
-
-        self.assertEqual(
-            0,
-            len(set(m2.tile_pos_for_label[1]) & set(m.tile_pos_for_label[1])))
-
-    def test_shape_data_split(self):
-
-        import logging
-        logging.basicConfig(level=logging.INFO)
-
-        img_path = os.path.join(
-            base_path,
-            '../test_data/shapes/pixels/*')
-        label_path = os.path.join(
-            base_path,
-            '../test_data/shapes/labels.ilp')
-        c = IlastikConnector(img_path, label_path)
-        d = Dataset(c)
-
-        size = (1, 50, 50)
-        pad = (0, 0, 0)
-
-        m = TrainingBatch(d, size, padding_zxy=pad)
-
-        m.split(0.001)
