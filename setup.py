@@ -17,7 +17,7 @@ def readme():
 
 
 setup(name='yapic_io',
-      version='0.2.6',
+      version='0.2.7',
       description='io data handling module for various image sources as interface for pixel classification tools',
       long_description=readme(),
       long_description_content_type='text/markdown',
