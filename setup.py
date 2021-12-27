@@ -7,6 +7,7 @@ reqs = ['numpy>=1.13.1',
         'scikit_image>=0.12.3',
         'tifffile',
         'h5py',
+        'matplotlib',
         'sparse>=0.12.0']
 
 
