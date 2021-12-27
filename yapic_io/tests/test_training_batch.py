@@ -32,7 +32,7 @@ class TestTrainingBatch(TestCase):
         size = (1, 3, 4)
         pad = (1, 2, 2)
 
-        m = TrainingBatch(d, size, padding_zxy=pad)
+        m = TrainingBatch(d, size, padding_zxy=pad, batch_size=len(d.label_values()))
 
         m._random_tile(for_label=1)
 
@@ -52,7 +52,8 @@ class TestTrainingBatch(TestCase):
         c = TiffConnector(pixel_image_dir,
                           label_image_dir,
                           savepath=self.tmpdir)
-        m = TrainingBatch(Dataset(c), tile_size, padding_zxy=padding)
+        d =  Dataset(c)
+        m = TrainingBatch(d, tile_size, padding_zxy=padding, batch_size=len(d.label_values()))
 
         for counter, mini in enumerate(m):
             # shape is (6, 3, 1, 5, 4):
@@ -87,7 +88,8 @@ class TestTrainingBatch(TestCase):
         # TiffConnector binding
         c = TiffConnector(pixel_image_dir, label_image_dir,
                           savepath=self.tmpdir)
-        m = TrainingBatch(Dataset(c), tile_size, padding_zxy=padding)
+        d =  Dataset(c)
+        m = TrainingBatch(d, tile_size, padding_zxy=padding, batch_size=len(d.label_values()))
 
         for counter, mini in enumerate(m):
             # shape is (6, 6, 1, 5, 4):
@@ -122,7 +124,7 @@ class TestTrainingBatch(TestCase):
         nx = 4
         ny = 5
 
-        m = TrainingBatch(d, size, padding_zxy=pad)
+        m = TrainingBatch(d, size, padding_zxy=pad, batch_size=len(d.label_values()))
 
         m.set_normalize_mode('local_z_score')
 
@@ -187,7 +189,7 @@ class TestTrainingBatch(TestCase):
            [1.,         1.,         1.,         1.,         1.],
            [1.,         1.,         1.,         1.,         1.]]])
 
-        m = TrainingBatch(d, size, padding_zxy=pad)
+        m = TrainingBatch(d, size, padding_zxy=pad, batch_size=len(d.label_values()))
         m.set_normalize_mode('global', minmax=[0, 3])
 
         pixels = np.zeros((batchsize, nr_channels, nz, nx, ny))
@@ -215,7 +217,7 @@ class TestTrainingBatch(TestCase):
         size = (1, 5, 4)
         pad = (0, 0, 0)
 
-        m = TrainingBatch(d, size, padding_zxy=pad)
+        m = TrainingBatch(d, size, padding_zxy=pad, batch_size=len(d.label_values()))
         assert m.global_norm_minmax is None
         m.set_normalize_mode('global')
         assert len(m.global_norm_minmax) == 3
@@ -232,7 +234,7 @@ class TestTrainingBatch(TestCase):
         size = (1, 3, 4)
         pad = (1, 2, 2)
 
-        m = TrainingBatch(d, size, padding_zxy=pad)
+        m = TrainingBatch(d, size, padding_zxy=pad, batch_size=len(d.label_values()))
 
         self.assertEqual(m.augmentation, {'flip'})
 
@@ -258,7 +260,7 @@ class TestTrainingBatch(TestCase):
         size = (1, 3, 4)
         pad = (1, 2, 2)
 
-        m = TrainingBatch(d, size, padding_zxy=pad)
+        m = TrainingBatch(d, size, padding_zxy=pad, batch_size=len(d.label_values()))
 
         m.set_pixel_dimension_order('bczxy')
         self.assertEqual([0, 1, 2, 3, 4], m.pixel_dimension_order)
@@ -277,7 +279,7 @@ class TestTrainingBatch(TestCase):
         size = (2, 5, 4)
         pad = (0, 0, 0)
 
-        m = TrainingBatch(d, size, padding_zxy=pad)
+        m = TrainingBatch(d, size, padding_zxy=pad, batch_size=len(d.label_values()))
 
         next(m)
 
