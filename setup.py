@@ -7,6 +7,7 @@ reqs = ['numpy>=1.13.1',
         'scikit_image>=0.12.3',
         'tifffile',
         'h5py',
+        'matplotlib',
         'sparse>=0.12.0']
 
 
@@ -17,7 +18,7 @@ def readme():
 
 
 setup(name='yapic_io',
-      version='0.2.6',
+      version='0.2.7',
       description='io data handling module for various image sources as interface for pixel classification tools',
       long_description=readme(),
       long_description_content_type='text/markdown',

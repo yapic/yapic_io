@@ -70,10 +70,9 @@ class TrainingBatch(Minibatch):
     def __init__(self,
                  dataset,
                  size_zxy,
+                 batch_size,
                  padding_zxy=(0, 0, 0),
                  equalized=False):
-
-        batch_size = len(dataset.label_values())
 
         super().__init__(dataset,
                          batch_size,
@@ -106,7 +105,12 @@ class TrainingBatch(Minibatch):
         weights = []
         augmentations = []
 
-        for label in self.labels:
+        if self._batch_size < len(self.labels):
+            sampled_labels = random.sample(self.labels, self._batch_size)
+        else:
+            sampled_labels = self.labels
+
+        for label in sampled_labels:
             tile_data = self._random_tile(for_label=label)
 
             pixels.append(tile_data.pixels)
@@ -367,10 +371,10 @@ class TrainingBatch(Minibatch):
         out = TrainingBatch(self.dataset,
                             self.tile_size_zxy,
                             padding_zxy=self.padding_zxy,
+                            batch_size=self._batch_size,
                             equalized=self.equalized)
 
         out.pixel_dimension_order = self.pixel_dimension_order
-        out._batch_size = self._batch_size
         out.normalize_mode = self.normalize_mode
         out.global_norm_minmax = self.global_norm_minmax
         out.float_data_type = self.float_data_type
