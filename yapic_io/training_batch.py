@@ -105,7 +105,7 @@ class TrainingBatch(Minibatch):
         weights = []
         augmentations = []
 
-        if self._batch_size == len(self.labels):
+        if self._batch_size >= len(self.labels):
             sampled_labels = self.labels
         else:
             sampled_labels = random.sample(self.labels, self._batch_size)
