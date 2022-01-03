@@ -109,7 +109,6 @@ class TrainingBatch(Minibatch):
             sampled_labels = self.labels
         else:
             sampled_labels = random.sample(self.labels, self._batch_size)
-            
 
         for label in sampled_labels:
             tile_data = self._random_tile(for_label=label)
